@@ -1,7 +1,7 @@
 module Siesta
   class TestSuite
     class Group
-      include ::Virtus
+      include Virtus.model
 
       attribute :path, String
       attribute :suite, TestSuite
@@ -22,7 +22,7 @@ module Siesta
     end
 
     class Item
-      include ::Virtus
+      include Virtus.model
 
       attribute :path, String
       attribute :group, Group
