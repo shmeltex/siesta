@@ -1,4 +1,4 @@
-require 'spec_helper'
+require 'rails_helper'
 
 describe Siesta do
   describe '.configure' do
@@ -27,11 +27,11 @@ describe Siesta do
       end
 
       it 'sets spec_dir to "spec/javascripts"' do
-        Siesta.config.spec_dir.should == 'spec/javascripts' 
+        expect(Siesta.config.spec_dir).to be == 'spec/javascripts'
       end
 
       it 'sets auto_organizing to "true"' do
-        Siesta.config.auto_organizing.should be_true
+        expect(Siesta.config.auto_organizing).to be true
       end
     end
   end
