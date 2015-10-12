@@ -13,7 +13,7 @@ module Siesta
       end
 
       def items
-        @items ||= Dir.glob(File.join(path, '*.t.js')).inject([]) do |c, f|
+        @items ||= Dir.glob(File.join(path, '*.t.{js,js.coffee}')).inject([]) do |c, f|
           c << Item.new(:path => f, :group => self, :suite => suite) unless File.directory?(f)
           
           c
@@ -29,7 +29,7 @@ module Siesta
       attribute :suite, TestSuite
 
       def url
-        @url ||= File.join('/assets', path.gsub(suite.path, ''))
+        @url ||= File.join('/assets', path.gsub(suite.path, '').gsub('.coffee', ''))
       end
     end
 
@@ -53,7 +53,7 @@ module Siesta
     end
 
     def has_tests?(path)
-      File.directory?(path) && !Dir[File.join(path, '*.t.js')].empty?
+      File.directory?(path) && !Dir[File.join(path, '*.t.{js,js.coffee}')].empty?
     end
   end
 end
