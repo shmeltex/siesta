@@ -1,6 +1,6 @@
 /*
 
-Siesta 3.1.0
+Siesta 4.0.0
 Copyright(c) 2009-2015 Bryntum AB
 http://bryntum.com/contact
 http://bryntum.com/products/siesta/license
@@ -3264,12 +3264,453 @@ Joose.Namespace.Manager.my.register('Singleton', Class({
 ;
 }();;
 ;
+Class('JooseX.Observable.Event', {
+    
+    has : {
+        name        : { required : true },
+        args        : { required : true },
+        
+        source      : { required : true },
+        
+        splat       : null,
+        current     : null,
+        
+        bubbling    : true
+    },
+    
+        
+    methods : {
+        
+        stopPropagation : function () {
+            this.bubbling = false
+        }
+    }
+})
+
+
+;
+Class('JooseX.Observable.Listener', {
+
+    has : {
+        channel     : { required : true },
+        eventName   : { required : true },
+        
+        func        : { required : true },
+        scope       : null,
+        
+        single          : false,
+        
+        buffer          : null,
+        bufferMax       : null,
+        
+        bufferStartedAt : null,
+        bufferTimeout   : null,
+        
+        delayTimeout    : null,
+        
+        delay           : null
+    },
+    
+        
+    methods : {
+        
+        activate : function (event, args) {
+            var me      = this
+            
+            if (me.buffer != null) {
+                
+                if (me.bufferMax != null)
+                    if (!me.bufferStartedAt) 
+                        me.bufferStartedAt = new Date()
+                    else
+                        if (new Date - me.bufferStartedAt > me.bufferMax) return
+                
+                        
+                if (me.bufferTimeout) clearTimeout(me.bufferTimeout)
+                
+                me.bufferTimeout = setTimeout(function () {
+                    
+                    delete me.bufferStartedAt
+                    delete me.bufferTimeout
+                    
+                    me.doActivate(event, args)
+                    
+                }, me.buffer)
+                
+                return
+            }
+            
+            if (me.delay != null) {
+                
+                me.delayTimeout = setTimeout(function () {
+                    
+                    delete me.delayTimeout
+                    
+                    me.doActivate(event, args)
+                    
+                }, me.delay)
+                
+                return
+            }
+            
+            return me.doActivate(event, args)
+        },
+        
+        
+        doActivate : function (event, args) {
+            if (this.single) this.remove()
+            
+            return this.func.apply(this.scope || event.source, [ event ].concat(args) ) !== false
+        },
+        
+        
+        cancel  : function () {
+            if (this.buffer) {
+                clearTimeout(this.bufferTimeout)
+                
+                delete this.bufferTimeout
+                delete this.bufferStartedAt
+            }
+            
+            if (this.delay) clearTimeout(this.delayTimeout)
+        },
+        
+        
+        remove : function () {
+            this.channel.removeListener(this)
+        }
+    }
+})
+
+
+;
+Class('JooseX.Observable.Channel', {
+    
+    has : {
+        channels    : Joose.I.Object,
+        
+        listeners   : Joose.I.Object
+    },
+    
+        
+    methods : {
+        
+        destroy : function () {
+            Joose.O.each(this.channels, function (channel, name) {
+                channel.purgeListeners()
+            })
+            
+            this.channels   = null
+            
+            // cleanup paranoya
+            Joose.O.each(this.listeners, function (value, name) {
+                this.listeners[ name ]  = null
+            }, this)
+            
+            this.listeners  = null
+        },
+        
+        
+        // (!) segments array will be destroyed in this method
+        getListenersFor : function (segments, name, activators) {
+            var listeners = this.listeners
+            
+            if (listeners[ '**' ]) {
+                
+                var splat       = segments.concat(name)
+                
+                Joose.A.each(listeners[ '**' ], function (listener) {
+                    activators.push({
+                        listener    : listener,
+                        splat       : splat
+                    })
+                })
+            }
+            
+            if (segments.length) {
+                var next = this.getSingleChannel(segments.shift(), true)
+                
+                if (next) next.getListenersFor(segments, name, activators)
+            } else {
+                
+                if (listeners[ '*' ])
+                    Joose.A.each(listeners[ '*' ], function (listener) {
+                        
+                        activators.push({
+                            listener    : listener,
+                            splat       : name
+                        })
+                    })
+                
+                if (listeners[ name ])  
+                    Joose.A.each(listeners[ name ], function (listener) {
+                        
+                        activators.push({
+                            listener    : listener
+                        })
+                    })
+            }
+        },
+        
+        
+        hasListenerFor : function (segments, name) {
+            var listeners = this.listeners
+            
+            if (listeners[ '**' ] && listeners[ '**' ].length) return true
+            
+            if (segments.length)  {
+                var next = this.getSingleChannel(segments.shift(), true)
+                
+                if (next) return next.hasListenerFor(segments, name)
+                
+            } else {
+                
+                if (listeners[ '*' ] && listeners[ '*' ].length) return true
+                
+                if (listeners[ name ] && listeners[ name ].length) return true  
+            }
+            
+            return false
+        },
+        
+        
+        addListener : function (listener) {
+            var eventName   = listener.eventName
+            var listeners   = this.listeners
+            
+            listeners[ eventName ] = listeners[ eventName ] || []
+            
+            listeners[ eventName ].push(listener)
+        },
+        
+        
+        removeListener : function (listenerToRemove) {
+            // already purged
+            if (!this.listeners) return
+            
+            var eventListeners      = this.listeners[ listenerToRemove.eventName ]
+            
+            eventListeners && Joose.A.each(eventListeners, function (listener, index) {
+                
+                if (listener == listenerToRemove) {
+                    
+                    eventListeners.splice(index, 1)
+                    
+                    return false
+                }
+            })
+        },
+        
+        
+        removeListenerByHandler : function (eventName, func, scope) {
+            var eventListeners      = this.listeners[ eventName ]
+            
+            eventListeners && Joose.A.each(eventListeners, function (listener, index) {
+                
+                if (listener.func == func && listener.scope == scope) {
+                    
+                    eventListeners.splice(index, 1)
+                    
+                    return false
+                }
+            })
+        },
+        
+        
+        getSingleChannel : function (name, doNotCreate) {
+            var channels    = this.channels
+            
+            if (channels[ name ]) return channels[ name ]
+            
+            if (doNotCreate) return null
+            
+            return channels[ name ] = new JooseX.Observable.Channel()
+        },
+        
+        
+        // (!) segments array will be destroyed in this method
+        getChannel : function (segments, doNotCreate) {
+            if (!segments.length) return this
+            
+            var next    = this.getSingleChannel(segments.shift(), doNotCreate)
+            
+            if (doNotCreate && !next) return null
+            
+            return next.getChannel(segments, doNotCreate)
+        }
+    }
+})
+
+
+;
+Role('JooseX.Observable', {
+    
+    /*PKGVERSION*/VERSION : 0.04,
+    
+//    use : [ 
+//        'JooseX.Observable.Channel',    
+//        'JooseX.Observable.Listener', 
+//        'JooseX.Observable.Event'    
+//    ],
+    
+    
+//    trait   : 'JooseX.Observable.Meta',
+    
+    
+    has : {
+        rootChannel             : {
+            is          : 'rw',
+            init        : function () { return new JooseX.Observable.Channel() }
+        },
+        
+        suspendCounter          : 0
+    },
+    
+        
+    methods : {
+        
+        getBubbleTarget : function () {
+        },
+        
+        
+        parseEventPath : function (path) {
+            var channels    = path.split('/')
+            var eventName   = channels.pop()
+            
+            if (channels.length && !channels[ 0 ]) channels.shift()
+            
+            return {
+                channels        : channels,
+                eventName       : eventName
+            }
+        },
+        
+        
+        on : function (path, func, scope, options) {
+            if (!func) throw "Not valid listener function provided when subsribing on event: " + path
+            
+            var parsed      = this.parseEventPath(path)
+            var channel     = this.getRootChannel().getChannel(parsed.channels)
+            
+            var listener    = new JooseX.Observable.Listener(Joose.O.extend(options || {}, {
+                channel     : channel,
+                eventName   : parsed.eventName,
+                
+                func        : func,
+                scope       : scope
+            }))
+            
+            channel.addListener(listener)
+            
+            return listener
+        },
+        
+        
+        un : function (path, func, scope) {
+            
+            if (path instanceof JooseX.Observable.Listener) {
+                
+                path.remove()
+                
+                return
+            }
+            
+            var parsed      = this.parseEventPath(path)
+            var channel     = this.getRootChannel().getChannel(parsed.channels, true)
+            
+            if (channel) channel.removeListenerByHandler(parsed.eventName, func, scope)
+        },
+        
+        
+        emit : function () {
+            return this.fireEvent.apply(this, arguments)
+        },
+        
+        
+        fireEvent : function (path) {
+            if (this.suspendCounter) return
+            
+            var args        = Array.prototype.slice.call(arguments, 1)
+
+            var event       = new JooseX.Observable.Event({
+                name        : path,
+                args        : args,
+                
+                source      : this
+            }) 
+            
+            return this.propagateEvent(event, path, args)
+        },
+        
+        
+        propagateEvent : function (event, path, args) {
+            if (this.suspendCounter) return
+            
+            var parsed      = this.parseEventPath(path)
+            var eventName   = parsed.eventName
+            
+            if (!eventName == '*' || eventName == '**') throw new Error("Can't fire an empty event or event with `*`, `**` names ")
+            
+            var activators  = []
+            
+            this.getRootChannel().getListenersFor(parsed.channels, eventName, activators)
+            
+            var res             = true
+            
+            event.current       = this
+            
+            if (activators.length) Joose.A.each(activators, function (activator) {
+                event.splat = activator.splat
+                
+                res = activator.listener.activate(event, args) !== false && res
+            })
+            
+            if (event.bubbling) {
+                
+                var further = this.getBubbleTarget()
+                
+                if (further) res = further.propagateEvent(event, path, args) !== false && res
+            } 
+                
+            return res
+        },
+        
+        
+        hasListenerFor : function (path) {
+            var parsed      = this.parseEventPath(path)
+            
+            return this.getRootChannel().hasListenerFor(parsed.channels, parsed.eventName)
+        },
+        
+        
+        purgeListeners  : function () {
+            this.rootChannel.destroy()
+            
+            this.rootChannel = new JooseX.Observable.Channel()
+        },
+        
+        
+        suspendEvents : function () {
+            this.suspendCounter++
+        },
+        
+        
+        resumeEvents : function () {
+            this.suspendCounter--
+            
+            if (this.suspendCounter < 0) this.suspendCounter = 0
+        }
+    }
+});
+;
 Class('Scope.Provider', {
     
     /*PKGVERSION*/VERSION : 0.12,
     
     has     : {
         name                : null,
+        
+        launchId            : null,
         
         scope               : null,
         
@@ -3360,7 +3801,8 @@ Class('Scope.Provider', {
 
 
 Scope.Provider.__ONLOAD__   = {}
-Scope.Provider.__ONERROR__  = {};
+Scope.Provider.__ONERROR__  = {}
+Scope.Provider.__FAILED_PRELOAD__  = {};
 Role('Scope.Provider.Role.WithDOM', {
     
     requires    : [ 'getDocument', 'create', 'getPreload', 'isAlreadySetUp', 'setViewportSize' ],
@@ -3439,9 +3881,11 @@ Role('Scope.Provider.Role.WithDOM', {
         
         cleanupHanlders : function () {
             var scopeProvider   = this.parentWindow.Scope.Provider
+            var scopeId         = this.scopeId
             
-            delete scopeProvider.__ONLOAD__[ this.scopeId ]
-            delete scopeProvider.__ONERROR__[ this.scopeId ]
+            delete scopeProvider.__ONLOAD__[ scopeId ]
+            delete scopeProvider.__ONERROR__[ scopeId ]
+            delete scopeProvider.__FAILED_PRELOAD__[ scopeId ]
         },
         
         
@@ -3512,17 +3956,25 @@ Role('Scope.Provider.Role.WithDOM', {
                 } 
             })
             
+            var me          = this
+            
+            var cont        = function () {
+                callback && callback(me, me.parentWindow.Scope.Provider.__FAILED_PRELOAD__[ me.scopeId ])
+            }
+            
+            this.parentWindow.Scope.Provider.__FAILED_PRELOAD__[ this.scopeId ] = {}
+            
             if (this.sourceURL || isIE && hasInlineScript) {
                 this.addSeedingToPreload()
                 
-                this.setupIncrementally(callback)
+                this.setupIncrementally(cont)
                 
             } else {
                 // for sane browsers just add the seeding code and seeding script to preloads
                 if (!isIE) this.addSeedingToPreload()
                 
                 // seeding scripts are included only for sane browsers (not IE)
-                this.setupWithDocWrite(callback, isIE)
+                this.setupWithDocWrite(cont, isIE)
             }
         },
         
@@ -3548,8 +4000,7 @@ Role('Scope.Provider.Role.WithDOM', {
             var scopeId              = this.scopeId
             
             this.parentWindow.Scope.Provider.__ONLOAD__[ scopeId ]    = function () {
-
-                var cont = function () { callback && callback(me) }
+                var cont = function () { callback && callback() }
                 
                 // sane browsers - seeding code and script has been already added
                 if (!needToSeed) { cont(); return }
@@ -3576,7 +4027,8 @@ Role('Scope.Provider.Role.WithDOM', {
                         html.join(''),
                     '</head>',
     
-                    '<body style="margin : 0; padding : 0; width: 100%; height: 100%" onload="(window.opener || window.parent).Scope.Provider.__ONLOAD__[' + scopeId + ']()">',
+                    // delay here is for IE9 - the "onerror" handlers of the <script> tags are fired _after_ <body> onload otherwise
+                    '<body style="margin : 0; padding : 0; width: 100%; height: 100%" onload="setTimeout(function () { (window.opener || window.parent).Scope.Provider.__ONLOAD__[' + scopeId + ']() }, 0)">',
                         this.innerHtmlBody || '',
                     '</body>',
                 '</html>'
@@ -3617,7 +4069,10 @@ Role('Scope.Provider.Role.WithDOM', {
                 
                 var loadScripts     = function (preloads, callback) {
                     
-                    var cont = function () { loadScripts(preloads, callback) }
+                    var cont = function () {
+                        // cleanup can happen in the middle of setup
+                        if (me.scope) loadScripts(preloads, callback) 
+                    }
                     
                     if (!preloads.length) 
                         callback && callback()
@@ -3637,7 +4092,8 @@ Role('Scope.Provider.Role.WithDOM', {
                     }
                 }
                 
-                loadScripts(me.getPreload().slice(), callback)
+                // cleanup can happen in the middle of setup
+                if (me.scope) loadScripts(me.getPreload().slice(), callback)
             })
         },        
         
@@ -3645,8 +4101,12 @@ Role('Scope.Provider.Role.WithDOM', {
         getScriptTagString : function (url, text) {
             var res = '<script type="text/javascript"'
             
+            var onerror = '(window.opener || window.parent).Scope.Provider.__FAILED_PRELOAD__[ scopeId ][ url ] = true'
+            
+            onerror     = onerror.replace(/scopeId/, "'" + this.scopeId + "'").replace(/url/, "'" + url + "'")
+            
             if (url) 
-                res     += ' src="' + url + '"></script>'
+                res     += ' src="' + url + '" onerror="' + onerror + '"></script>'
             else
                 res     += '>' + text.replace(/<\/script>/gi, '\\x3C/script>') + '</script>'
                 
@@ -3705,14 +4165,28 @@ Role('Scope.Provider.Role.WithDOM', {
         
         
         runScript : function (url, callback) {
+            var scopeId     = this.scopeId
+            
             if (this.isCSS(url))
                 this.loadCSS(url, callback)
-            else
-                this.getHead().appendChild(this.createScriptTag(null, url, callback))
+            else {
+                var onerror = function () {
+                    this.onerror    = null
+                    
+                    var doc         = this.ownerDocument
+                    var win         = doc.defaultView || doc.parentWindow
+                    
+                    ;(win.opener || win.parent).Scope.Provider.__FAILED_PRELOAD__[ scopeId ][ url ] = true
+                    
+                    callback()
+                }
+                
+                this.getHead().appendChild(this.createScriptTag(null, url, callback, onerror))
+            }
         },
         
         
-        createScriptTag : function (text, url, callback) {
+        createScriptTag : function (text, url, callback, errback) {
             var node = this.getDocument().createElement("script")
             
             node.setAttribute("type", "text/javascript")
@@ -3732,6 +4206,8 @@ Role('Scope.Provider.Role.WithDOM', {
                         callback()
                 }
             }
+            
+            if (errback) node.onerror = errback
             
             return node
         },
@@ -3848,6 +4324,8 @@ Class('Scope.Provider.IFrame', {
         wrapCls         : null,
         wrapper         : null,
         
+        // should be inside of the `wrapper` el
+        iframeParentEl  : null,
         parentEl        : null,
         
         cleanupDelay    : 1000
@@ -3906,11 +4384,17 @@ Class('Scope.Provider.IFrame', {
             iframe.src = this.sourceURL || 'about:blank'
             
             if (this.performWrap) {
-                var wrapper         = this.wrapper  = this.wrapper || doc.createElement('div')
+                var wrapper             = this.wrapper
                 
-                wrapper.className   = this.wrapCls || ''
+                if (!wrapper) {
+                    wrapper             = this.wrapper = doc.createElement('div')
+                    wrapper.className   = this.wrapCls || ''
+                }
                 
-                wrapper.appendChild(iframe)
+                ;(this.iframeParentEl || wrapper).appendChild(iframe)
+                
+                // no required anymore, since whole wrapper will be removed
+                this.iframeParentEl     = null
             } 
             
             ;(this.parentEl || doc.body).appendChild(wrapper || iframe)
@@ -3952,6 +4436,10 @@ Class('Scope.Provider.IFrame', {
             var iframe      = this.iframe
             var me          = this
             
+            // remove this property one more time, because sometimes it is not cleared in IE
+            // (seems "onreadystatechange" is not fired)
+            iframe.onreadystatechange   = null
+            
             wrapper.style.display    = 'none'
             
             var onUnloadChecker = function () {
@@ -3966,30 +4454,26 @@ Class('Scope.Provider.IFrame', {
             this.scope      = null
             this.wrapper    = null
 
-            // wait for 1000ms to allow time for possible `setTimeout` in the scope of iframe
+            if (me.beforeCleanupCallback) me.beforeCleanupCallback()
+            me.beforeCleanupCallback    = null
+            
+            // chaging the page, triggering `onunload` and hopefully preventing browser from caching the content of iframe
+            iframe.src      = 'javascript:false'
+            
+            // wait again before removing iframe from the DOM, as recommended by some online sources
             setTimeout(function () {
+                ;(me.parentEl || me.parentWindow.document.body).removeChild(wrapper)
                 
-                if (me.beforeCleanupCallback) me.beforeCleanupCallback()
-                me.beforeCleanupCallback    = null
+                wrapper     = null
+                iframe      = null
                 
-                // chaging the page, triggering `onunload` and hopefully preventing browser from caching the content of iframe
-                iframe.src      = 'javascript:false'
+                me.parentEl = null
                 
-                // wait again before removing iframe from the DOM, as recommended by some online sources
-                setTimeout(function () {
-                    ;(me.parentEl || me.parentWindow.document.body).removeChild(wrapper)
-                    
-                    wrapper     = null
-                    iframe      = null
-                    
-                    me.parentEl = null
-                    
-                    me.cleanupHanlders()
-                    
-                    if (me.cleanupCallback) me.cleanupCallback()
-                    me.cleanupCallback  = null
-                    
-                }, me.cleanupDelay)
+                me.cleanupHanlders()
+                
+                if (me.cleanupCallback) me.cleanupCallback()
+                me.cleanupCallback  = null
+                
             }, me.cleanupDelay)
         }
     }
@@ -4580,445 +5064,6 @@ This is free software, licensed under:
   The GNU Lesser General Public License, Version 3, June 2007
 
 */;
-;
-Class('JooseX.Observable.Event', {
-    
-    has : {
-        name        : { required : true },
-        args        : { required : true },
-        
-        source      : { required : true },
-        
-        splat       : null,
-        current     : null,
-        
-        bubbling    : true
-    },
-    
-        
-    methods : {
-        
-        stopPropagation : function () {
-            this.bubbling = false
-        }
-    }
-})
-
-
-;
-Class('JooseX.Observable.Listener', {
-
-    has : {
-        channel     : { required : true },
-        eventName   : { required : true },
-        
-        func        : { required : true },
-        scope       : null,
-        
-        single          : false,
-        
-        buffer          : null,
-        bufferMax       : null,
-        
-        bufferStartedAt : null,
-        bufferTimeout   : null,
-        
-        delayTimeout    : null,
-        
-        delay           : null
-    },
-    
-        
-    methods : {
-        
-        activate : function (event, args) {
-            var me      = this
-            
-            if (me.buffer != null) {
-                
-                if (me.bufferMax != null)
-                    if (!me.bufferStartedAt) 
-                        me.bufferStartedAt = new Date()
-                    else
-                        if (new Date - me.bufferStartedAt > me.bufferMax) return
-                
-                        
-                if (me.bufferTimeout) clearTimeout(me.bufferTimeout)
-                
-                me.bufferTimeout = setTimeout(function () {
-                    
-                    delete me.bufferStartedAt
-                    delete me.bufferTimeout
-                    
-                    me.doActivate(event, args)
-                    
-                }, me.buffer)
-                
-                return
-            }
-            
-            if (me.delay != null) {
-                
-                me.delayTimeout = setTimeout(function () {
-                    
-                    delete me.delayTimeout
-                    
-                    me.doActivate(event, args)
-                    
-                }, me.delay)
-                
-                return
-            }
-            
-            return me.doActivate(event, args)
-        },
-        
-        
-        doActivate : function (event, args) {
-            if (this.single) this.remove()
-            
-            return this.func.apply(this.scope || event.source, [ event ].concat(args) ) !== false
-        },
-        
-        
-        cancel  : function () {
-            if (this.buffer) {
-                clearTimeout(this.bufferTimeout)
-                
-                delete this.bufferTimeout
-                delete this.bufferStartedAt
-            }
-            
-            if (this.delay) clearTimeout(this.delayTimeout)
-        },
-        
-        
-        remove : function () {
-            this.channel.removeListener(this)
-        }
-    }
-})
-
-
-;
-Class('JooseX.Observable.Channel', {
-    
-    has : {
-        channels    : Joose.I.Object,
-        
-        listeners   : Joose.I.Object
-    },
-    
-        
-    methods : {
-        
-        destroy : function () {
-            Joose.O.each(this.channels, function (channel, name) {
-                channel.purgeListeners()
-            })
-            
-            this.channels   = null
-            
-            // cleanup paranoya
-            Joose.O.each(this.listeners, function (value, name) {
-                this.listeners[ name ]  = null
-            }, this)
-            
-            this.listeners  = null
-        },
-        
-        
-        // (!) segments array will be destroyed in this method
-        getListenersFor : function (segments, name, activators) {
-            var listeners = this.listeners
-            
-            if (listeners[ '**' ]) {
-                
-                var splat       = segments.concat(name)
-                
-                Joose.A.each(listeners[ '**' ], function (listener) {
-                    activators.push({
-                        listener    : listener,
-                        splat       : splat
-                    })
-                })
-            }
-            
-            if (segments.length) {
-                var next = this.getSingleChannel(segments.shift(), true)
-                
-                if (next) next.getListenersFor(segments, name, activators)
-            } else {
-                
-                if (listeners[ '*' ])
-                    Joose.A.each(listeners[ '*' ], function (listener) {
-                        
-                        activators.push({
-                            listener    : listener,
-                            splat       : name
-                        })
-                    })
-                
-                if (listeners[ name ])  
-                    Joose.A.each(listeners[ name ], function (listener) {
-                        
-                        activators.push({
-                            listener    : listener
-                        })
-                    })
-            }
-        },
-        
-        
-        hasListenerFor : function (segments, name) {
-            var listeners = this.listeners
-            
-            if (listeners[ '**' ] && listeners[ '**' ].length) return true
-            
-            if (segments.length)  {
-                var next = this.getSingleChannel(segments.shift(), true)
-                
-                if (next) return next.hasListenerFor(segments, name)
-                
-            } else {
-                
-                if (listeners[ '*' ] && listeners[ '*' ].length) return true
-                
-                if (listeners[ name ] && listeners[ name ].length) return true  
-            }
-            
-            return false
-        },
-        
-        
-        addListener : function (listener) {
-            var eventName   = listener.eventName
-            var listeners   = this.listeners
-            
-            listeners[ eventName ] = listeners[ eventName ] || []
-            
-            listeners[ eventName ].push(listener)
-        },
-        
-        
-        removeListener : function (listenerToRemove) {
-            // already purged
-            if (!this.listeners) return
-            
-            var eventListeners      = this.listeners[ listenerToRemove.eventName ]
-            
-            eventListeners && Joose.A.each(eventListeners, function (listener, index) {
-                
-                if (listener == listenerToRemove) {
-                    
-                    eventListeners.splice(index, 1)
-                    
-                    return false
-                }
-            })
-        },
-        
-        
-        removeListenerByHandler : function (eventName, func, scope) {
-            var eventListeners      = this.listeners[ eventName ]
-            
-            eventListeners && Joose.A.each(eventListeners, function (listener, index) {
-                
-                if (listener.func == func && listener.scope == scope) {
-                    
-                    eventListeners.splice(index, 1)
-                    
-                    return false
-                }
-            })
-        },
-        
-        
-        getSingleChannel : function (name, doNotCreate) {
-            var channels    = this.channels
-            
-            if (channels[ name ]) return channels[ name ]
-            
-            if (doNotCreate) return null
-            
-            return channels[ name ] = new JooseX.Observable.Channel()
-        },
-        
-        
-        // (!) segments array will be destroyed in this method
-        getChannel : function (segments, doNotCreate) {
-            if (!segments.length) return this
-            
-            var next    = this.getSingleChannel(segments.shift(), doNotCreate)
-            
-            if (doNotCreate && !next) return null
-            
-            return next.getChannel(segments, doNotCreate)
-        }
-    }
-})
-
-
-;
-Role('JooseX.Observable', {
-    
-    /*PKGVERSION*/VERSION : 0.04,
-    
-//    use : [ 
-//        'JooseX.Observable.Channel',    
-//        'JooseX.Observable.Listener', 
-//        'JooseX.Observable.Event'    
-//    ],
-    
-    
-//    trait   : 'JooseX.Observable.Meta',
-    
-    
-    has : {
-        rootChannel             : {
-            is          : 'rw',
-            init        : function () { return new JooseX.Observable.Channel() }
-        },
-        
-        suspendCounter          : 0
-    },
-    
-        
-    methods : {
-        
-        getBubbleTarget : function () {
-        },
-        
-        
-        parseEventPath : function (path) {
-            var channels    = path.split('/')
-            var eventName   = channels.pop()
-            
-            if (channels.length && !channels[ 0 ]) channels.shift()
-            
-            return {
-                channels        : channels,
-                eventName       : eventName
-            }
-        },
-        
-        
-        on : function (path, func, scope, options) {
-            if (!func) throw "Not valid listener function provided when subsribing on event: " + path
-            
-            var parsed      = this.parseEventPath(path)
-            var channel     = this.getRootChannel().getChannel(parsed.channels)
-            
-            var listener    = new JooseX.Observable.Listener(Joose.O.extend(options || {}, {
-                channel     : channel,
-                eventName   : parsed.eventName,
-                
-                func        : func,
-                scope       : scope
-            }))
-            
-            channel.addListener(listener)
-            
-            return listener
-        },
-        
-        
-        un : function (path, func, scope) {
-            
-            if (path instanceof JooseX.Observable.Listener) {
-                
-                path.remove()
-                
-                return
-            }
-            
-            var parsed      = this.parseEventPath(path)
-            var channel     = this.getRootChannel().getChannel(parsed.channels, true)
-            
-            if (channel) channel.removeListenerByHandler(parsed.eventName, func, scope)
-        },
-        
-        
-        emit : function () {
-            return this.fireEvent.apply(this, arguments)
-        },
-        
-        
-        fireEvent : function (path) {
-            if (this.suspendCounter) return
-            
-            var args        = Array.prototype.slice.call(arguments, 1)
-
-            var event       = new JooseX.Observable.Event({
-                name        : path,
-                args        : args,
-                
-                source      : this
-            }) 
-            
-            return this.propagateEvent(event, path, args)
-        },
-        
-        
-        propagateEvent : function (event, path, args) {
-            if (this.suspendCounter) return
-            
-            var parsed      = this.parseEventPath(path)
-            var eventName   = parsed.eventName
-            
-            if (!eventName == '*' || eventName == '**') throw new Error("Can't fire an empty event or event with `*`, `**` names ")
-            
-            var activators  = []
-            
-            this.getRootChannel().getListenersFor(parsed.channels, eventName, activators)
-            
-            var res             = true
-            
-            event.current       = this
-            
-            if (activators.length) Joose.A.each(activators, function (activator) {
-                event.splat = activator.splat
-                
-                res = activator.listener.activate(event, args) !== false && res
-            })
-            
-            if (event.bubbling) {
-                
-                var further = this.getBubbleTarget()
-                
-                if (further) res = further.propagateEvent(event, path, args) !== false && res
-            } 
-                
-            return res
-        },
-        
-        
-        hasListenerFor : function (path) {
-            var parsed      = this.parseEventPath(path)
-            
-            return this.getRootChannel().hasListenerFor(parsed.channels, parsed.eventName)
-        },
-        
-        
-        purgeListeners  : function () {
-            this.rootChannel.destroy()
-            
-            this.rootChannel = new JooseX.Observable.Channel()
-        },
-        
-        
-        suspendEvents : function () {
-            this.suspendCounter++
-        },
-        
-        
-        resumeEvents : function () {
-            this.suspendCounter--
-            
-            if (this.suspendCounter < 0) this.suspendCounter = 0
-        }
-    }
-});
 ;
 /*
     http://www.JSON.org/json2.js
@@ -5951,6 +5996,16 @@ Role('Siesta.Util.Role.CanGetType', {
     }
 })
 ;
+Role('Siesta.Util.Role.CanEscapeRegExp', {
+    
+    methods : {
+        
+        escapeRegExp : function (str) {
+            return str.replace(/[\-\[\]\/\{\}\(\)\*\+\?\.\\\^\$\|]/g, "\\$&")
+        }
+    }
+})
+;
 Class('Siesta.Util.Queue', {
     
     has     : {
@@ -6634,7 +6689,7 @@ Class('Siesta.Content.Manager', {
 ;
 ;
 Class('Siesta', {
-    /*PKGVERSION*/VERSION : '3.1.0',
+    /*PKGVERSION*/VERSION : '4.0.0',
 
     // "my" should been named "static"
     my : {
@@ -6703,6 +6758,12 @@ if (!Function.prototype.bind) {
 };
 Siesta.CurrentLocale = Siesta.CurrentLocale || {
 
+    "Siesta.Harness" : {
+        preloadHasFailed            : 'Preload of {url} has failed',
+        preloadHasFailedForTest     : 'Preload of {url} has failed for test {test}',
+        staticDeprecationWarning    : 'You are calling static method `{methodName}` of the harness class {harnessClass}. Such usage is deprecated now, please switch to creation of the harness class instance: `var harness = new {harnessClass}()`'
+    },
+    
     "Siesta.Harness.Browser.UI.AboutWindow" : {
 
         upgradeText : 'Upgrade to Siesta Standard',
@@ -6814,7 +6875,8 @@ Siesta.CurrentLocale = Siesta.CurrentLocale || {
         filterToCurrentGroup    : 'Filter to current group',
         filterToFailed          : 'Filter to failed',
         httpWarningTitle  : 'You must use a web server',
-        httpWarningDesc   : 'You must run Siesta in a web server context, and not using the file:/// protocol'
+        httpWarningDesc   : 'You must run Siesta in a web server context, and not using the file:/// protocol',
+        viewSource        : 'View source'
     },
 
 
@@ -6834,6 +6896,7 @@ Siesta.CurrentLocale = Siesta.CurrentLocale || {
         passText            : 'PASS',
         failText            : 'FAIL',
         warnText            : 'WARN',
+        errorText           : 'ERROR',
         missingFileText     : 'Test file [{URL}] not found.',
         allTestsPassedText  : 'All tests passed',
         failuresFoundText   : 'There are failures'
@@ -6969,6 +7032,7 @@ Siesta.CurrentLocale = Siesta.CurrentLocale || {
     },
     
     "Siesta.Test.Browser"            : {
+        popupsDisabled                  : 'Failed to open the popup for url: {url}. Enable the popups in the browser settings.',
         noDomElementFound            : 'No DOM element found for CSS selector',
         noActionTargetFound          : 'No action target found for',
         waitForEvent                 : 'observable to fire its',
@@ -6990,7 +7054,9 @@ Siesta.CurrentLocale = Siesta.CurrentLocale || {
         target                       : 'target',
         toAppear                     : 'to appear',
         targetMoved                  : 'Moving target detected, retargeting initiated',
-        alertMethodNotCalled         : 'Expected a call to alert()'
+        alertMethodNotCalled         : 'Expected a call to alert()',
+        focusLostWarning             : 'Focus has left the test window {url}',
+        focusLostWarningLauncher     : 'Focus has left the test window {url}, it will be restarted. This behavior is controled with the --restart-on-blur option.'
     },
 
     "Siesta.Test.Date"               :  {
@@ -7002,6 +7068,7 @@ Siesta.CurrentLocale = Siesta.CurrentLocale || {
         elementContent               : 'element content',
         toAppear                     : 'to appear',
         toDisappear                  : 'to disappear',
+        toAppearAt                   : 'to appear at',
         monkeyException              : 'Monkey testing action did not complete properly - probably an exception was thrown',
         monkeyNoExceptions           : 'No exceptions thrown during monkey test',
         monkeyActionLog              : 'Monkey action log',
@@ -7023,8 +7090,6 @@ Siesta.CurrentLocale = Siesta.CurrentLocale || {
 
         selector                     : 'selector',
         selectors                    : 'selectors',
-        toAppear                     : 'to appear',
-        toAppearAt                   : 'to appear at',
         noCssSelector                : 'A CSS selector must be supplied',
 
         waitForSelectorsBadInput     : 'An array of CSS selectors must be supplied',
@@ -7264,7 +7329,7 @@ Siesta.CurrentLocale = Siesta.CurrentLocale || {
         queryMatchesMultiple                : 'Query matches multiple components',
         noVisibleElsFound                   : 'No visible elements found for target',
         noTestDetected                      : 'No test detected',
-        noTestStarted                       : 'You need to run a test first',
+        noTestStarted                       : 'You need to run a test first, or provide a Page URL',
         recordTooltip                       : 'Record',
         stopTooltip                         : 'Stop',
         playTooltip                         : 'Play',
@@ -7273,13 +7338,11 @@ Siesta.CurrentLocale = Siesta.CurrentLocale || {
         addNewTooltip                       : 'Add a new step',
         removeAllPromptTitle                : 'Remove all?',
         removeAllPromptMessage              : 'Do you want to clear the recorded events?',
-        Error                               : 'Error'
-    },
-
-    "Siesta.Recorder.UI.TargetColumn"       : {
-        headerText                          : 'Target / Value',
-        by                                  : 'by',
-        to                                  : 'to'
+        Error                               : 'Error',
+        showSource                          : 'Show source',
+        showSourceInNewWindow               : 'Show source in new window',
+        newRecording                        : 'New recording...',
+        pageUrl                             : 'Page URL'
     },
 
     "Siesta.Recorder.UI.TargetColumn"       : {
@@ -7292,6 +7355,8 @@ Siesta.CurrentLocale = Siesta.CurrentLocale || {
 ;
 // Localization helper
 Siesta.Resource = (function () {
+    
+    var cacheByNamespace    = {}
     
     var Resource    = Class({
         does    : Siesta.Util.Role.CanFormatStrings,
@@ -7317,16 +7382,20 @@ Siesta.Resource = (function () {
     })
     
 
-    return function (namespace, key) {
+    return function (namespace, key, data) {
         var dictionary  = Siesta.CurrentLocale[ namespace ];
 
         if (!dictionary) {
             throw 'Missing dictionary for namespace: ' + namespace;
         }
         
-        var resource    = new Resource({ dict : dictionary, serializeFormatingPlaceholders : false })
+        var resource    = cacheByNamespace[ namespace ]
+        
+        if (!resource) {
+            resource    = cacheByNamespace[ namespace ] = new Resource({ dict : dictionary, serializeFormatingPlaceholders : false })
+        }
 
-        if (key) return resource.get(key)
+        if (key) return resource.get(key, data)
 
         return resource
     }
@@ -7491,7 +7560,6 @@ Class('Siesta.Result.Assertion', {
         // stored as string
         sourceLine      : null,
         
-        isSkipped       : false,
         isTodo          : false,
         
         isException     : false,
@@ -7516,8 +7584,10 @@ Class('Siesta.Result.Assertion', {
         
         
         toString : function () {
-            var R = Siesta.Resource('Siesta.Result.Assertion');
-            var text = (this.isTodo ? R.get('todoText') : '') + (this.passed ? R.get('passText') : R.get('failText')) + ' ' + this.index + ' - ' + this.description
+            var R       = Siesta.Resource('Siesta.Result.Assertion');
+            
+            var text    = (this.isTodo ? R.get('todoText') : '') + 
+                (this.passed ? R.get('passText') : R.get('failText')) + ' ' + this.index + ' - ' + this.description
             
             if (this.annotation) text += '\n' + this.annotation
             
@@ -7531,9 +7601,11 @@ Class('Siesta.Result.Assertion', {
             var info    = {
                 type            : this.meta.name,
                 passed          : this.passed,
-                description     : String(this.description) || 'No description',
-                annotation      : String(this.annotation)
+                index           : this.index,
+                description     : String(this.description) || 'No description'
             }
+            
+            if (this.annotation) info.annotation = String(this.annotation)
             
             // copy if true
             Joose.A.each([ 'isTodo', 'isWaitFor', 'isException', 'sourceLine', 'name' ], function (name) {
@@ -7591,9 +7663,10 @@ Class('Siesta.Result.SubTest', {
             
             // top level test
             if (!test.parent)   {
-                report.url          = test.url
-                report.jUnitClass   = test.getJUnitClass()
-                report.groups       = test.groups
+                report.automationElementId  = test.automationElementId
+                report.url                  = test.url
+                report.jUnitClass           = test.getJUnitClass()
+                report.groups               = test.groups
             }
             
             if (test.specType)  report.bddSpecType  = test.specType
@@ -8203,12 +8276,16 @@ Role('Siesta.Test.More', {
         },
         
         /**
-         * This assertion passes, when the `func` function throws the exception during executing, and the
+         * This assertion passes if the `func` function throws an exception during executing, and the
          * stringified exception passes the 'like' assertion (with 'expected' parameter).
          * 
          * It has synonyms - `throws_ok` and `throws`.
-         * 
-         * @param {Function} func The function which supposed to throw an exception
+         *
+         *      t.throwsOk(function(){
+         *          throw "oopsie";
+         *      }, 'oopsie', 'Some description text');
+         *
+         * @param {Function} func The function which should throw an exception
          * @param {String/RegExp} expected The regex against which to test the stringified exception, can be also a plain string
          * @param {String} desc The description of the assertion
          */
@@ -8823,6 +8900,8 @@ Role('Siesta.Test.More', {
             // however, in IE the async frame may end earlier than failure from "pollFunc"
             // in such case we report the same error as in "pollFunc"
             var async                   = this.beginAsync((isWaitingForTime ? method : timeout) + 3 * interval, function () {
+                isDone      = true
+                
                 originalClearTimeout(pollTimeout)
                 
                 me.finalizeWaiting(waitAssertion, false, R.get('waitedTooLong') + ': ' + description, {
@@ -9197,7 +9276,7 @@ Role('Siesta.Test.More', {
                                     
                                     args        =  Array.prototype.slice.call(arguments);
                                     
-                                    if (step.desc) me.pass(step.desc);
+                                    if (step.desc) me.pass(step.desc)
                                     
                                     data.next()
                                 },
@@ -9230,7 +9309,11 @@ Role('Siesta.Test.More', {
                             }
                             
                             // and finalize the async frame manually, as the "nextFunc" for last step will never be called
-                            isLast && me.endAsync(stepInitData.async)
+                            if (isLast) {
+                                me.endAsync(stepInitData.async)
+                                
+                                if (step.desc) me.pass(step.desc)
+                            }
                             
                         } else if (me.typeOf(step) == 'String') {
                             var action      = new Siesta.Test.Action.Eval({
@@ -9316,22 +9399,21 @@ Role('Siesta.Test.More', {
                 case '<' : return actual < expected
                 case '>' : return actual > expected
             }
-        }
+        },
+
+        
+        getMaximalTimeout : function () {
+            return Math.max(this.waitForTimeout, this.defaultTimeout, this.subTestTimeout, this.timeout || 0, this.isReadyTimeout)
+        }        
     },
     
     
     after : {
         
-        initialize        : function () {
-            
-            this.on('beforetestfinalize', function () {
-                
-                if (this.autoCheckGlobals && !this.isFailed() && !this.parent) this.verifyGlobals()
-                
-            }, this)
+        onBeforeTestFinalize : function () {
+            if (this.autoCheckGlobals && !this.isFailed() && !this.parent) this.verifyGlobals()
         }
     }
-        
 })
 //eof Siesta.Test.More
 ;
@@ -10085,8 +10167,13 @@ Class('Siesta.Test.BDD.Expectation', {
         
         
         /**
-         * This assertion passes when the function, provided to the {@link Siesta.Test#expect expect} method, throws any exception
+         * This assertion passes when the function provided to the {@link Siesta.Test#expect expect} method, throws an exception
          * during its execution.
+         *
+         * t.expect(function(){
+         *     throw "oopsie";
+         * }).toThrow());
+         *
          */
         toThrow : function () {
             var func    = this.value
@@ -10876,7 +10963,6 @@ Role('Siesta.Test.Sub', {
     }
         
 })
-//eof Siesta.Test
 ;
 /**
 @class Siesta.Test
@@ -10918,10 +11004,13 @@ Class('Siesta.Test', {
     does        : [
         Siesta.Util.Role.CanFormatStrings,
         Siesta.Util.Role.CanGetType,
+        Siesta.Util.Role.CanEscapeRegExp,
+        
         Siesta.Test.More,
         Siesta.Test.Date,
         Siesta.Test.Function,
         Siesta.Test.BDD,
+        
         JooseX.Observable
     ],
 
@@ -10957,9 +11046,12 @@ Class('Siesta.Test', {
         exceptionCatcher    : null,
         testErrorClass      : null,
 
+        // same number for the whole subtests tree
         generation          : function () {
             return Math.random()
         },
+        
+        launchId            : null,
 
         parent              : null,
         harness             : null,
@@ -10988,8 +11080,8 @@ Class('Siesta.Test', {
         // the context of the test page
         global              : null,
 
-        reusingSandbox                      : false,
-        sandboxCleanup     : true,
+        reusingSandbox      : false,
+        sandboxCleanup      : true,
 
         // the scope provider for the context of the test script
         // usually the same as the `scopeProvider`, but may be different in case of using `separateContext` option
@@ -11048,6 +11140,7 @@ Class('Siesta.Test', {
 
         jUnitClass                  : null,
         groups                      : null,
+        automationElementId         : null,
 
         // user-provided config values
         config                      : null
@@ -11160,6 +11253,7 @@ Class('Siesta.Test', {
         },
 
 
+        // indicates that the tests identical or from the same tree (one is parent for another)
         isFromTheSameGeneration : function (test2) {
             return this.generation == test2.generation
         },
@@ -11433,42 +11527,39 @@ Class('Siesta.Test', {
         getStackTrace : function (e) {
             if (Object(e) !== e)    return null
             if (!e.stack)           return null
-
-            var text            = e.stack + '';
-            var isFirefox       = /^@/.test(text)
-            var lines           = text.split('\n')
+            
+            var stackLines      = (e.stack + '').split('\n')
+            var message         = e + ''
             var R               = Siesta.Resource('Siesta.Test');
-
             var result          = []
             var match
 
-            for (var i = 0; i < lines.length; i++) {
-                if (!lines[ i ]) continue
+            for (var i = 0; i < stackLines.length; i++) {
+                var line        = stackLines[ i ]
+                
+                if (!line) continue
 
+                // first line should contain exception message
                 if (!i) {
-                    if (isFirefox)
-                        result.push(e + '')
+                    if (line != message)
+                        result.push(message)
                     else {
-                        result.push(lines[ i ])
+                        result.push(line)
                         continue;
                     }
                 }
 
-                if (isFirefox) {
-                    match       = /(.*?):(\d+):(\d+)$/.exec(lines[ i ]);
+                match   = /@(.*?):(\d+):(\d+)$/.exec(line) || /\((.*?):(\d+):(\d+)\)$/.exec(line) || 
+                    /at (.*?):(\d+):(\d+)$/.exec(line) || /(.*?):(\d+):(\d+)$/.exec(line) 
 
-                    // the format of stack trace in Firefox has changed, 080_exception_parsing should fail
-                    if (!match) return null
-
-                    result.push('    ' + R.get('atLine') + ' ' + match[ 2 ] + ' ' + R.get('of') + ' ' + match[ 1 ])
-                } else {
-                    match       = /\s*at\s(.*?):(\d+):(\d+)/.exec(lines[ i ]);
-
-                    // the format of stack trace in Chrome has changed, 080_exception_parsing should fail
-                    if (!match) return null
-
-                    result.push('    ' + R.get('atLine') + ' ' + match[ 2 ] + ', ' + R.get('character') + ' ' + match[ 3 ] + ', ' + R.get('of') + ' ' + match[ 1 ])
-                }
+                // the format of stack trace has changed, 080_exception_parsing should fail
+                if (!match) return null
+                
+                result.push(
+                    '    ' + R.get('atLine') + ' ' + match[ 2 ] + 
+                    (match[ 3 ] ? ', ' + R.get('character') + ' ' + match[ 3 ] : '') + 
+                    ', ' + R.get('of') + ' ' + match[ 1 ]
+                )
             }
 
             if (!result.length) return null
@@ -11860,6 +11951,8 @@ Class('Siesta.Test', {
          */
         beginAsync : function (time, errback) {
             time                        = time || this.defaultTimeout
+            
+            if (time > this.getMaximalTimeout()) this.fireEvent('maxtimeoutchanged', time)
 
             var R                       = Siesta.Resource('Siesta.Test');
             var me                      = this
@@ -11951,30 +12044,6 @@ Class('Siesta.Test', {
         },
 
 
-        // deprecated
-        skipIf : function (condition, why, code, howMany) {
-            howMany = howMany || 1
-
-            if (condition) {
-
-                for (var i = 1; i <= howMany; i++) this.addResult(new Siesta.Result.Assertion({
-                    passed      : true,
-                    isSkipped   : true,
-
-                    description : 'SKIPPED: ' + why
-                }))
-
-            } else
-                code()
-        },
-
-
-        // deprecated
-        skip : function (why, code, howMany) {
-            this.skipIf(true, why, code, howMany)
-        },
-
-
         processSubTestConfig : function (config) {
             return Joose.O.extend({
                 trait                   : Siesta.Test.Sub,
@@ -11995,6 +12064,7 @@ Class('Siesta.Test', {
                 scopeProvider           : this.scopeProvider,
                 harness                 : this.harness,
                 generation              : this.generation,
+                launchId                : this.launchId,
 
                 overrideSetTimeout      : this.overrideSetTimeout,
                 originalSetTimeout      : this.originalSetTimeout,
@@ -12279,12 +12349,11 @@ Class('Siesta.Test', {
         },
 
 
-        start : function (alreadyFailedWithException) {
-            var R = Siesta.Resource('Siesta.Test');
+        start : function (preloadErrors) {
+            var me          = this;
+            var R           = Siesta.Resource('Siesta.Test');
 
-            if (this.startDate) {
-                throw R.get('testAlreadyStarted');
-            }
+            if (this.startDate) throw R.get('testAlreadyStarted');
 
             this.startDate  = new Date() - 0
 
@@ -12302,8 +12371,17 @@ Class('Siesta.Test', {
              */
             this.fireEvent('teststart', this);
 
-            if (alreadyFailedWithException) {
-                this.failWithException(alreadyFailedWithException)
+            if (preloadErrors && preloadErrors.length) {
+                Joose.A.each(preloadErrors, function (error) {
+                    if (!error.isException) 
+                        me.fail(error.message)
+                    else {
+                        me.failWithException(error.message)
+                        return false
+                    }
+                })
+                
+                me.finalize(true)
 
                 return
             }
@@ -12314,7 +12392,6 @@ Class('Siesta.Test', {
                 return
             }
 
-            var me              = this;
             var errorMessage;
 
             // Note, that `setTimeout, setInterval` and similar methods here are from the harness context
@@ -12331,13 +12408,13 @@ Class('Siesta.Test', {
                     function () {
                         if (!hasTimedOut) {
                             clearTimeout(setupTimeout)
-                            me.launch()
+                            me.launch(isReadyError)
                         }
                     },
                     function (setupError) {
                         if (!hasTimedOut) {
                             clearTimeout(setupTimeout)
-                            me.launch(setupError)
+                            me.launch(isReadyError || setupError)
                         }
                     }
                 );
@@ -12479,7 +12556,7 @@ Class('Siesta.Test', {
          * for tests initialization purposes.
          * 
          * Typical usage for this method can be  for example to clear the database, before starting to 
-         * load the {@link Siesta.Harness.Browser#hostPageUrl hostPageUrl} link.  
+         * load the {@link Siesta.Harness.Browser#pageUrl pageUrl} link.  
          * 
          * This method receives a callback and errback, either of these should be called once the setup has completed (or failed). 
          *
@@ -12662,15 +12739,12 @@ Class('Siesta.Test', {
                 }
             }
 
-            if (this.reusingSandbox && this.sandboxCleanup) {
+            if (this.reusingSandbox && this.sandboxCleanup && !this.parent) {
                 this.cleanupContextBeforeStart()
             }
-
-            // trying to focus the window (hopefully fixes the tab key issues)
-            global.focus && global.focus()
-
+            
             var run     = this.run
-
+            
             if (this.transparentEx)
                 run(me)
             else
@@ -12743,6 +12817,10 @@ Class('Siesta.Test', {
                     else
                         return
                 }
+                
+                // assertion can stil be added in this method and the following event listeners
+                // but not after!
+                me.onBeforeTestFinalize()
 
                 /**
                  * This event is fired before each individual test case ends (no any corresponding Harness actions will have been run yet).
@@ -12819,6 +12897,10 @@ Class('Siesta.Test', {
                 
                 if (!hasTimedOut) finalizationCode(error)
             })
+        },
+        
+        
+        onBeforeTestFinalize : function () {
         },
         
         
@@ -13071,6 +13153,15 @@ Class('Siesta.Test', {
         // to give test scripts access to locales
         resource : function () {
             return Siesta.Resource.apply(Siesta.Resource, arguments)
+        },
+        
+        
+        getRootTest : function () {
+            var root        = this
+            
+            while (root.parent) root = root.parent
+            
+            return root
         }
     }
     // eof methods
@@ -13098,7 +13189,7 @@ Singleton('Siesta.Test.ActionRegistry', {
         
         create : function (obj, test, defaultArgs, initStep) {
             if (obj !== Object(obj)) throw "Action configuration should be an Object instance"
-            
+
             if (!obj.action) {
                 var actionClasses       = this.actionClasses
                 var methods             = {}
@@ -13109,7 +13200,7 @@ Singleton('Siesta.Test.ActionRegistry', {
                 
                 Joose.O.eachOwn(obj, function (value, key) {
                     var shortcut        = key.toLowerCase()
-                    
+
                     if (actionClasses[ shortcut ]) {
                         obj.action      = shortcut
                         
@@ -13697,17 +13788,17 @@ This file is a reference only, for a getting start guide and manual, please refe
 Synopsys
 ========
 
-    var Harness,
+    var harness,
         isNode        = typeof process != 'undefined' && process.pid
     
     if (isNode) {
-        Harness = require('siesta');
+        harness = require('siesta');
     } else {
-        Harness = Siesta.Harness.Browser;
+        harness = new Siesta.Harness.Browser();
     }
         
     
-    Harness.configure({
+    harness.configure({
         title     : 'Awesome Test Suite',
         
         transparentEx       : true,
@@ -13728,7 +13819,7 @@ Synopsys
     })
     
     
-    Harness.start(
+    harness.start(
         // simple string - url relative to harness file
         'sanity.t.js',
         
@@ -13858,7 +13949,7 @@ Class('Siesta.Harness', {
          * 
          * For example
          * 
-    Harness.configure({
+    harness.configure({
         title               : 'Ext Scheduler Test Suite',
         
         autoCheckGlobals    : true,
@@ -13888,7 +13979,7 @@ Class('Siesta.Harness', {
          * 
          * For example:
          * 
-    Harness.configure({
+    harness.configure({
         title           : 'Ext Scheduler Test Suite',
         
         preload         : [
@@ -13901,39 +13992,42 @@ Class('Siesta.Harness', {
         ...
     })
             
-         * This option can be also specified in the test file descriptor. **Note**, that if test descriptor has non-empty {@link Siesta.Harness.Browser#hostPageUrl hostPageUrl}
-         * option, then *it will not inherit* the `preload` option from parent descriptors or harness, **unless** it has the `preload` config set to string `inherit`. 
-         * If both `hostPageUrl` and `preload` are set on the harness level, `preload` value still will be inherited. For example:
+         * This option can be also specified in the test file descriptor. **Note**, that if test descriptor has non-empty 
+         * {@link Siesta.Harness.Browser#pageUrl pageUrl} option, then *it will not inherit* the `preload` option 
+         * from parent descriptors or harness, **unless** it has the `preload` config set to string `inherit`. 
+         * If both `pageUrl` and `preload` are set on the harness level, `preload` value still will be inherited. For example:
          *
-    Harness.configure({
-        hostPageUrl     : 'general-page.html',
+    harness.configure({
+        pageUrl     : 'general-page.html',
         preload         : [ 'my-file.js' ],
         ...
     })
     
-    Harness.start(
-        // this test will inherit both `hostPageUrl` and `preload`
+    harness.start(
+        // this test will inherit both `pageUrl` and `preload`
         'test1.js',
         {
             // no preloads inherited
-            hostPageUrl     : 'host-page.html',
-            url             : 'test2.js'
+            pageUrl     : 'host-page.html',
+            url         : 'test2.js'
         }, 
         {
             // inherit `preload` value from the upper level - [ 'my-file.js' ]
-            hostPageUrl     : 'host-page.html',
-            preload         : 'inherit',
-            url             : 'test3.js'
+            pageUrl     : 'host-page.html',
+            preload     : 'inherit',
+            url         : 'test3.js'
         }, 
         {
-            group           : 'Some group',
-            hostPageUrl     : 'host-page2.html',
-            preload         : 'inherit',
+            group       : 'Some group',
+            pageUrl     : 'host-page2.html',
+            preload     : 'inherit',
             
             items           : [
-                // inherit `hostPageUrl` value from the group
-                // inherit `preload` value from the upper level - [ 'my-file.js' ]
-                url             : 'test3.js'
+                {
+                    // inherit `pageUrl` value from the group
+                    // inherit `preload` value from the upper level - [ 'my-file.js' ]
+                    url     : 'test3.js'
+                }
             ]
         }
     )
@@ -13942,7 +14036,7 @@ Class('Siesta.Harness', {
          * See {@link Siesta.Harness.Browser#enableCodeCoverage} for details.
          * 
 
-    Harness.configure({
+    harness.configure({
         preload         : [
             {
                 type        : 'js',
@@ -13972,7 +14066,7 @@ Class('Siesta.Harness', {
          * Note, that the events from individual {@link Siesta.Test test cases} instances will bubble up to the harness - you can listen to all of them in one place: 
          * 
 
-    Harness.configure({
+    harness.configure({
         title     : 'Awesome Test Suite',
         
         preload : [
@@ -14019,8 +14113,6 @@ Class('Siesta.Harness', {
         
         mainPreset              : null,
         emptyPreset             : null,
-        
-        verbosity               : 0,
         
         /**
          * @cfg {Number} keepNLastResults
@@ -14092,7 +14184,7 @@ Class('Siesta.Harness', {
         /**
          * @cfg {Number} pauseBetweenTests Default timeout between tests (in milliseconds). Increase this settings for big test suites, to give browser time for memory cleanup.
          */
-        pauseBetweenTests       : 300,
+        pauseBetweenTests       : 10,
         
         
         /**
@@ -14106,11 +14198,14 @@ Class('Siesta.Harness', {
         failOnExclusiveSpecsWhenAutomated   : false,
         
         
-        setupDone               : false,
+        setupDone                   : false,
         
-        sourceLineForAllAssertions      : false,
+        sourceLineForAllAssertions  : false,
         
-        currentLaunchId         : null
+        currentLaunchId             : null,
+        
+        isAutomated                 : false,
+        autoLaunchTests             : true
     },
     
     
@@ -14152,7 +14247,7 @@ Class('Siesta.Harness', {
         },
         
         
-        onTestSuiteStart : function (descriptors, contentManager) {
+        onTestSuiteStart : function (descriptors, contentManager, launchState) {
             this.startDate  = new Date()
             
             /**
@@ -14161,7 +14256,7 @@ Class('Siesta.Harness', {
              * 
              * You can subscribe to it, using regular ExtJS syntax:
              * 
-             *      Harness.on('testsuitestart', function (event, harness) {}, scope, { single : true })
+             *      harness.on('testsuitestart', function (event, harness) {}, scope, { single : true })
              * 
              * See also the "/examples/events"
              * 
@@ -14170,11 +14265,11 @@ Class('Siesta.Harness', {
              * @param {JooseX.Observable.Event} event The event instance
              * @param {Siesta.Harness} harness The harness that just has started
              */
-            this.fireEvent('testsuitestart', this)
+            this.fireEvent('testsuitestart', this, launchState)
         },
         
         
-        onTestSuiteEnd : function (descriptors, contentManager) {
+        onTestSuiteEnd : function (descriptors, contentManager, launchState) {
             this.endDate    = new Date()
             
             /**
@@ -14186,7 +14281,7 @@ Class('Siesta.Harness', {
              * @param {JooseX.Observable.Event} event The event instance
              * @param {Siesta.Harness} harness The harness that just has ended
              */
-            this.fireEvent('testsuiteend', this)
+            this.fireEvent('testsuiteend', this, launchState)
         },
         
         
@@ -14242,7 +14337,7 @@ Class('Siesta.Harness', {
             var scopeProviderClass  = eval(scopeProvider)
             var cleanScope          = new scopeProviderClass()
             
-            var cleanScopeGlobals   = this.cleanScopeGlobals        
+            var cleanScopeGlobals   = this.cleanScopeGlobals
             
             // we can also use "create" and not "setup" here
             // create will only create the iframe (in browsers) and will not try to update its content
@@ -14287,17 +14382,16 @@ Class('Siesta.Harness', {
             
             this.emptyPreset    = new Siesta.Content.Preset()
             
-            this.populateCleanScopeGlobals(this.scopeProvider, function () {
-                me.setupDone        = true
-                
-                callback()
-            })
+            me.normalizeDescriptors(me.descriptors)
+            
+            this.populateCleanScopeGlobals(this.scopeProvider, callback)
         },
         
         /**
          * This method will launch a test suite. It accepts a variable number of *test file descriptors* or an array of such. A test file descritor is one of the following:
          * 
-         * - a string, containing a test file url
+         * - a string, containing a test file url. The url should be unique among all tests. If you need to re-use the same test
+         * file, you can add an arbitrary query string to it: `my_test.t.js?copy=1`
          * - an object containing the `url` property `{ url : '...', option1 : 'value1', option2 : 'value2' }`. The `url` property should point to the test file.
          * Other properties can contain values of some configuration options of the harness (marked accordingly). In this case, they will **override** the corresponding values,
          * provided to harness or parent descriptor. 
@@ -14312,7 +14406,7 @@ Class('Siesta.Harness', {
          * For example, one may easily have a special group of test files, having its own `preload` configuration (for example for testing on-demand loading). In the same
          * time some test in that group may have its own preload, overriding others.
 
-    Harness.configure({
+    harness.configure({
         title           : 'Ext Scheduler Test Suite',
         preload         : [
             'http://cdn.sencha.io/ext-4.0.2a/resources/css/ext-all.css',
@@ -14322,7 +14416,7 @@ Class('Siesta.Harness', {
         ...
     })
     
-    Harness.start(
+    harness.start(
         // regular file
         'data/crud.t.js',
         // a group with own "preload" config for its items
@@ -14371,7 +14465,7 @@ Class('Siesta.Harness', {
          * standard properties and methods!
          * 
 
-    Harness.start(
+    harness.start(
         {
             url         : 'ondemand/4-0-6-compat.t.js',
             config      : {
@@ -14395,19 +14489,70 @@ Class('Siesta.Harness', {
          * @param {Mixed} descriptorN
          */
         start : function () {
-            // a bit hackish - used by Selenium reporter..
-            var me      = Siesta.my.activeHarness = this
-            var args    = Array.prototype.concat.apply([], arguments)
+            var me          = Siesta.my.activeHarness = this
             
+            me.descriptors  = this.flattenArray(arguments)
+
+            // A system level descriptor used by the recorder
+            me.descriptors.push({
+                isSystemDescriptor  : true,
+                url                 : '/'
+            });
+
             this.setup(function () {
-                me.normalizeDescriptors(args)
+                me.setupDone        = true
                 
-                me.launch(me.descriptors)
+                me.fireEvent('setupdone')
+                
+                if (me.autoLaunchTests) me.launch(me.descriptors)
             })
         },
         
         
-        // good to have this as a seprate method for testing
+        /**
+         * This method will read the content of the provided `url` then will try to parse it as JSON
+         * and pass to the regular {@link #start} method. The file on the `url` should contain
+         * a valid JSON array object with test descriptors.
+         * 
+         * You can use this method in conjunction with the `bin/discover` utility, which can 
+         * auto-discover the test files and generate a starter file for you. In such setup, it is convenient
+         * to specify the test configs in the test file itself (see {@link #start} method for details).
+         * However, in such setup, you can not use conditional processing of the descriptors set, so
+         * you decide what fits best to your needs.
+         * 
+         * @param {String} url
+         */
+        startFromUrl : function (url) {
+            var contentManager  = new this.contentManagerClass({
+                harness         : this,
+                presets         : [  new Siesta.Content.Preset({ preload : [ url ] }) ]
+            })
+            
+            var me      = this
+            
+            contentManager.cache(function () {
+                var content     = contentManager.getContentOf(url)
+                
+                try {
+                    var descriptors     = JSON.parse(content)
+                } catch (e) {
+                    alert("The content of: " + url + " is not a valid JSON")
+                    return
+                }
+                
+                if (me.typeOf(descriptors) == 'Array')
+                    me.start(descriptors)
+                else {
+                    alert("The content of: " + url + " is not an array")
+                }
+                
+            }, function () {
+                alert("Can not load the content of: " + url)
+            })
+        },
+        
+        
+        // good to have this as a separate method for testing
         normalizeDescriptors : function (descArray) {
             var me              = this
             
@@ -14422,7 +14567,7 @@ Class('Siesta.Harness', {
 
         
         launch : function (descriptors, callback, errback) {
-            var launchId                = this.currentLaunchId  = this.launchCounter++
+            var launchId                = this.currentLaunchId  = ++this.launchCounter
             var me                      = this
             
             //console.time('launch')
@@ -14437,12 +14582,17 @@ Class('Siesta.Harness', {
             var testScriptsPreset       = new Siesta.Content.Preset()
             var presets                 = [ testScriptsPreset, this.mainPreset ]
             
+            var notLaunchedByAutomationId   = {}
+            
             Joose.A.each(flattenDescriptors, function (desc) { 
                 if (desc.preset != me.mainPreset && desc.preset != me.emptyPreset) presets.push(desc.preset)
                 
                 if (!desc.testCode) testScriptsPreset.addResource(desc.url)
                 
                 me.deleteTestByURL(desc.url)
+                
+                // only used in automation, where the `desc.automationElementId` is populated 
+                notLaunchedByAutomationId[ desc.automationElementId ] = 1
             })
             
             // cache either everything (this.cachePreload) or only the test files (to be able to show missing files / show content) 
@@ -14451,17 +14601,17 @@ Class('Siesta.Harness', {
                 presets         : [ testScriptsPreset ].concat(this.cachePreload ? presets : [])
             })
             
-            var options         = this.launches[ launchId ] = {
-                increaseTimeout     : this.runCore == 'parallel' && flattenDescriptors.length > this.increaseTimeoutThreshold,
+            var launchState     = this.launches[ launchId ] = {
                 launchId            : launchId,
-                descriptors         : flattenDescriptors.slice(),
-                descriptorsLeft     : null,
-                contentManager      : contentManager
+                increaseTimeout     : this.runCore == 'parallel' && flattenDescriptors.length > this.increaseTimeoutThreshold,
+                descriptors         : flattenDescriptors,
+                contentManager      : contentManager,
+                notLaunchedByAutomationId   : notLaunchedByAutomationId
             }
             
             //console.time('caching')
             
-            me.onTestSuiteStart(descriptors, contentManager)
+            me.onTestSuiteStart(descriptors, contentManager, launchState)
             
             contentManager.cache(function () {
                 
@@ -14483,12 +14633,14 @@ Class('Siesta.Harness', {
                     me.normalizeScopeProvider(desc)
                 })
                 
-                me.fireEvent('testsuitelaunch', descriptors, contentManager)
+                me.fireEvent('testsuitelaunch', descriptors, contentManager, launchState)
                 
-                me.runCoreGeneral(flattenDescriptors, contentManager, options, options.callback = function () {
-                    me.onTestSuiteEnd(descriptors, contentManager)
+                me.runCoreGeneral(flattenDescriptors, contentManager, launchState, launchState.callback = function () {
+                    me.onTestSuiteEnd(descriptors, contentManager, launchState)
                     
                     callback && callback(descriptors)
+                    
+                    launchState.needToStop  = true
                     
                     delete me.launches[ launchId ]
                 })
@@ -14507,15 +14659,12 @@ Class('Siesta.Harness', {
             var me          = this
             
             Joose.A.each(descriptors, function (descriptor) {
-                
                 if (descriptor.group) {
-                    
                     if (includeFolders) flatten.push(descriptor)
                     
                     flatten.push.apply(flatten, me.flattenDescriptors(descriptor.items, includeFolders))
-                    
                 } else
-                    flatten.push(descriptor)
+                    if (!descriptor.isSystemDescriptor) flatten.push(descriptor)
             })
             
             return flatten
@@ -14545,7 +14694,12 @@ Class('Siesta.Harness', {
         
 
         getDescriptorConfig : function (descriptor, configName, doNotLookAtRoot) {
-            return this.lookUpValueInDescriptorTree(descriptor, configName, doNotLookAtRoot)
+            var res     = this.lookUpValueInDescriptorTree(descriptor, configName, doNotLookAtRoot)
+            
+            if (res == null && configName == 'pageUrl')
+                res     = this.lookUpValueInDescriptorTree(descriptor, 'hostPageUrl', doNotLookAtRoot)
+            
+            return res
         },
         
         
@@ -14582,6 +14736,8 @@ Class('Siesta.Harness', {
         
         
         normalizeDescriptor : function (desc, parent, index, level) {
+            if (desc.normalized) return desc
+            
             if (typeof desc == 'string') desc = { url : desc }
             
             level       = level || 0
@@ -14615,20 +14771,22 @@ Class('Siesta.Harness', {
             
             this.descriptorsById[ desc.id ] = desc
             
+            desc.normalized     = true
+            
             return desc
         },
         
         
-        runCoreGeneral : function (descriptors, contentManager, launchOptions, callback) {
+        runCoreGeneral : function (descriptors, contentManager, launchState, callback) {
             var runCoreMethod   = 'runCore' + Joose.S.uppercaseFirst(this.runCore)
             
             if (typeof this[ runCoreMethod ] != 'function') throw new Error("Invalid `runCore` specified: [" + this.runCore + "]")
             
-            this[ runCoreMethod ](descriptors, contentManager, launchOptions, callback)
+            this[ runCoreMethod ](descriptors, contentManager, launchState, callback)
         },
         
         
-        runCoreParallel : function (descriptors, contentManager, launchOptions, callback) {
+        runCoreParallel : function (descriptors, contentManager, launchState, callback) {
             var me              = this
             var processedNum    = 0
             var count           = descriptors.length
@@ -14640,12 +14798,12 @@ Class('Siesta.Harness', {
             var hasLaunchedAllThreads   = false
             
             var doProcessURL  = function (desc) {
-                me.processURL(desc, desc.index, contentManager, launchOptions, function () {
+                me.processURL(desc, desc.index, contentManager, launchState, function () {
                     processedNum++
                     
                     // set the internal closure `exitLoop` to stop launching new branches
                     // on the 1st encountering of `me.needToStop` flag
-                    if (me.needToStop || exitLoop) {
+                    if (me.needToStop || exitLoop || launchState.needToStop) {
                         exitLoop = true
                         
                         if (!hasExited) {
@@ -14682,21 +14840,16 @@ Class('Siesta.Harness', {
         },
         
         
-        runCoreSequential : function (descriptors, contentManager, launchOptions, callback) {
-            if (!launchOptions.descriptorsLeft) launchOptions.descriptorsLeft = descriptors
-            
-            if (descriptors.length && !this.needToStop) {
+        runCoreSequential : function (descriptors, contentManager, launchState, callback) {
+            if (descriptors.length && !this.needToStop && !launchState.needToStop) {
                 var desc        = descriptors.shift()
                 var me          = this
-                var prevLength  = descriptors.length
                 
-                this.processURL(desc, desc.index, contentManager, launchOptions, function () {
+                this.processURL(desc, desc.index, contentManager, launchState, function () {
 
-                    // if the length of the `descriptors` array has changed - that means that test suite has been restarted
-                    // (because of 3 mins inactivity) - should not try to continue in this case
-                    if (descriptors.length && descriptors.length == prevLength)
+                    if (descriptors.length && !launchState.needToStop)
                         setTimeout(function () {
-                            me.runCoreSequential(descriptors, contentManager, launchOptions, callback)
+                            me.runCoreSequential(descriptors, contentManager, launchState, callback)
                         }, me.pauseBetweenTests)
                     else
                         callback()
@@ -14715,7 +14868,7 @@ Class('Siesta.Harness', {
                 StartTest.id                = descId
                 
                 // for older IE - the try/catch should be from the same context as the exception
-                StartTest.exceptionCatcher  = function (func) { var ex; try { func() } catch (e) { ex = e; }; return ex; };
+                StartTest.exceptionCatcher  = function (func) { var ex; try { func() } catch (e) { ex = e; } return ex; };
                 
                 // for Error instances we try to pick up the values from "message" or "description" property
                 // so need to have a correct constructor from the context of test
@@ -14730,6 +14883,7 @@ Class('Siesta.Harness', {
             var config          = Joose.O.copy(desc.scopeProviderConfig || {})
             
             config.seedingCode  = this.getSeedingCode(desc, launchId)
+            config.launchId     = launchId
             
             return config
         },
@@ -14777,13 +14931,26 @@ Class('Siesta.Harness', {
         
         setupScope : function (desc, launchId) {
             var url                 = desc.url
+            
+            var alreadyExisting     = this.scopesByURL[ url ]
+            // if test suite has been restarted at the "testsuitestart" point
+            // then previous launch will concur the latest launch for the "this.scopesByURL" state
+            // so we prevent the older launch to overwrite the newer
+            var isOudatedRequest    = alreadyExisting && alreadyExisting.launchId > launchId
+            
             var scopeProviderClass  = eval(desc.scopeProvider)
             
-            this.cleanupScopeForURL(url)
+            var newProvider         = new scopeProviderClass(this.getScopeProviderConfigFor(desc, launchId))
             
-            this.keepTestResult(url)
+            if (isOudatedRequest) {
+                return newProvider
+            } else {
+                this.cleanupScopeForURL(url)
             
-            return this.scopesByURL[ url ] = new scopeProviderClass(this.getScopeProviderConfigFor(desc, launchId))
+                this.keepTestResult(url)
+                
+                return this.scopesByURL[ url ] = newProvider
+            }
         },
         
         
@@ -14835,9 +15002,11 @@ Class('Siesta.Harness', {
         },
         
         
-        processURL : function (desc, index, contentManager, launchOptions, callback, noCleanup) {
+        processURL : function (desc, index, contentManager, launchState, callback, noCleanup) {
             var me      = this
             var url     = desc.url
+            
+            delete launchState.notLaunchedByAutomationId[ desc.automationElementId ]
             
             if (desc.isMissing) {
                 callback()
@@ -14848,9 +15017,9 @@ Class('Siesta.Harness', {
             // a magical shared object, which will contain the `test` property with test instance, once the test will be created
             var testHolder      = {}
             // an array of errors occured during preload phase
-            var preloadErrors   = []    
+            var preloadErrors   = []
             
-            var scopeProvider   = this.setupScope(desc, launchOptions.launchId)
+            var scopeProvider   = this.setupScope(desc, launchState.launchId)
             var transparentEx   = this.getDescriptorConfig(desc, 'transparentEx')
             
             var onErrorHandler  = function (msg, url, lineNumber, col, error) {
@@ -14860,7 +15029,10 @@ Class('Siesta.Harness', {
                     test.nbrExceptions++;
                     test.failWithException(error || (msg + ' ' + url + ' ' + lineNumber))
                 } else {
-                    preloadErrors.push(error && error.stack ? error.stack + '' : msg + ' ' + url + ' ' + lineNumber)
+                    preloadErrors.push({
+                        isException     : true,
+                        message         : error && error.stack ? error.stack + '' : msg + ' ' + url + ' ' + lineNumber
+                    })
                 }
             }
             
@@ -14892,10 +15064,10 @@ Class('Siesta.Harness', {
             var testClass       = me.getDescriptorConfig(desc, 'testClass')
             if (me.typeOf(testClass) == 'String') testClass = Joose.S.strToClass(testClass)
             
-            var testConfig      = me.getNewTestConfiguration(desc, scopeProvider, contentManager, launchOptions)
+            var testConfig      = me.getNewTestConfiguration(desc, scopeProvider, contentManager, launchState)
             
             // create the test instance early, so that one can perform some setup (as the test class method call)
-            // even before the "hostPageUrl" starts loading
+            // even before the "pageUrl" starts loading
             var test            = testHolder.test = new testClass(testConfig)
             
             this.onBeforeScopePreload(scopeProvider, url, test)
@@ -14903,10 +15075,12 @@ Class('Siesta.Harness', {
             test.earlySetup(function () {
                 cont()
             }, function (errorMessage) {
-                cont(errorMessage)
+                preloadErrors.push({ isException : false, message : errorMessage })
+                
+                cont()
             })
             
-            function cont(errorMessage) {
+            function cont() {
                 //console.timeEnd('launch-till-preload')
                 
                 //console.time('preload')
@@ -14916,20 +15090,37 @@ Class('Siesta.Harness', {
     //                content     : 'console.timeEnd("scope-onload")'
     //            })
                 
-                scopeProvider.setup(function () {
-                    me.onAfterScopePreload(scopeProvider, url, test)
+                scopeProvider.setup(function (scopeProvider, failedPreloads) {
+                    me.onAfterScopePreload(scopeProvider, url, test, failedPreloads)
+                    
+                    failedPreloads && Joose.O.each(failedPreloads, function (value, url) {
+                        preloadErrors.push({ 
+                            isException : false, 
+                            message     : Siesta.Resource('Siesta.Harness', 'preloadHasFailed', { url : url })
+                        })
+                        
+                        if (me.isAutomated) {
+                            me.warn(Siesta.Resource('Siesta.Harness', 'preloadHasFailedForTest', { url : url, test : desc.url }))
+                        }
+                    })
                     
                     // scope provider has been cleaned up while setting up? (may be user has restarted the test)
                     // then do nothing
                     if (!scopeProvider.scope) { callback(); return }
+                    
+                    // do not try to launch the test in automation if some preload has failed
+                    // in this case test will be repeated Siesta.Launcher.Dispatcher.Element#maxFailuresCount times
+                    // and reported as failed afterwards
+                    // the warnings should give user an idea what is going on
+                    if (me.isAutomated && !Joose.O.isEmpty(failedPreloads)) { callback(); return }
                     
                     me.launchTest({
                         testHolder          : testHolder,
                         desc                : desc,
                         scopeProvider       : scopeProvider,
                         contentManager      : contentManager,
-                        launchOptions       : launchOptions,
-                        preloadErrors       : errorMessage || preloadErrors,
+                        launchState         : launchState,
+                        preloadErrors       : preloadErrors,
                         onErrorHandler      : onErrorHandler,
                         
                         // need to provide the "startTestAnchor" explicitly (and not just get from "scope" inside of the "launchTest"
@@ -14961,6 +15152,7 @@ Class('Siesta.Harness', {
             var args            = startTestAnchor && startTestAnchor.args
             var global          = scopeProvider.scope
             var noCleanup       = options.noCleanup
+            var cleanupUrl      = options.cleanupUrl
             
             // additional setup of the test instance, setting up the properties, which are known only after scope
             // is loaded
@@ -14983,7 +15175,10 @@ Class('Siesta.Harness', {
                 
                 // "main" test callback, called once test is completed
                 callback : function () {
-                    if (!noCleanup && !me.isKeepingResultForURL(url)) me.cleanupScopeForURL(url)
+                    if (!noCleanup && !me.isKeepingResultForURL(url)) {
+                        // `cleanupUrl` will be different for shared sandbox tests
+                        me.cleanupScopeForURL(cleanupUrl || url)
+                    }
                     
                     callback && callback()
                 }
@@ -14992,6 +15187,10 @@ Class('Siesta.Harness', {
             this.saveTestWithURL(url, test)
             
             var doLaunch        = function() {
+                // scope provider has been cleaned up while setting up? (may be user has restarted the test)
+                // then do nothing
+                if (!scopeProvider.scope) { callback(); return }
+                
                 //console.timeEnd('launch')
                 
                 me.fireEvent('beforeteststart', test)
@@ -14999,7 +15198,7 @@ Class('Siesta.Harness', {
                 // in the edge case, test can be already finished before its even started :)
                 // this happens if user re-launch the test during these 10ms - test will be 
                 // finalized forcefully in the "deleteTestByUrl" method
-                if (!test.isFinished()) test.start(options.preloadErrors[ 0 ])
+                if (!test.isFinished()) test.start(options.preloadErrors)
                 
                 options         = null
                 test            = null
@@ -15019,7 +15218,7 @@ Class('Siesta.Harness', {
         },
         
         
-        getNewTestConfiguration : function (desc, scopeProvider, contentManager, launchOptions) {
+        getNewTestConfiguration : function (desc, scopeProvider, contentManager, launchState) {
             var groups          = []
             var currentDesc     = desc.parent
             
@@ -15034,6 +15233,9 @@ Class('Siesta.Harness', {
                 url                 : desc.url,
                 name                : desc.name,
                 
+                launchId            : launchState.launchId,
+                
+                automationElementId : desc.automationElementId,
                 groups              : groups,
                 jUnitClass          : this.getDescriptorConfig(desc, 'jUnitClass'),
             
@@ -15052,9 +15254,9 @@ Class('Siesta.Harness', {
                 
                 overrideSetTimeout          : this.getDescriptorConfig(desc, 'overrideSetTimeout'),
                 
-                defaultTimeout              : this.getDescriptorConfig(desc, 'defaultTimeout') * (launchOptions.increaseTimeout ? 2 : 1),
-                subTestTimeout              : this.getDescriptorConfig(desc, 'subTestTimeout') * (launchOptions.increaseTimeout ? 2 : 1),
-                waitForTimeout              : this.getDescriptorConfig(desc, 'waitForTimeout') * (launchOptions.increaseTimeout ? 3 : 1),
+                defaultTimeout              : this.getDescriptorConfig(desc, 'defaultTimeout') * (launchState.increaseTimeout ? 2 : 1),
+                subTestTimeout              : this.getDescriptorConfig(desc, 'subTestTimeout') * (launchState.increaseTimeout ? 2 : 1),
+                waitForTimeout              : this.getDescriptorConfig(desc, 'waitForTimeout') * (launchState.increaseTimeout ? 3 : 1),
                 isReadyTimeout              : this.getDescriptorConfig(desc, 'isReadyTimeout'),
                 
                 sourceLineForAllAssertions  : this.sourceLineForAllAssertions,
@@ -15113,32 +15315,76 @@ Class('Siesta.Harness', {
                 // if at least one test is missing then something is wrong
                 if (descriptor.isMissing) { allPassed = false; return false }
                 
-                var test    = me.getTestByURL(descriptor.url)
+                var test        = me.getTestByURL(descriptor.url)
                 
                 // ignore missing tests (could be skipped by test filtering)
                 if (!test) return
                 
-                allPassed = allPassed && test.isPassed()
+                allPassed       = allPassed && test.isPassed()
+                
+                // stop iteration if found failed test
+                if (!allPassed) return false
             })
             
             return allPassed
         },
         
         
-        generateReport : function (options) {
-            if (!arguments.length) options = __REPORT_OPTIONS__
+        flattenArray : function (array) {
+            var me          = this
+            var result      = []
+
+            Joose.A.each(array, function (el) {
+                if (me.typeOf(el) == 'Array')
+                    result.push.apply(result, me.flattenArray(el))
+                else
+                    result.push(el)
+            })
+
+            return result
+        }
+    },
+    // eof methods
+    
+    my : {
+        
+        has     : {
+            HOST            : null,
+            instance        : null
+        },
+        
+        methods : {
             
-            // a string? 
-            if (Object(options) !== options) options = { format : options || 'JSON' }
+            staticDeprecationWarning : function (methodName) {
+                var message     = Siesta.Resource('Siesta.Harness', 'staticDeprecationWarning', { methodName : methodName, harnessClass : this.HOST + '' })
+                
+                if (typeof console != 'undefined') console.warn(message)
+            },
             
-            var methodName  = 'generate' + options.format + 'Report'
             
-            if (!this[ methodName ]) throw "Can't generate report - missing the `" + methodName + "` method"
+            configure : function (config) {
+                this.staticDeprecationWarning('configure')
+                
+                var instance        = this.instance = new this.HOST()
+                
+                return instance.configure(config)
+            },
             
-            return this[ methodName ](options)
+            
+            start : function () {
+                this.staticDeprecationWarning('start')
+                
+                return this.instance.start.apply(this.instance, arguments)
+            },
+            
+            
+            on : function () {
+                this.staticDeprecationWarning('on')
+                
+                return this.instance.on.apply(this.instance, arguments)
+            }
         }
     }
-    // eof methods
 })
 //eof Siesta.Harness
 ;
@@ -15219,117 +15465,65 @@ Role('Siesta.Role.CanStyleOutput', {
     }
 })
 ;
-// consuming harness need to use `sequential` run core
+;
+/**
+@class Siesta.Util.Role.CanParseBrowser
 
-Role('Siesta.Role.ConsoleReporter', {
+A mixin, providing browser name and version sniffing using UA string method.
+
+*/
+Role('Siesta.Util.Role.CanParseBrowser', {
     
-    requires    : [ 'log', 'exit', 'allPassed' ],
-    
-    
-    does        : [
-        Siesta.Role.CanStyleOutput
-    ],
-
-    has : {
-        // special flag which will be used by automation launchers to prevent the summary message
-        // after every page
-        needSummaryMessage      : true
-    },
-
-
-    after : {
-
-        markMissingFile : function (desc) {
-            this.warn(Siesta.Resource('Siesta.Role.ConsoleReporter', 'missingFileText').replace("{URL}", desc.url))
-        },
-
-
-        onTestSuiteStart : function () {
-        },
-
-
-        onTestSuiteEnd : function () {
-            this.exit(this.getExitCode())
-        },
-
-
-        onTestEnd : function (test) {
-            var isPassed    = test.isPassed()
-
-            this.log('[' + (isPassed ? this.style().green(Siesta.Resource('Siesta.Role.ConsoleReporter', 'passText')) : this.style().red(Siesta.Resource('Siesta.Role.ConsoleReporter', 'failText'))) + ']  ' + test.url + (isPassed ? '' : '\n'))
-        },
-
-
-        onTestUpdate : function (test, result, parentResult) {
-            var text            = result + ''
-            var needToShow      = this.verbosity > 0
-
-            if (result instanceof Siesta.Result.Assertion) {
-                if (result.isWaitFor && !result.completed) return;
-
-                if (result.isException && !result.isTodo) {
-                    text        = this.style().bold(this.style().red(text))
-
-                    needToShow  = true
-                } else if (result.isTodo) {
-                    text        = this.styled(text, result.passed ? 'magenta' : 'yellow')
-
-                    if (result.passed && !result.isWaitFor) needToShow = true
-
-                } else {
-                    text        = this.styled(text, result.passed ? 'green' : 'red')
-
-                    if (!result.passed) needToShow = true
-                }
+    methods : { 
+        
+        parseBrowser : function (uaString) {
+            var browser = 'unknown'
+            var version = ''
+            
+            var match
+            
+            if (match = /Firefox\/((?:\d+\.?)+)/.exec(uaString)) {
+                browser     = "Firefox"
+                version     = match[ 1 ]
             }
-
-            if (result instanceof Siesta.Result.Diagnostic) {
-                text            = this.styled(text, 'bold')
-
-                if (result.isWarning) {
-                    this.logWarning(result)
-                    return
-                }
+            
+            if (match = /Chrome\/((?:\d+\.?)+)/.exec(uaString)) {
+                browser     = "Chrome"
+                version     = match[ 1 ]
             }
-
-            if (result instanceof Siesta.Result.Summary) {
-                needToShow      = this.needSummaryMessage
-
-                text            = this.styled(result.description.join(''), 'bold')
+            
+            if (match = /MSIE\s*((?:\d+\.?)+)/.exec(uaString)) {
+                browser     = "IE"
+                version     = match[ 1 ]
             }
-
-            if (needToShow) this.log(text)
-        }
-    },
-
-
-    methods : {
-
-        warn : function (text) {
-            this.log(this.styled('[' + Siesta.Resource('Siesta.Role.ConsoleReporter', 'warnText') + '] ', 'red') + text)
-        },
-        
-        
-        logWarning : function (result) {
-            this.warn(result + '')
-        },
-
-
-        getSummaryMessage : function (allPassed) {
-            allPassed = allPassed != null ? allPassed : this.allPassed()
-
-            return allPassed ? this.style().bold(this.style().green(Siesta.Resource('Siesta.Role.ConsoleReporter', 'allTestsPassedText'))) : this.style().bold(this.style().red(Siesta.Resource('Siesta.Role.ConsoleReporter', 'failuresFoundText')))
-        },
-        
-        
-        getExitCode : function () {
-            return this.allPassed() ? 0 : 1
+            
+            if (uaString.match(/trident/i) && (match = /rv.(\d\d\.?\d?)/.exec(uaString))) {
+                browser     = "IE"
+                version     = match[ 1 ]
+            }
+            
+            if (match = /Apple.*Version\/((?:\d+\.?)+)\s*(?=Safari\/((?:\d+\.?)+))/.exec(uaString)) {
+                browser     = "Safari"
+                version     = match[ 1 ] + ' (' + match[ 2 ] + ')'
+            }
+            
+            if (match = /PhantomJS\/(\d+\.\d+\.\d+)/.exec(uaString)) {
+                browser     = "PhantomJS"
+                version     = match[ 1 ]
+            }
+            
+            if (match = /SlimerJS\/(\d+\.\d+\.\d+)/.exec(uaString)) {
+                browser     = "SlimerJS"
+                version     = match[ 1 ]
+            }
+            
+            return {
+                name        : browser,
+                version     : version
+            }
         }
     }
-    
-})
-
-;
+});
 ;
 /*!
 * jQuery JavaScript Library v1.6.2
@@ -16233,7 +16427,7 @@ Role('Siesta.Role.ConsoleReporter', {
 
         // Deprecated, use jQuery.browser.webkit instead
         if (jQuery.browser.webkit) {
-            jQuery.browser.safari = true;
+            jQuery.browser.safari = /safari/i.test(userAgent) && !/chrome/i.test(userAgent);
         }
 
         // IE doesn't match non-breaking spaces with \s
@@ -25266,7 +25460,14 @@ Class('Siesta.Test.Action.Type', {
          * Any options that will be used when simulating the event. For information about possible
          * config options, please see: <https://developer.mozilla.org/en-US/docs/DOM/event.initMouseEvent>
          */
-        options             : null
+        options             : null,
+
+        /**
+         * @cfg {String} clearExisting
+         *
+         *  true to clear existing text in the target before typing
+         */
+        clearExisting       : false
     },
 
 
@@ -25277,7 +25478,7 @@ Class('Siesta.Test.Action.Type', {
             this.target = this.target || this.test.activeElement();
 
             // additional "getTarget" to allow functions as "target" value
-            this.test.type(this.getTarget(), this.text, this.next, null, this.options);
+            this.test.type(this.getTarget(), this.text, this.next, null, this.options, this.clearExisting);
         }
     }
 });
@@ -25733,7 +25934,9 @@ Role('Siesta.Test.Simulate.Mouse', {
 
         autoScrollElementsIntoView      : true,
 
-        overEls                         : Joose.I.Array
+        overEls                         : Joose.I.Array,
+        
+        delayAfterScrollIntoView        : 200
     },
 
 
@@ -25751,8 +25954,8 @@ Role('Siesta.Test.Simulate.Mouse', {
             var global      = this.global
 
             options         = $.extend({
-                bubbles     : type !== 'mouseenter' && type !== 'mouseleave',
-                cancelable  : type != "mousemove",
+                bubbles     : !/(ms)?(mouse|pointer)enter/i.test(type) && !/(ms)?(mouse|pointer)leave/i.test(type),
+                cancelable  : !/(ms)?(mouse|pointer)move/i.test(type),
                 view        : global,
                 detail      : 0,
 
@@ -26058,7 +26261,9 @@ Role('Siesta.Test.Simulate.Mouse', {
 
                             args.onPointerMove(targetEl, $.extend({ clientX: point[ 0 ], clientY: point[ 1 ] }, options), j < toIndex)
                         }
+                        // eof (targetEl)
                     }
+                    // eof for
                 }
             });
 
@@ -26127,11 +26332,12 @@ Role('Siesta.Test.Simulate.Mouse', {
         // This method is called before mouse interactions (the "method" param, along with its "args") to assure that target is visible and reachable.
         // It also handles cases where the target is moved or made unreachable while the cursor is moving towards it.
         // In such unusual cases, a wait is added and the method calls itself to start over
-        waitForTargetAndSyncMousePosition : function(target, offset, method, args, waitForTargetTop) {
+        waitForTargetAndSyncMousePosition : function(target, offset, method, args, waitForTargetTop, syncMousePosition) {
             var originalXY;
-            var targetIsNotAPoint = this.typeOf(target) != 'Array';
-            var oldSuppressPassedWaitForAssertion = this.suppressPassedWaitForAssertion;
-            this.suppressPassedWaitForAssertion = true;
+            var targetIsNotAPoint                   = this.typeOf(target) != 'Array';
+            var oldSuppressPassedWaitForAssertion   = this.suppressPassedWaitForAssertion;
+            
+            this.suppressPassedWaitForAssertion     = true;
 
             this.chain(
                 { waitForAnimations : [] },
@@ -26141,16 +26347,32 @@ Role('Siesta.Test.Simulate.Mouse', {
                 // 2. visible
                 targetIsNotAPoint && { waitForElementVisible : target },
 
-                function(next) {
-                    if (targetIsNotAPoint && this.autoScrollElementsIntoView) {
-                        this.scrollTargetIntoView(target, offset);
-                    }
+                targetIsNotAPoint && this.autoScrollElementsIntoView 
+                    ? 
+                function (next) {
+                    if (this.scrollTargetIntoView(target, offset) === true)
+                        // this "waitFor" has been added because of Ext6 behaviour (see https://www.assembla.com/spaces/bryntum/tickets/2211#/activity/ticket:)
+                        // Ext6 listens to scroll event on grid view and sets the "pointer-event : none" on the grid view el in the handler
+                        // Problem happens during click.
+                        // Seems, depending from browser engine, "scroll" event may be fired after slight delay, already after the "mousedown"
+                        // even has been fired, then, with "pointer-events" none on grid view, grid container becomes a top element
+                        // and further `mouseup` and `click` happens on it, instead of original element
+                        // the "pointer-event" style is reset back in the another ExtJS handler, which is buffered for 100ms
+                        // so we need to wait > 100ms, waiting for 200ms
+                        // potential race condition
+                        this.waitFor(this.delayAfterScrollIntoView, next)
+                    else
+                        next()
+                }
+                    :
+                null,
+                    
+                function (next) {
+                    var data    = this.getNormalizedTopElementInfo(target, true, method.toString(), offset);
 
-                    var data = this.getNormalizedTopElementInfo(target, true, method.toString(), offset);
+                    originalXY  = data.globalXY;
 
-                    originalXY = data.globalXY;
-
-                    if (this.moveCursorBetweenPoints) {
+                    if (this.moveCursorBetweenPoints && syncMousePosition !== false) {
                         this.syncCursor(originalXY, next);
                     } else {
                         next();
@@ -26158,7 +26380,7 @@ Role('Siesta.Test.Simulate.Mouse', {
                 },
 
                 // After moving cursor, we again wait as something might have changed in the while we moved the cursor
-                waitForTargetTop !== false && targetIsNotAPoint && function(next) {
+                waitForTargetTop !== false && targetIsNotAPoint && function (next) {
                     this.waitForTarget(target, next, this, null, offset);
                 },
 
@@ -26171,7 +26393,7 @@ Role('Siesta.Test.Simulate.Mouse', {
                         this.diag(Siesta.Resource('Siesta.Test.Browser','targetMoved'));
 
                         this.waitFor(100, function() {
-                            this.waitForTargetAndSyncMousePosition(target, offset, method, args);
+                            this.waitForTargetAndSyncMousePosition(target, offset, method, args, waitForTargetTop, syncMousePosition);
                         });
                     } else {
                         this.suppressPassedWaitForAssertion = oldSuppressPassedWaitForAssertion;
@@ -26186,10 +26408,24 @@ Role('Siesta.Test.Simulate.Mouse', {
         // Check if the mouse interaction triggered a DOM update causing the last interacted element to be removed from the DOM
         // In this case we should simulate a new 'mouseover' event on whatever appeared under the cursor.
         afterMouseInteraction : function() {
-            if (this.overEls && this.overEls.length > 0) {
-                var lastOverEl = this.overEls[this.overEls.length - 1]
-                var doc        = lastOverEl.ownerDocument;
+            var overEls         = this.overEls,
+                lastOverEl      = overEls[ overEls.length - 1 ]
+            
+            if (lastOverEl) {
+                var doc
+                
+                try {
+                    doc         = lastOverEl.ownerDocument;
+                } catch (e) {
+                    // exception here probably means the "lastOverEl" is from freed context (unloaded page)
+                    // access to such elements throws exceptions in IE
+                    lastOverEl  = null
+                    overEls     = this.overEls = []
+                }
 
+                // `doc` will be empty in case of exception above and `mouseover` will be executed, which is correct
+                // since after page reload we want to simulate the `mouseover` 
+                // for the element appeared at the current cursorposition
                 if (!doc || !$.contains(lastOverEl, doc.body)) {
                     this.mouseOver(this.currentPosition);
                 }
@@ -26224,7 +26460,7 @@ Role('Siesta.Test.Simulate.Mouse', {
             // when mouse position is not yet updated
             // potentially the element will become reachable when the mouse is moved to the required point
             var data        = this.getNormalizedTopElementInfo(el, true, actionName, offset);
-
+            
             if (!data) {
                 // No point in continuing
                 callback && callback.call(scope || this);
@@ -26431,6 +26667,10 @@ Role('Siesta.Test.Simulate.Mouse', {
 
             var x           = clickInfo.globalXY[ 0 ]
             var y           = clickInfo.globalXY[ 1 ]
+            
+            var doc         = me.global.document
+            
+            var prevScrollTop   = doc.body.scrollTop
 
             // re-evaluate the target el - it might have changed while we were syncing the cursor position
             var target      = me.elementFromPoint(x, y, false, clickInfo.el)
@@ -26447,7 +26687,19 @@ Role('Siesta.Test.Simulate.Mouse', {
                 observeTest     : this,
 
                 processor       : function (data) {
-                    var el          = me.elementFromPoint(x, y, false, target)
+                    // XXX this has to be investigated more deeply (notably the <body> vs <html> scrolling, etc)
+                    // - When simulating events browser performs weird scrolls on the document.
+                    // Seems it tries to make the point of simulated event visible on the screen.
+                    // This is native browser behavior over of our control.
+                    // Thing is, when the document is scrolled, `elementFromPoint` returns different
+                    // element for the same point. Because of that the logic for clicks is vulnerable.
+                    // Scenario is - "mousedown" (or may be "mouseup") is simulated, scroll position changes
+                    // futher "click" event happens on different element
+                    
+                    // body can be absent if the doubleclick happens on the anchor and page is reloaded in the middle 
+                    // of double click
+                    var delta       = doc.body ? doc.body.scrollTop - prevScrollTop : 0
+                    var el          = me.elementFromPoint(x, y - delta, false, target)
 
                     if (data.reCaptureTheTarget) { target = el; targetHasChanged = false }
 
@@ -27076,49 +27328,60 @@ Role('Siesta.Test.Simulate.Keyboard', {
         findNextFocusable : function (el, offset) {
             var $el         = this.$(el)
             
-            var $focusable  = this.$(":input, a[href]", el.ownerDocument)
+            var $focusable  = this.$(":focus, :input, a[href], [tabindex], body", el.ownerDocument)
                 .not(":disabled")
                 .not(":hidden")
-                .not("a[href]:empty");
+                .not("a[href]:empty")
+                
                 
             var escapeSelectorName  = function (str) {
                 // Based on http://api.jquery.com/category/selectors/
                 // Still untested
                 return str.replace(/(!"#$%&'\(\)\*\+,\.\/:;<=>\?@\[\]^`\{\|\}~)/g, "\\\\$1");
             }
+            
+            var isRadio     = false
+            var selector 
 
-            if (
-                el.tagName  === "INPUT" &&
-                el.type     === "radio" &&
-                el.name     !== ""
-            ) {
-                var name    = escapeSelectorName(el.name);
-
-                $focusable  = $focusable
-                    .not("input[type=radio][name=" + name + "]")
-                    .add($el);
+            if (el.tagName === "INPUT" && el.type === "radio" && el.name !== "" ) {
+                isRadio     = true
+                selector    = "input[type=radio][name=" + escapeSelectorName(el.name) + "]"
             }
-
-            // Sort the inputs, by tabIndex if it is set
-            var elsWithTabIndex = $focusable.filter('[tabindex]');
-
-            elsWithTabIndex.sort(function(a, b) {
-                return a.tabIndex < b.tabIndex ? -1 : 1;
+            
+            var processed       = []
+            
+            for (var i = 0; i < $focusable.length; i++) {
+                var currEl      = $focusable[ i ]
+                
+                // always include current element 
+                if (currEl != el && currEl.getAttribute('tabIndex') == -1 || isRadio && $(currEl).is(selector)) continue
+                
+                processed.push(currEl)
+            }
+            
+            var body                = el.ownerDocument.body
+            var currentTabIndex     = el.getAttribute('tabIndex')
+            
+            var getTabIndex         = function (dom) {
+                if (dom == el && currentTabIndex == -1) return 0
+                
+                if (dom == body) return 0
+                
+                return dom.getAttribute('tabIndex') || 0
+            }
+            
+            processed.sort(function (a, b) {
+                var aIndex      = getTabIndex(a)
+                var bIndex      = getTabIndex(b)
+                
+                return aIndex < bIndex ? -1 : (aIndex > bIndex ? 1 : (a == body ? 1 : (b == body ? -1 : 0)))
             });
 
-            elsWithTabIndex     = $(elsWithTabIndex.toArray().concat($focusable.filter(':not([tabindex])').toArray()));
-
-            var currentIndex    = $(elsWithTabIndex).index($el);
-
-            var nextIndex       = (currentIndex + offset) % elsWithTabIndex.length;
-            var $next;
-
-            // If we're at the last focusable element, focus the body el
-            if (nextIndex > 0) {
-                $next           = elsWithTabIndex.eq(nextIndex);
-            }
-
-            return $next && $next[ 0 ] || null;
+            var currentIndex    = $(processed).index($el);
+            
+            if (currentIndex == -1) return null
+            
+            return processed[ (currentIndex + offset) % processed.length ]
         },
         
         
@@ -27157,20 +27420,12 @@ Role('Siesta.Test.Simulate.Keyboard', {
         * @param {Function} callback (optional) To run this method async, provide a callback method to be called after the type operation is completed.
         * @param {Object} scope (optional) the scope for the callback
         * @param {Object} options (optional) any extra options used to configure the DOM key events (like holding shiftKey, ctrlKey, altKey etc).
-        */
-        type: function (el, text, callback, scope, options) {
+        * @param {Boolean} clearExisting (optional) true to clear existing text in the target before typing
+         */
+        type : function (el, text, callback, scope, options, clearExisting) {
             el              = this.normalizeElement(el || this.activeElement());
 
-            if (text === null || text === undefined) {
-                throw 'Must supply a string to type';
-            }
-
-            // Some browsers (IE/FF) do not overwrite selected text, do it manually.
-            var selText     = this.getSelectedText(el);
-
-            if (selText) {
-                el.value    = el.value.replace(selText, '');
-            }
+            if (text == null) throw 'Must supply a string to type';
 
             var me          = this
 
@@ -27178,6 +27433,10 @@ Role('Siesta.Test.Simulate.Keyboard', {
                 me.processCallbackFromTest(callback, null, scope || me)
 
                 return;
+            }
+            
+            if (clearExisting) {
+                el.value    = ''
             }
 
             // Extract normal chars, or special keys in brackets such as [TAB], [RIGHT] or [ENTER]			
@@ -27220,11 +27479,28 @@ Role('Siesta.Test.Simulate.Keyboard', {
             })
             
             jQuery.each(keys, function (index, key) {
-                queue.addStep({
-                    key     : key.length == 1 ? key : key.substring(1, key.length - 1)
-                })
+                key             = key.length == 1 ? key : key.substring(1, key.length - 1)
+                
+                keys[ index ]   = key
+                
+                queue.addStep({ key : key })
             });
-
+            
+            if (keys.length) {
+                var firstKeyCode    = Siesta.Test.Simulate.KeyCodes().keys[ keys[ 0 ].toUpperCase() ]
+                
+                if (this.isReadableKey(firstKeyCode)) {
+                    // Some browsers (IE/FF) do not overwrite selected text, do it manually
+                    // but only if the key is readable (some letter etc)
+                    // do not clear the selection in case of special symbol
+                    var selText     = this.getSelectedText(el);
+        
+                    if (selText) {
+                        el.value    = el.value.replace(selText, '');
+                    }
+                }
+            }
+            
             var async       = this.beginAsync();
 
             queue.run(function () {
@@ -27284,16 +27560,26 @@ Role('Siesta.Test.Simulate.Keyboard', {
                     // PhantomJS does not simulate the "textInput" event correctly if target element is inside an iframe
                     // (at least not as of 1.6), only the last character is shown.
                     if (!isPhantomJS) {
-
+                        var innerHTML
+                        
                         // IE10 tries to be 'helpful' by inserting an empty space, clean it
-                        if (isEditableNode && $.browser.msie && el.innerHTML.indexOf('&nbsp;') === 0) {
-                            el.innerHTML = el.innerHTML.substring(6);
+                        // IE11 inserts <br> after call to the .focus() method of the element
+                        if (isEditableNode && $.browser.msie) {
+                            innerHTML               = el.innerHTML
+                            
+                            if (innerHTML.indexOf('&nbsp;') === 0)
+                                el.innerHTML        = innerHTML.substring(6)
+                            else
+                                if (innerHTML.indexOf('<br>') === 0) 
+                                    el.innerHTML    = innerHTML.substring(4);
                         }
 
                         // IE won't do execCommand with insertText
                         if (isEditableNode && !$.browser.msie) {
-                            if (el.innerHTML.charCodeAt(el.innerHTML.length-1) === 8203) {
-                                el.innerHTML = el.innerHTML.substring(0, el.innerHTML.length-1);
+                            innerHTML           = el.innerHTML
+                            
+                            if (innerHTML.charCodeAt(innerHTML.length - 1) === 8203) {
+                                el.innerHTML    = innerHTML.substring(0, innerHTML.length - 1);
                             }
                             el.ownerDocument.execCommand('insertText', false, options.readableKey);
                         } else {
@@ -27560,7 +27846,9 @@ Role('Siesta.Test.Simulate.Touch', {
         
         currentTouchId  : 1,
         
-        activeTouches   : Joose.I.Object
+        activeTouches   : Joose.I.Object,
+        
+        notSupportedWarned  : false
     },
     
     
@@ -27569,7 +27857,11 @@ Role('Siesta.Test.Simulate.Touch', {
         checkTouchEventsSupport : function () {
             var supports        = Siesta.Harness.Browser.FeatureSupport().supports
             
-            if (!supports.TouchEvents && !supports.PointerEvents && !supports.MSPointerEvents) {
+            var root            = this.getRootTest()
+            
+            if (!supports.TouchEvents && !supports.PointerEvents && !supports.MSPointerEvents && !root.notSupportedWarned) {
+                root.notSupportedWarned = true
+                
                 this.warn("Touch events are not supported by browser. For Chrome, you can enable them, by launching it with: --args --touch-events")
             }
         },
@@ -30393,7 +30685,8 @@ Role('Siesta.Test.ExtJS.Grid', {
             grid = this.normalizeComponent(grid);
             
             var view = grid.getView(),
-                cell = this.getCell(grid, rowIndex, colIndex).child('div');
+                Ext = this.Ext(),
+                cell = this.getCell(grid, rowIndex, colIndex).child('.' + Ext.baseCSSPrefix + 'grid-cell-inner');
 
             var isRegExp    = this.typeOf(string) == 'RegExp';
             var content     = cell.dom.innerHTML;
@@ -30687,6 +30980,20 @@ Role('Siesta.Test.Element', {
         'chain',
         'normalizeElement'
     ],
+    
+    has : {
+        allowMonkeyToClickOnAnchors     : false,
+        
+        allowedCharacters               : function () {
+            return {
+                // does not include TAB by purpose, because our "TAB" simulation is not perfect
+                special     : 'BACKSPACE/ENTER/ESCAPE/PAGE-UP/PAGE-DOWN/END/HOME/UP/RIGHT/DOWN/LEFT/INSERT/DELETE',
+                // does not inlcude * because Ext fails on typing it
+                punctuation : '.,/()[]{}\\"\'`~!?@#$%^&_=+-',
+                normal      : "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789"
+            }
+        }
+    },
 
     methods : {
 
@@ -30778,8 +31085,13 @@ Role('Siesta.Test.Element', {
             el          = this.normalizeElement(el);
 
             if (el) {
-                // Jquery :visible doesn't handle SVG/VML, so manual check
-                if (window.SVGElement && el instanceof this.global.SVGElement) return el.style.display !== 'none' && el.style.visibility !== 'hidden'
+                try {
+                    // Jquery :visible doesn't handle SVG/VML, so manual check
+                    // accessing to `this.global.SVGElement` throws exceptions for popups in IE 9
+                    if (window.SVGElement && el instanceof this.global.SVGElement) 
+                        return el.style.display !== 'none' && el.style.visibility !== 'hidden'
+                } catch (e) {
+                }
 
                 // Jquery :visible doesn't take visibility into account
                 return this.$(el).is(':visible') && (!el.style || el.style.visibility !== 'hidden')
@@ -30861,6 +31173,39 @@ Role('Siesta.Test.Element', {
                 description     : ' ' + R.get('elementContent') + ' "' + text + '" ' + R.get('toDisappear')
             });
         },
+        
+        
+        getRandomTypeString : function (length) {
+            var allowedCharacters   = this.allowedCharacters
+            
+            var special     = allowedCharacters.special.split('/')
+            var punctuation = allowedCharacters.punctuation
+            var normal      = allowedCharacters.normal
+            
+            var total       = special.length + punctuation.length + normal.length
+            
+            var str         = ''
+            
+            for (var i = 0; i < length; i++) {
+                var index       = this.randomBetween(0, total - 1)
+                
+                if (index < normal.length) 
+                    str     += normal.substr(index, 1)
+                else {
+                    index   -= normal.length
+                    
+                    if (index < punctuation.length) 
+                        str     += punctuation.substr(index, 1)
+                    else {
+                        index   -= punctuation.length
+                        
+                        str     += '[' + special[ index ] + ']'
+                    }
+                }
+            }
+            
+            return str
+        },
 
         /**
          * Performs clicks, double clicks, right clicks and drags at random coordinates within the passed target.
@@ -30880,7 +31225,6 @@ Role('Siesta.Test.Element', {
          * @param {Object} scope The scope for the callback
          */
         monkeyTest : function(el, nbrInteractions, description, callback, scope) {
-            var global      = this.global
             el              = this.normalizeElement(el, false, true);
 
             this.suppressPassedWaitForAssertion = true;
@@ -30896,6 +31240,7 @@ Role('Siesta.Test.Element', {
 
             nbrInteractions = typeof nbrInteractions === 'number' ? nbrInteractions : 30;
 
+            var global      = this.global
             var isBody      = el == global.document.body
 
             var me          = this,
@@ -30940,10 +31285,34 @@ Role('Siesta.Test.Element', {
                 }
             });
 
-            for (var i = 0; i < nbrInteractions; i++) {
+            var dummy       = []
+            dummy.length    = nbrInteractions
+            
+            var ignoreActionOnAnchor      = function (data, i) {
+                var target      = me.normalizeElement(data.xy)
+                
+                // do not click on the <a> elements, unless those
+                // w/o `href' or with #hash-style hrefs
+                if (
+                    target && 
+                    target.tagName.toLowerCase() == 'a'
+//                    && 
+//                    target.href && target.getAttribute('target') == '_blank'
+                ) {
+                    actionLog[ data.logIndex ]  = null
+                    if (data.isDouble) actionLog[ data.logIndex - 1 ]  = null
+                    
+                    data.next()
+                    
+                    return true
+                } else
+                    return false
+            }
+            
+            Joose.A.each(dummy, function (value, i) {
                 var xy = [ me.randomBetween(offset.left, right), me.randomBetween(offset.top, bottom) ];
 
-                switch (this.randomBetween(0, 4)) {
+                switch (me.randomBetween(0, 4)) {
                     case 0:
                         actionLog.push({
                             'click' : xy
@@ -30958,9 +31327,10 @@ Role('Siesta.Test.Element', {
 
                         queue.addAsyncStep({
                             action          : function (data) {
-                                me.click(data.xy, data.next)
+                                if (!ignoreActionOnAnchor(data)) me.click(data.xy, data.next)
                             },
-                            xy              : xy
+                            xy              : xy,
+                            logIndex        : actionLog.length - 1
                         });
                     break;
 
@@ -30978,9 +31348,10 @@ Role('Siesta.Test.Element', {
 
                         queue.addAsyncStep({
                             action          : function (data) {
-                                me.doubleClick(data.xy, data.next)
+                                if (!ignoreActionOnAnchor(data)) me.doubleClick(data.xy, data.next)
                             },
-                            xy              : xy
+                            xy              : xy,
+                            logIndex        : actionLog.length - 1
                         });
                     break;
 
@@ -31008,7 +31379,7 @@ Role('Siesta.Test.Element', {
                                 if ("oncontextmenu" in window) {
                                     me.rightClick(data.xy, data.next)
                                 } else {
-                                    me.click(data.xy, data.next)
+                                    if (!ignoreActionOnAnchor(data)) me.click(data.xy, data.next)
                                 }
                             },
                             xy              : xy
@@ -31041,15 +31412,13 @@ Role('Siesta.Test.Element', {
                     break;
 
                     case 4:
-                        var text = Math.random().toString(36).substring(7) + '[UP][RIGHT][DOWN][LEFT][ENTER][ESCAPE]'
+                        var text = me.getRandomTypeString(15)
 
                         actionLog.push({
-                            target    : xy,
-                            'click'   : xy
+                            'click' : xy
                         })
                         actionLog.push({
-                            target   : xy,
-                            'type'   : text
+                            'type'  : text
                         })
 
                         // Inject waitForSelector : 'body' to make sure we always have a body
@@ -31058,24 +31427,25 @@ Role('Siesta.Test.Element', {
                                 me.waitForSelector('body', data.next);
                             }
                         });
-
+                        
                         // First click somewhere then type
                         queue.addAsyncStep({
                             action          : function (data) {
-                                me.click(data.xy, data.next)
+                                if (!ignoreActionOnAnchor(data)) {
+                                    me.click(data.xy, function () {
+                                        me.waitForSelector('body', function () {
+                                            me.type(null, text, data.next)
+                                        });
+                                    })
+                                }
                             },
-                            xy              : xy
-                        });
-                        queue.addAsyncStep({
-                            action          : function (data) {
-                                // Type into currently active element
-                                me.type(null, text, data.next)
-                            },
-                            xy              : xy
+                            xy              : xy,
+                            logIndex        : actionLog.length - 1,
+                            isDouble        : true
                         });
                         break;
                 }
-            }
+            })
 
             var checkerActivated    = false
 
@@ -32274,7 +32644,8 @@ Class('Siesta.Test.Browser', {
     
     isa         : Siesta.Test,
         
-    does        : [ 
+    does        : [
+        Siesta.Util.Role.CanParseBrowser,
         Siesta.Test.Simulate.Event,
         Siesta.Test.Simulate.Mouse,
         Siesta.Test.Simulate.Touch,
@@ -32309,87 +32680,177 @@ Class('Siesta.Test.Browser', {
         realConfirm             : null,
         realPrompt              : null,
         realPrint               : null,
+        realOpen                : null,
         
         previousConfirm         : null,
-        previousPrompt          : null
+        previousPrompt          : null,
+        
+//        blurListener            : null,
+        restartOnBlur           : false,
+        
+        popups                  : Joose.I.Array
     },
 
     after : {
         cleanup : function () {
             this._global    = null
             
-            this.realAlert  = this.realConfirm = this.realPrompt = this.realPrint = null
+            this.realAlert  = this.realConfirm = this.realPrompt = this.realPrint = this.realOpen = null
             
             this.previousPrompt = this.previousConfirm = null
+            
+            this.blurListener   = null
+            
+            Joose.A.each(this.popups, function (handle) {
+                if (!handle.popup.closed) handle.popup.close()
+            })
+            
+            this.popups.length  = 0
+            this.popups         = null
         }
     },
 
     methods : {
         
-        initialize : function () {
-            this.SUPER()
-            
+        onBeforeTestFinalize : function () {
+            var global          = this.global
+
+            // If expectAlertMessage(which overwrites the alert method) was called but no alert() call happened - fail the test
+            if (global.alert.__EXPECTED_ALERT__) {
+                this.fail(Siesta.Resource('Siesta.Test.Browser','alertMethodNotCalled'))
+            }
+        },
+        
+
+        launch : function () {
             var emptyFn     = function () {};
 
-            this.on('teststart', function (event) {
-                var me          = this
-                var win         = this.global
+            var me          = this
+            var win         = this.global
+            
+            // top test
+            if (!me.parent) {
+                me.realAlert        = win.alert
+                me.realConfirm      = win.confirm
+                me.realPrompt       = win.prompt
+                me.realPrint        = win.print
+                me.realOpen         = win.open
                 
-                // top test
-                if (!me.parent) {
-                    me.realAlert        = win.alert
-                    me.realConfirm      = win.confirm
-                    me.realPrompt       = win.prompt
-                    me.realPrint        = win.print
+                if (!me.harness.browserWindowHasFocus() && !$.browser.safari) me.onWindowBlur()
+                
+                // trying to focus the window (hopefully fixes the tab key issues)
+                win.focus && win.focus()
+                
+//                win.addEventListener && win.addEventListener('blur', me.blurListener = function () {
+//                    if ($.browser.mozilla && win.document.getElementsByTagName('iframe').length > 0)
+//                        // this "waitFor" can be interrupted, but only by forceful test finalization, which
+//                        // happens when test throws exception for example, so it fails anyway
+//                        me.waitFor({
+//                            method              : 0,
+//                            suppressAssertion   : true,
+//                            callback            : function () { me.onWindowBlur() }
+//                        })
+//                    else
+//                        me.onWindowBlur()
+//                })
+            }
+            
+            // WARN: behavior when several sub-tests are running at the same time is not well-defined
+            me.previousConfirm      = win.confirm
+            me.previousPrompt       = win.prompt
+
+            win.alert               = win.print = emptyFn;
+
+            win.confirm = function () {
+                var retVal                  = typeof me.nextConfirmValue === 'boolean' ? me.nextConfirmValue : true;
+
+                me.nextConfirmValue         = null;
+
+                return retVal;
+            };
+
+            win.prompt = function () {
+                var retVal                  = me.nextPromptReturnValue || '';
+
+                me.nextPromptReturnValue    = null;
+
+                return retVal;
+            };
+            
+            win.open = function (url) {
+                var popup   = me.realOpen.apply(win, arguments)
+                
+                if (!popup) 
+                    me.fail(Siesta.Resource('Siesta.Test.Browser','popupsDisabled', { url : url }))
+                else {
+                    me.popups.push({ url : url, popup : popup })
                 }
                 
-                // WARN: behavior when several sub-tests are running at the same time is not well-defined
-                me.previousConfirm      = win.confirm
-                me.previousPrompt       = win.prompt
+                return popup
+            }
 
-                win.alert               = win.print = emptyFn;
+            this.SUPERARG(arguments)
+        },
+        
+        
+        onTestFinalize : function () {
+            var win         = this.global
 
-                win.confirm = function () {
-                    var retVal  = typeof me.nextConfirmValue === 'boolean' ? me.nextConfirmValue : true;
-
-                    me.nextConfirmValue = null;
-
-                    return retVal;
-                };
-
-                win.prompt = function () {
-                    var retVal  = me.nextPromptReturnValue || '';
-
-                    me.nextPromptReturnValue = null;
-
-                    return retVal;
-                };
-            })
-
-            this.on('beforetestfinalize', function (event) {
-                var global          = this.global
-
-                // If expectAlertMessage(which overwrites the alert method) was called but no alert() call happened - fail the test
-                if (global.alert.__EXPECTED_ALERT__) {
-                    this.fail(Siesta.Resource('Siesta.Test.Browser','alertMethodNotCalled'))
-                }
-
-                // Restore window native methods
-                global.alert      = emptyFn;
+            if (!this.parent) {
+                win.confirm = this.previousConfirm;
+                win.prompt  = this.previousPrompt;
                 
-                if (!this.parent) {
-                    global.confirm  = this.previousConfirm;
-                    global.prompt   = this.previousPrompt;
-                    
-                    global.print    = this.realPrint
-                    global.alert    = this.realAlert    
-                } else {
-                    global.confirm  = this.realConfirm;
-                    global.prompt   = this.realPrompt;
-                }
-            })
+                win.print   = this.realPrint
+                win.alert   = this.realAlert
+                win.open    = this.realOpen
+            } else {
+                win.confirm = this.realConfirm;
+                win.prompt  = this.realPrompt;
+                
+                win.alert   = win.print = function () {}
+            }
+            
+//            this.blurListener && win.removeEventListener('blur', this.blurListener)
+//            
+//            this.blurListener   = null
+            
+            this.SUPERARG(arguments)
+        },
+        
+        
+        onWindowBlur : function (arg1, arg2) {
+//            var doc             = this.global.document
+//            
+//            // ignore the case when focus is moved inside of the child iframe
+//            // IGNORE
+//            if (!doc.hasFocus && doc.hasFocus()) return
+//            
+//            var slice           = Array.prototype.slice
+//            
+//            //                  convert from HTMLCollection to Array
+//            var iframes         = slice.apply(doc.getElementsByTagName('iframe'))
+//            
+//            while (iframes.length) {
+//                try {
+//                    var innerDoc    = iframes[ 0 ].contentWindow.document
+//                    
+//                    if (innerDoc.hasFocus()) return
+//                    
+//                    iframes.push.apply(iframes, slice.apply(innerDoc.getElementsByTagName('iframe')))
+//                } catch (e) {
+//                }
+//                
+//                iframes.shift()
+//            }
+//            // EOF IGNORE
+            
+            if (this.restartOnBlur) 
+                this.fireEvent('focuslost')
+            else
+                this.warn(Siesta.Resource('Siesta.Test.Browser').get('focusLostWarning', { url : this.url }))
         },
 
+        
         $ : function () {
             var local$ = $.rebindWindowContext(this.global);
             return local$.apply(this.global, arguments);
@@ -32505,20 +32966,23 @@ Class('Siesta.Test.Browser', {
         },
         
         
+        // returns "true" if scrolling has actually occured
         scrollTargetIntoView : function (target, offset) {
             if (this.typeOf(target) != 'Array') {
-                target  = this.normalizeElement(target, true, null, false);
+                target          = this.normalizeElement(target, true, null, false);
+                var isInside    = this.isOffsetInsideElementBox(target, offset);
 
-                var isInside = this.isOffsetInsideElementBox(target, offset);
-
-                if (target && this.isElementVisible(target) &&
+                if (
+                    target && this.isElementVisible(target) &&
                     // If element isn't visible, try to bring it into view
-                    isInside && this.elementIsScrolledOut(target, offset))
-                {
+                    isInside && this.elementIsScrolledOut(target, offset)
+                ) {
                     // Required to handle the case where the body is scrolled
                     target.scrollIntoView();
 
                     this.$(target).scrollintoview({ duration : 0 });
+                    
+                    return true
                 }
             }
         },
@@ -32532,7 +32996,7 @@ Class('Siesta.Test.Browser', {
                 'currentPosition', 
                 'actionDelay', 'afterActionDelay', 
                 'dragDelay', 'moveCursorBetweenPoints', 'dragPrecision', 'overEls',
-                'realAlert', 'realConfirm', 'realPrompt', 'realPrint'
+                'realAlert', 'realConfirm', 'realPrompt', 'realPrint', 'realOpen', 'popups'
             ], function (name) {
                 res[ name ]     = me[ name ]
             })
@@ -32651,8 +33115,9 @@ Class('Siesta.Test.Browser', {
             return stops;
         },
 
+        
         randomBetween : function (min, max) {
-            return Math.round(min + (Math.random()*(max - min)));
+            return Math.floor(min + (Math.random() * (max - min + 1)));
         },
 
         
@@ -32729,18 +33194,19 @@ Class('Siesta.Test.Browser', {
             
             var focusedEl   = doc.activeElement;
 
-            // For iframes, we need to grab the activeElement of the frame
-            if ($(focusedEl).is('iframe') && focusedEl.contentDocument && focusedEl.contentDocument.body) {
-                focusedEl = focusedEl.contentDocument.activeElement;
-            }
-            // 1. In IE10, it seems activeElement cannot be trusted as it sometimes returns an empty object with no properties.
+            // 1. In IE10,11 it seems activeElement cannot be trusted as it sometimes returns an empty object with no properties.
             // Try to detect this case and use the fallback el 
             // 2. Sometimes receiving <body> from this method does not make sense either - use fallback el as well
-            else if (!focusedEl || !focusedEl.nodeName || !focusedEl.tagName || (focusedEl === doc.body && notAllowBody)) {
+            if (!focusedEl || !focusedEl.nodeName || !focusedEl.tagName || (focusedEl === doc.body && notAllowBody)) {
                 focusedEl   = fallbackEl;
             }
             
-            return focusedEl
+            // For iframes, we need to grab the activeElement of the frame
+            if ($(focusedEl).is('iframe') && focusedEl.contentDocument && focusedEl.contentDocument.body) {
+                return this.activeElement(notAllowBody, fallbackEl, focusedEl.contentDocument)
+            }
+            
+            return focusedEl || doc.body
         },
 
         
@@ -33282,44 +33748,6 @@ Class('Siesta.Test.Browser', {
         },
         
         
-        parseBrowser : function (uaString) {
-            var browser = 'unknown'
-            var version = ''
-            
-            var match
-            
-            if (match = /Firefox\/((?:\d+\.?)+)/.exec(uaString)) {
-                browser     = "Firefox"
-                version     = match[ 1 ]
-            }
-            
-            if (match = /Chrome\/((?:\d+\.?)+)/.exec(uaString)) {
-                browser     = "Chrome"
-                version     = match[ 1 ]
-            }
-            
-            if (match = /MSIE\s*((?:\d+\.?)+)/.exec(uaString)) {
-                browser     = "IE"
-                version     = match[ 1 ]
-            }
-            
-            if (uaString.match(/trident/i) && (match = /rv.(\d\d\.?\d?)/.exec(uaString))) {
-                browser     = "IE"
-                version     = match[ 1 ]
-            }
-            
-            if (match = /Apple.*Version\/((?:\d+\.?)+)\s*(?=Safari\/((?:\d+\.?)+))/.exec(uaString)) {
-                browser     = "Safari"
-                version     = match[ 1 ] + ' (' + match[ 2 ] + ')'
-            }
-            
-            return {
-                name        : browser,
-                version     : version
-            }
-        },
-        
-        
         getJUnitClass : function () {
             var browserInfo         = this.getBrowserInfo()
             
@@ -33328,6 +33756,7 @@ Class('Siesta.Test.Browser', {
             return browserInfo + ':' + this.SUPER()
         },
 
+        
         // Returns true if the scope was adjusted to another frame for the target string
         adjustScope : function(target) {
 
@@ -33341,8 +33770,9 @@ Class('Siesta.Test.Browser', {
                         return false;
                     }
 
-                    this._global = this.global;
-                    this.global = frameEl.contentWindow;
+                    this._global    = this.global;
+                    this.global     = frameEl.contentWindow;
+                    
                     return true;
                 }
             }
@@ -33350,6 +33780,7 @@ Class('Siesta.Test.Browser', {
             return false;
         },
 
+        
         resetScope : function() {
             this.global     = this._global || this.global;
             
@@ -33358,12 +33789,39 @@ Class('Siesta.Test.Browser', {
         
         
         // a stub method for the Lite package
-        screenshot : function (fileName, callback) {
+        screenshot : function (options, callback) {
             this.diag("Command: `screenshot` skipped - not running in Standard Package")
             
-            this.processCallbackFromTest(callback, [ false ], this)
+            this.processCallbackFromTest(callback, [ 'skipped' ], this)
         },
 
+        // a stub method for the Lite package
+        screenshotElement : function (target, fileName, callback) {
+            this.diag("Command: `screenshot` skipped - not running in Standard Package")
+            
+            this.processCallbackFromTest(callback, [ 'skipped' ], this)
+        },
+        
+        /**
+         * setUrl Opens the url provided (make sure you use the {@link Siesta.Harness.Browser#separateContext} option on the Harness when using this API method)
+         *
+         * @param {String} url The new url for current page
+         * @param {Function} callback The callback to call after the page has been loaded
+         * @param {Object} scope The scope for the callback
+         */
+        setUrl : function(url, callback, scope) {
+            if (!url) throw 'Must provide a valid URL';
+
+            var me = this;
+
+            if (me.global.location.href !== url) {
+                me.waitForPageLoad(callback, scope);
+                me.global.location.href = url;
+            } else {
+                callback.call(scope || me);
+            }
+        },
+        
         /**
          * Expects an alert message with the specified text to be shown during the test. If no alert is called,
          * or the text doesn't match, a failed assertion will be added.
@@ -33421,9 +33879,127 @@ Class('Siesta.Test.Browser', {
 
             this.processCallbackFromTest(callback, null, this)
         },
+        
 
         waitForAnimations : function(callback) {
             callback.call(this);
+        },
+        
+        
+        popupHasStartedLoading : function (popup, initialUrl) {
+            if (String(initialUrl).toLowerCase() != 'about:blank' && popup.location.href == 'about:blank') return false
+            
+            return true
+        },
+        
+        
+        /**
+         * Switches the target of all Siesta interactive commands (like "click/type" etc) to a different
+         * window (usually a popup). You can use {@link #switchToMain} method to switch back to main window.
+         * 
+         * @param {String/RegExp/Object/Window/HTMLIFrameElement} [win] A new window which should be a target for all interactive commands.
+         * If this argument is specified as `null` a first opened popup is used.
+         * Can be specified as the:
+         * 
+         * - Window - A global window instance
+         * - Object - Object with the following properties
+         *      - url   : String/RegExp - The first popup, opened with matching url will be used 
+         *      - title : String/RegExp - The first popup, opened with matching title will be used
+         * - String - corresponds to the `title` property of the Object branch
+         * 
+         * @param {Function} callback Function to call once the switch has complete (will also wait until the target page 
+         * completes loading)
+         * 
+         * @return {Window} Previously active window reference
+         */
+        switchTo : function (win, callback) {
+            var me          = this
+            
+            // In Chrome, when popup for some url is just created, it has "url" set to "about:blank"
+            // after some time the url is set to the original value and load process begins
+            // this opens a race condition - one can not reliably predict when the popup has completed loading
+            // doing our best
+            this.waitFor({
+                method              : function () {
+                    for (var i = 0; i < me.popups.length; i++)
+                        if (!me.popupHasStartedLoading(me.popups[ i ].popup, me.popups[ i ].url)) return false
+                        
+                    return true
+                },
+                suppressAssertion   : true,
+                
+                callback            : function () {
+                    var found
+                    
+                    if (!win) {
+                        Joose.A.each(this.popups, function (handle) {
+                            if (!handle.popup.closed) { found = handle.popup;  return false }
+                        })
+                        
+                        win  = found
+                    }
+                    
+                    if (this.typeOf(win) == 'String') win = { title : win }
+                    
+                    if (this.typeOf(win) == 'Object') {
+                        found           = null
+                        var regexp      = win.title || win.url
+                        
+                        if (this.typeOf(regexp) == 'String') regexp = new RegExp('^' + this.escapeRegExp(regexp) + '$')
+                        
+                        Joose.A.each(this.popups, function (handle) {
+                            var popup       = handle.popup
+                            
+                            if (!popup.closed)
+                                if (
+                                    win.url && regexp.test(popup.location.href)
+                                    ||
+                                    win.title && regexp.test(popup.document && popup.document.title || '')
+                                ) {
+                                    found = popup
+                                    return false
+                                }
+                        })
+                        
+                        win  = found
+                    }
+                    
+                    if (!win || win.self != win) {
+                        this.fail("Can't resolve target win: " + win)
+                        
+                        this.processCallbackFromTest(callback, null, this)
+                        
+                        return
+                    }
+                    
+                    this.global                 = win
+//                    This has to be revised properly in the "context" branch, idea is, that we switch to popup's implementation
+//                    of `setTimeout` for waiting, asyncing etc, because thats what really user expect
+//                    however in IE test just hangs
+//                    this.originalSetTimeout     = win.setTimeout
+//                    this.originalClearTimeout   = win.clearTimeout
+                    
+                    this.waitFor({
+                        suppressAssertion   : true,
+                        method      :  function () {
+                            return win.document && win.document.readyState == 'complete'
+                        },
+                        callback    : callback
+                    })
+                }
+            })
+            
+            return this.global
+        },
+        
+        
+        /**
+         * Switches all interactive commands back to main test window.
+         * 
+         * @param {Function} callback Function to call once the switch has complete.
+         */
+        switchToMain : function (callback) {
+            this.switchTo(this.scopeProvider.scope, callback)
         }
     }
 });
@@ -33539,7 +34115,8 @@ Class('Siesta.Test.ExtJS', {
 
                 var frame           = Ext.core.DomHelper.append(Ext.getBody(), {
                     tag     : "iframe",
-                    style   : 'width:0;height:0'
+                    style   : 'width:1024px;height:768px;position:absolute;left:-10000px;top:-10000px',
+                    src     : 'about:blank'
                 }, false);
 
                 var freshWin        = frame.contentWindow;
@@ -33547,7 +34124,13 @@ Class('Siesta.Test.ExtJS', {
                 freshWin.document.open();
 
                 freshWin.document.write(
-                    '<html><head><script type="text/javascript" src="' + extjsBundleURL + '"></script></head><body></body></html>'
+                    '<!DOCTYPE html>' + 
+                    '<html>' + 
+                        '<head>' +
+                            '<script type="text/javascript" src="' + extjsBundleURL + '"></script>' + 
+                        '</head>' + 
+                        '<body></body>' + 
+                    '</html>'
                 );
     
                 freshWin.document.close();
@@ -33563,25 +34146,40 @@ Class('Siesta.Test.ExtJS', {
                     return p;
                 }
     
+                var ignoreRegexp    = [
+                    /Ext\.data\.Store\.ImplicitModel|collectorThreadId|Ext\.dom\.GarbageCollector\.lastTime/,
+                    /Ext.globalEvents.cur/i,
+                    /Ext\.dd\.(DragDropManager|DragDropMgr|DDM)\.(currentPoint|offsetX|offsetY)/
+                ]
+                
                 var ignore          = function (name) {
-                    return name.match(/Ext\.data\.Store\.ImplicitModel|collectorThreadId|Ext\.dom\.GarbageCollector\.lastTime/);
+                    for (var i = 0; i < ignoreRegexp.length; i++)
+                        if (ignoreRegexp[ i ].test(name)) return true
+                        
+                    return false
                 }
                 
                 var getObjectDifferences    = function (cleanObj, dirtyObj, ns) {
                     var diff    = []
 
                     for (var p in dirtyObj) {
-
                         try {
                             if (dirtyObj.hasOwnProperty(p)) {
+                                var dirtyValue  = dirtyObj[ p ]
+                                var cleanValue  = cleanObj[ p ]
+                                
                                 // Check if the object exists on the clean window and also do a string comparison
                                 // in case a builtin method has been overridden
                                 if (
-                                    (!cleanObj.hasOwnProperty(p) && typeof cleanObj[p] == 'undefined' ) ||
-                                        (typeof dirtyObj[p] == 'function' && cleanObj[p].toString() !== dirtyObj[p].toString()) ||
-                                        (Ext.isPrimitive(dirtyObj[p]) && dirtyObj[p].toString() !== cleanObj[p].toString())
+                                    (!cleanObj.hasOwnProperty(p) && typeof cleanValue == 'undefined' ) 
+                                        ||
+                                    (
+                                        String(cleanValue) != String(dirtyValue)
+                                            && 
+                                        (typeof dirtyValue == 'function' || Ext.isPrimitive(dirtyValue))
+                                    )
                                 ) {
-                                    if (!ignore(ns + '.' + p)) diff.push(ns + '.' + p);
+                                    if (!ignore(ns + '.' + p)) diff.push(ns + '.' + p)
                                 }
                             }
                         } catch (e) {
@@ -34142,9 +34740,9 @@ This file is for reference only, for a getting start guide and manual, please re
 Synopsys
 ========
 
-    var Harness = Siesta.Harness.Browser;
+    var harness = new Siesta.Harness.Browser();
     
-    Harness.configure({
+    harness.configure({
         title     : 'Awesome Test Suite',
         
         transparentEx       : true,
@@ -34165,7 +34763,7 @@ Synopsys
     })
     
     
-    Harness.start(
+    harness.start(
         // simple string - url relative to harness file
         'sanity.t.js',
         
@@ -34200,82 +34798,87 @@ Synopsys
 
 Class('Siesta.Harness.Browser', {
     
-    // static
-    my : {
-        isa         : Siesta.Harness,
+    isa         : Siesta.Harness,
+    
+    has : {
+        id                  : null,
         
-        has : {
-            id                  : null,
-            
-            /**
-             * @cfg {Class} testClass The test class which will be used for creating test instances, defaults to {@link Siesta.Test.Browser}.
-             * You can subclass {@link Siesta.Test.Browser} and provide a new class. 
-             * 
-             * This option can be also specified in the test file descriptor. 
-             */
-            testClass           : Siesta.Test.Browser,
-            
-            viewportClass       : "Siesta.Harness.Browser.UI.Viewport",
+        /**
+         * @cfg {Class} testClass The test class which will be used for creating test instances, defaults to {@link Siesta.Test.Browser}.
+         * You can subclass {@link Siesta.Test.Browser} and provide a new class. 
+         * 
+         * This option can be also specified in the test file descriptor. 
+         */
+        testClass           : Siesta.Test.Browser,
+        
+        viewportClass       : "Siesta.Harness.Browser.UI.Viewport",
 
-            viewport            : null,
-            
-            /**
-             * @cfg {Boolean} autoRun When set to `true`, harness will automatically launch the execution either of the checked test files or the whole suite.
-             * Default value is `false`
-             */
-            autoRun             : false,
-            
-            /**
-             * @cfg {Boolean} viewDOM When set to `true`, harness will expand the panel with the `<iframe>` of the test file, so you can examine the content of DOM.
-             * Default value is `false`
-             */
-            viewDOM             : false,
-            
-            /**
-             * @cfg {Boolean} speedRun When set to `true`, harness will reduce the quality or completely remove the visual effects for events simulation,
-             * improving the speed of test. Default value is `true`.
-             * 
-             * This option can be also specified in the test file descriptor.
-             */
-            speedRun            : true,
+        viewport            : null,
+        
+        /**
+         * @cfg {Boolean} autoRun When set to `true`, harness will automatically launch the execution either of the checked test files or the whole suite.
+         * Default value is `false`
+         */
+        autoRun             : false,
+        
+        /**
+         * @cfg {Boolean} viewDOM When set to `true`, harness will expand the panel with the `<iframe>` of the test file, so you can examine the content of DOM.
+         * Default value is `false`
+         */
+        viewDOM             : false,
+        
+        /**
+         * @cfg {String} domContainerRegion Should be exactly one of `east/west/south/north`. Controls the position of the dom container
+         * panel. Set it to `south` to create a "portrait" mode of the results panel with the assertions grid at the top and DOM container
+         * at the bottom.
+         */
+        domContainerRegion  : 'east',
+        
+        /**
+         * @cfg {Boolean} speedRun When set to `true`, harness will reduce the quality or completely remove the visual effects for events simulation,
+         * improving the speed of test. Default value is `true`.
+         * 
+         * This option can be also specified in the test file descriptor.
+         */
+        speedRun            : true,
 
-            /**
-             * @cfg {Boolean} breakOnFail When set to `true`, the harness will not start launching any further tests after detecting a failed assertion.
-             * Default value is `false`.
-             */
-            breakOnFail             : false,
-            
-            /**
-             * @cfg {Boolean} debuggerOnFail When set to `true`, the harness will issue a `debugger` statement after detecting a failed assertion, allowing you
-             * to inspect the internal state of the test in the browser's debugger. Default value is `false`.   
-             */
-            debuggerOnFail          : false,
+        /**
+         * @cfg {Boolean} breakOnFail When set to `true`, the harness will not start launching any further tests after detecting a failed assertion.
+         * Default value is `false`.
+         */
+        breakOnFail             : false,
+        
+        /**
+         * @cfg {Boolean} debuggerOnFail When set to `true`, the harness will issue a `debugger` statement after detecting a failed assertion, allowing you
+         * to inspect the internal state of the test in the browser's debugger. Default value is `false`.   
+         */
+        debuggerOnFail          : false,
 
-            contentManagerClass : Siesta.Content.Manager.Browser,
-            scopeProvider       : 'Scope.Provider.IFrame',
-            
-            /**
-             * @cfg {Boolean} disableCaching When set to `true`, harness will prevent the browser caching of files being preloaded and the test files, by appending
-             * a query string to it.
-             * Note, that in this case, debuggers may not understand that you are actually loading the same file, and breakpoints may not work. Default value is `false`
-             */
-            disableCaching      : false,
-            
-            baseUrl             : window.location.href.replace(/\?.*$/,'').replace(/\/[^/]*$/, '/'),
-            baseHost            : window.location.host,
-            baseProtocol        : window.location.protocol,
-            
-            /**
-             * @cfg {Boolean} forceDOMVisible When set to `true` the tests will be executed in "fullscreen" mode, with their iframes on top of all other elements.
-             * This is required in IE if your test includes interaction with the DOM, because the `document.getElementFromPoint()` method 
-             * does not work correctly in IE unless the element is visible.
-             *
-             * This option is enabled by default in IE and disabled in all other browsers.
-             * This option can be also specified in the test file descriptor (usually you will create a group of "rendering" tests). Usually it's only relevant for IE,
-             * so using this option should look like:
-             *
+        contentManagerClass : Siesta.Content.Manager.Browser,
+        scopeProvider       : 'Scope.Provider.IFrame',
+        
+        /**
+         * @cfg {Boolean} disableCaching When set to `true`, harness will prevent the browser caching of files being preloaded and the test files, by appending
+         * a query string to it.
+         * Note, that in this case, debuggers may not understand that you are actually loading the same file, and breakpoints may not work. Default value is `false`
+         */
+        disableCaching      : false,
+        
+        baseUrl             : window.location.href.replace(/\?.*$/,'').replace(/\/[^/]*$/, '/'),
+        baseHost            : window.location.host,
+        baseProtocol        : window.location.protocol,
+        
+        /**
+         * @cfg {Boolean} forceDOMVisible When set to `true` the tests will be executed in "fullscreen" mode, with their iframes on top of all other elements.
+         * This is required in IE if your test includes interaction with the DOM, because the `document.getElementFromPoint()` method 
+         * does not work correctly in IE unless the element is visible.
+         *
+         * This option is enabled by default in IE and disabled in all other browsers.
+         * This option can be also specified in the test file descriptor (usually you will create a group of "rendering" tests). Usually it's only relevant for IE,
+         * so using this option should look like:
+         *
 
-    Harness.start(
+    harness.start(
         {
             group       : 'Rendering',
             
@@ -34288,195 +34891,195 @@ Class('Siesta.Harness.Browser', {
         },
         ...
     )
-            
-             */
-            forceDOMVisible     : $.browser.msie,
-            
-            /**
-             * @cfg {Boolean} runInPopup Experimental. When set to `true` the tests will be executed in the popup, instead of iframe.
-             * You will need to enable popups the host you are testing from.
-             * 
-             * Popups provides almost exactly the same environment as standalone page - notably the `window.top` property
-             * reference the popup itself, making it easier to test hash-based navigation.
-             * 
-             * Note, that mouse cursor visualization does not work for tests in popups.
-             * 
-             * This option can be also specified in the test file descriptor.
-             */
-            runInPopup          : false,
-            
-            
-            /**
-             * @cfg {String} hostPageUrl The url of the HTML page which will be the target for the test(s) (the URL must be on the same domain the harness HTML page). This option is used for application level testing, Siesta will visit this URL and then launch
-             * the test. See `/examples/021-extjs-drag-drop/index.js` for an example.
-             * 
-             * Note that with this option, the test descriptor will stop inheriting the {@link #preload} option from parent descriptors/harness
-             * (to make sure you don't preload your dependencies twice). This is usually an expected behavior, and you still can specify the `preload` option
-             * directly on such descriptor if needed.
-             * 
-             * This option can be also specified in the test file descriptor.
-             * 
-             * For example, to define that a test should be executed on a page generated by some php script:
+        
+         */
+        forceDOMVisible     : $.browser.msie,
+        
+        /**
+         * @cfg {Boolean} runInPopup Experimental. When set to `true` the tests will be executed in the popup, instead of iframe.
+         * You will need to enable popups the host you are testing from.
+         * 
+         * Popups provides almost exactly the same environment as standalone page - notably the `window.top` property
+         * reference the popup itself, making it easier to test hash-based navigation.
+         * 
+         * Note, that mouse cursor visualization does not work for tests in popups.
+         * 
+         * This option can be also specified in the test file descriptor.
+         */
+        runInPopup          : false,
+        
+        
+        /**
+         * @cfg {String} pageUrl The url of the HTML page which will be the target for the test(s) (the URL must be on the same domain the harness HTML page). This option is used for application level testing, Siesta will visit this URL and then launch
+         * the test. See `/examples/021-extjs-drag-drop/index.js` for an example.
+         * 
+         * Note that with this option, the test descriptor will stop inheriting the {@link #preload} option from parent descriptors/harness
+         * (to make sure you don't preload your dependencies twice). This is usually an expected behavior, and you still can specify the `preload` option
+         * directly on such descriptor if needed.
+         * 
+         * This option can be also specified in the test file descriptor. This option has a deprecated synonym - "hostPageUrl"
+         * 
+         * For example, to define that a test should be executed on a page generated by some php script:
 
-    Harness.start(
+    harness.start(
         {
-            hostPageUrl     : '../my_php_script?page=home',     // url of the html page for test
+            pageUrl         : '../my_php_script?page=home',     // url of the html page for test
             url             : '020_home_page_drag_n_drop.t.js'  // url of the js file, containing actual test code
         },
         ...
     )
-             *  
-             * 
-             */
-            hostPageUrl         : null,
-            
-            
-            /**
-             * @cfg {Boolean} useStrictMode When set to `false` the test scopes will be created w/o strict mode `DOCTYPE`. Default value is `true`.
-             * This option is not applicable for tests with `hostPageUrl` option. 
-             * 
-             * This option can be also specified in the test file descriptor.
-             */
-            useStrictMode       : true,
-            
-            
-            /**
-             * @cfg {String} innerHtmlHead
-             * 
-             * A string that will be placed into the `innerHTML` property of the &lt;head&gt; tag, before starting the preload process. 
-             * No validity checks will be performed.
-             * 
-             * This option will not be inherited by the tests with {@link #hostPageUrl} option set, unless it is explicitly set to the
-             * `inherit` value.
-             * 
-             * This option can be specified in the test file descriptor.
-             * 
-             * See also {@link #innerHtmlBody}
-             */
-            innerHtmlHead       : null,
-            
-            
-            /**
-             * @cfg {String} innerHtmlBody
-             * 
-             * A string that will be placed into the `innerHTML` property of the &lt;body&gt; tag, before starting the preload process. 
-             * No validity checks will be performed.
-             * 
-             * This option will not be inherited by the tests with {@link #hostPageUrl} option set, unless it is explicitly set to the
-             * `inherit` value.
-             * 
-             * This option can be specified in the test file descriptor.
-             * 
-             * See also {@link #innerHtmlHead}
-             */
-            innerHtmlBody       : null,
-            
-            
-            /**
-             * @cfg {Boolean} sandbox
-             * 
-             * This option controls whether the individual tests should be run in isolation from each other. By default it is enabled,
-             * and every test file will be run inside of the newly created iframe, so that it can not interfere with
-             * any other test. Such setup gives you predictable starting state for every test, removes the need for any kind of
-             * cleanup at the end of the test and is more robust in general.
-             * 
-             * However, the setup of every iframe take some time (for preloading). If you are sure that your tests
-             * do not modify any global state (like global variable that can affect the other test) you may want to run 
-             * all of them in the same context, saving the setup time. In this case, you may want to disable this option.
-             * 
-             * Siesta collects all tests with this option disabled and split them into chunks. Every chunk will have exactly
-             * the same values for the configs that influence the initial setup of the page: {@link #preload}, {@link #alsoPreload}, 
-             * {@link #hostPageUrl}, {@link Siesta.Test.ExtJS#requires} and some others. The tests inside of every 
-             * chunk will be run sequentially, in the same sandbox.
-             * 
-             * **Important**: The 1st test in every chunk will be run normally. Starting from the 2nd one, tests
-             * will skip the {@link Siesta.Test#isReady} check and {@link Siesta.Test#setup} methods. This is because all the 
-             * setup is supposed to be already done by the 1st test. This behavior may change (or made configurable) in the future. 
-             * 
-             * This option can be specified in the test file descriptor.
-             * 
-             * See also {@link #sandboxBoundaryByGroup}, {@link #sandboxCleanup}
-             */
-            sandbox                         : true,
-            
-            /**
-             * @cfg {Boolean} sandboxBoundaryByGroup
-             * 
-             * Only applicable for tests with the {@link #sandbox} option *disabled*.
-             * 
-             * when this option is enabled, the tests to be run in the same context will be guaranteed to reside in the same group.
-             * If a new test group starts (even with the same "preload" config) - a fresh context for that group will be created
-             * by Siesta.
-             * 
-             * For example, in the following setup, both "Group 1" and "Group 2" have sandboxing disabled and the 
-             * same "preload" config. If `sandboxBoundaryByGroup` will be disabled all 4 individual tests will be run 
-             * in the same context. If `sandboxBoundaryByGroup` will be enabled, separate fresh context will be created
-             * for the tests from each group.  
-             * 
-
-        Harness.configure({
-            preload     : [ ... ]
-        });
+         *  
+         * 
+         */
+        pageUrl             : null,
         
-        Harness.start(
-            {
-                group       : 'Group 1',
-                sandbox     : false,
-                items       : [
-                    '010-basics/010_sanity.t.js',
-                    '010-basics/020_jshint.t.js'
-                ]
-            },
-            {
-                group       : 'Group 2',
-                sandbox     : false,
-                items       : [
-                    '020-basics/010_sanity.t.js',
-                    '020-basics/030_bdd.t.js'
-                ]
-            },
-            ...
-        )
+        
+        /**
+         * @cfg {Boolean} useStrictMode When set to `false` the test scopes will be created w/o strict mode `DOCTYPE`. Default value is `true`.
+         * This option is not applicable for tests with `pageUrl` option. 
+         * 
+         * This option can be also specified in the test file descriptor.
+         */
+        useStrictMode       : true,
+        
+        
+        /**
+         * @cfg {String} innerHtmlHead
+         * 
+         * A string that will be placed into the `innerHTML` property of the &lt;head&gt; tag, before starting the preload process. 
+         * No validity checks will be performed.
+         * 
+         * This option will not be inherited by the tests with {@link #pageUrl} option set, unless it is explicitly set to the
+         * `inherit` value.
+         * 
+         * This option can be specified in the test file descriptor.
+         * 
+         * See also {@link #innerHtmlBody}
+         */
+        innerHtmlHead       : null,
+        
+        
+        /**
+         * @cfg {String} innerHtmlBody
+         * 
+         * A string that will be placed into the `innerHTML` property of the &lt;body&gt; tag, before starting the preload process. 
+         * No validity checks will be performed.
+         * 
+         * This option will not be inherited by the tests with {@link #pageUrl} option set, unless it is explicitly set to the
+         * `inherit` value.
+         * 
+         * This option can be specified in the test file descriptor.
+         * 
+         * See also {@link #innerHtmlHead}
+         */
+        innerHtmlBody       : null,
+        
+        
+        /**
+         * @cfg {Boolean} sandbox
+         * 
+         * This option controls whether the individual tests should be run in isolation from each other. By default it is enabled,
+         * and every test file will be run inside of the newly created iframe, so that it can not interfere with
+         * any other test. Such setup gives you predictable starting state for every test, removes the need for any kind of
+         * cleanup at the end of the test and is more robust in general.
+         * 
+         * However, the setup of every iframe take some time (for preloading). If you are sure that your tests
+         * do not modify any global state (like global variable that can affect the other test) you may want to run 
+         * all of them in the same context, saving the setup time. In this case, you may want to disable this option.
+         * 
+         * Siesta collects all tests with this option disabled and split them into chunks. Every chunk will have exactly
+         * the same values for the configs that influence the initial setup of the page: {@link #preload}, {@link #alsoPreload}, 
+         * {@link #pageUrl}, {@link Siesta.Test.ExtJS#requires} and some others. The tests inside of every 
+         * chunk will be run sequentially, in the same sandbox.
+         * 
+         * **Important**: The 1st test in every chunk will be run normally. Starting from the 2nd one, tests
+         * will skip the {@link Siesta.Test#isReady} check and {@link Siesta.Test#setup} methods. This is because all the 
+         * setup is supposed to be already done by the 1st test. This behavior may change (or made configurable) in the future. 
+         * 
+         * This option can be specified in the test file descriptor.
+         * 
+         * See also {@link #sandboxBoundaryByGroup}, {@link #sandboxCleanup}
+         */
+        sandbox                         : true,
+        
+        /**
+         * @cfg {Boolean} sandboxBoundaryByGroup
+         * 
+         * Only applicable for tests with the {@link #sandbox} option *disabled*.
+         * 
+         * when this option is enabled, the tests to be run in the same context will be guaranteed to reside in the same group.
+         * If a new test group starts (even with the same "preload" config) - a fresh context for that group will be created
+         * by Siesta.
+         * 
+         * For example, in the following setup, both "Group 1" and "Group 2" have sandboxing disabled and the 
+         * same "preload" config. If `sandboxBoundaryByGroup` will be disabled all 4 individual tests will be run 
+         * in the same context. If `sandboxBoundaryByGroup` will be enabled, separate fresh context will be created
+         * for the tests from each group.  
+         * 
 
-             * 
-             */
-            sandboxBoundaryByGroup          : false,
-            
-            
-            /**
-             * @cfg {Boolean} sandboxCleanup
-             * 
-             * Only applicable for tests with the {@link #sandbox} option *disabled*. When enabled, test that runs
-             * in shared sandbox (the sandbox in which another test just has been run) will perform a cleanup. 
-             * 
-             * By default it will remove any "unexpected" globals (see {@link #expectedGlobals}) and clear the DOM.
-             * 
-             * If you will disable this option, every new test in the "groups" will start from the state previous test
-             * has finished the execution. This will allow you split one big test scenario into several files
-             * 
-             * This option can be specified in the test file descriptor.
-             */
-            sandboxCleanup                  : true,
-            
-            uniqueCounter                   : 0,
-            valueToHashIndicies             : Joose.I.Object,
-            
-            // lazy attribute, should be accessed with "getSandboxHashStructure" method
-            sandboxHashStructure            : {
-                lazy    : 'this.buildSandboxHashStructure'
-            },
-            
-            
-            /**
-             * @cfg {String} runCore Either `parallel` or `sequential`. Indicates how the individual tests should be run - several at once or one-by-one.
-             * 
-             * Default value is "parallel", except for IE 6, 7, 8 where it's set to `sequential`.
-             * 
-             * Set this option to `sequential` for tests, that uses some exclusive resources (like for example focus of the
-             * text fields).
-             * 
+    harness.configure({
+        preload     : [ ... ]
+    });
+    
+    harness.start(
+        {
+            group       : 'Group 1',
+            sandbox     : false,
+            items       : [
+                '010-basics/010_sanity.t.js',
+                '010-basics/020_jshint.t.js'
+            ]
+        },
+        {
+            group       : 'Group 2',
+            sandbox     : false,
+            items       : [
+                '020-basics/010_sanity.t.js',
+                '020-basics/030_bdd.t.js'
+            ]
+        },
+        ...
+    )
 
-    Harness.start(
+         * 
+         */
+        sandboxBoundaryByGroup          : true,
+        
+        
+        /**
+         * @cfg {Boolean} sandboxCleanup
+         * 
+         * Only applicable for tests with the {@link #sandbox} option *disabled*. When enabled, test that runs
+         * in shared sandbox (the sandbox in which another test just has been run) will perform a cleanup. 
+         * 
+         * By default it will remove any "unexpected" globals (see {@link #expectedGlobals}) and clear the DOM.
+         * 
+         * If you will disable this option, every new test in the "groups" will start from the state previous test
+         * has finished the execution. This will allow you split one big test scenario into several files
+         * 
+         * This option can be specified in the test file descriptor.
+         */
+        sandboxCleanup                  : true,
+        
+        uniqueCounter                   : 0,
+        valueToHashIndicies             : Joose.I.Object,
+        
+        // lazy attribute, should be accessed with "getSandboxHashStructure" method
+        sandboxHashStructure            : {
+            lazy    : 'this.buildSandboxHashStructure'
+        },
+        
+        
+        /**
+         * @cfg {String} runCore Either `parallel` or `sequential`. Indicates how the individual tests should be run - several at once or one-by-one.
+         * 
+         * Default value is "parallel", except for IE 6, 7, 8 where it's set to `sequential`.
+         * 
+         * Set this option to `sequential` for tests, that uses some exclusive resources (like for example focus of the
+         * text fields).
+         * 
+
+    harness.start(
         'some_test.t.js',
         {
             url         : 'test_that_relies_on_focus.t.js',
@@ -34484,102 +35087,102 @@ Class('Siesta.Harness.Browser', {
         }
     )
 
-             * 
-             * This option can be also specified in the test file descriptor. 
-             */
-            runCore                 : 'parallel',
-            
-            // a `runCore` value, "forced" for all tests, private, used for automation
-            forcedRunCore           : null,
-            
-            /**
-             * @cfg {String} simulateEventsWith
-             * 
-             * This option is IE9-strict mode (and probably above) specific. It specifies how Siesta should simulate events.
-             * The options are 'dispatchEvent' (W3C standard) or 'fireEvent' (MS interface) - both are available in IE9 strict mode
-             * and each activates different set of event listeners. See this blog post for detailed explanations: 
-             * <http://www.digitalenginesoftware.com/blog/archives/76-DOM-Event-Model-Compatibility-or-Why-fireEvent-Doesnt-Trigger-addEventListener.html>
-             * 
-             * Valid values are "dispatchEvent" and "fireEvent".
-             * 
-             * The framework specific adapters (like {@link Siesta.Test.ExtJS} and like {@link Siesta.Test.jQuery}) choose the most appropriate value
-             * automatically (unless explicitly configured). 
-             */
-            simulateEventsWith  : {
-                is      : 'rw',
-                init    : 'dispatchEvent'
-            },
-            
-            // the test with currently "forced" (by the "forceDOMVisible" option) iframe 
-            testOfForcedIFrame          : null,
-            
-            /**
-             * @cfg {Boolean} autoScrollElementsIntoView
-             * 
-             * With this option enabled Siesta will try to scroll invisible action targets into the view automatically, before performing an
-             * action (such as click etc).
-             * 
-             * This option can also be specified in the test file descriptor.
-             */
-            autoScrollElementsIntoView  : true,
-            
-            /**
-             * @cfg {Boolean} enableUnreachableClickWarning When this option is set to `true` (default) Siesta will generate warnings
-             * when click happens in the unreachable point of some element. For example, imagine the following situation: you have
-             * a 10x10px "div" element with "overflow : hidden", and inside of it, another inner "div" 10x50px. Then you ask Siesta
-             * to click on the inner div (by default it clicks in the center). The center of inner div is hidden by the outer div,
-             * so click will happen on some other element and a warning will be issued.
-             * 
-             * Usually this behaviour is what you want, since it protects you from various mistakes, but sometimes you may want
-             * to disable it, for example if you want to write your clicks like this: `{ click : someEl, offset : [ "50%", "100%+10" ] }`
-             * (which means - click 10px to the right from right edge of the `someEl`).
-             * 
-             * Note, that warning won't be issued if in the click point there's some child element of the target element.
-             * 
-             * This option can also be specified in the test file descriptor.
-             */
-            enableUnreachableClickWarning   : true,
-            
-            
-            /**
-             * @cfg {Boolean} maintainViewportSize
-             * 
-             * Enabling this option will cause Siesta to honor the {@link #viewportWidth} and {@link #viewportHeight} configuration options.
-             * 
-             * This option can also be specified in the test file descriptor.
-             */
-            maintainViewportSize        : true,
-            
-            /**
-             * @cfg {Number} viewportWidth 
-             * 
-             * The width of the test iframe, default value is 1024
-             */
-            viewportWidth               : 1024,
-            
-            /**
-             * @cfg {Number} viewportHeight
-             * 
-             * The height of the test iframe, default value is 768
-             */
-            viewportHeight              : 768,
+         * 
+         * This option can be also specified in the test file descriptor. 
+         */
+        runCore                 : 'parallel',
+        
+        // a `runCore` value, "forced" for all tests, private, used for automation
+        forcedRunCore           : null,
+        
+        /**
+         * @cfg {String} simulateEventsWith
+         * 
+         * This option is IE9-strict mode (and probably above) specific. It specifies how Siesta should simulate events.
+         * The options are 'dispatchEvent' (W3C standard) or 'fireEvent' (MS interface) - both are available in IE9 strict mode
+         * and each activates different set of event listeners. See this blog post for detailed explanations: 
+         * <http://www.digitalenginesoftware.com/blog/archives/76-DOM-Event-Model-Compatibility-or-Why-fireEvent-Doesnt-Trigger-addEventListener.html>
+         * 
+         * Valid values are "dispatchEvent" and "fireEvent".
+         * 
+         * The framework specific adapters (like {@link Siesta.Test.ExtJS} and like {@link Siesta.Test.jQuery}) choose the most appropriate value
+         * automatically (unless explicitly configured). 
+         */
+        simulateEventsWith  : {
+            is      : 'rw',
+            init    : 'dispatchEvent'
+        },
+        
+        // the test with currently "forced" (by the "forceDOMVisible" option) iframe 
+        testOfForcedIFrame          : null,
+        
+        /**
+         * @cfg {Boolean} autoScrollElementsIntoView
+         * 
+         * With this option enabled Siesta will try to scroll invisible action targets into the view automatically, before performing an
+         * action (such as click etc).
+         * 
+         * This option can also be specified in the test file descriptor.
+         */
+        autoScrollElementsIntoView  : true,
+        
+        /**
+         * @cfg {Boolean} enableUnreachableClickWarning When this option is set to `true` (default) Siesta will generate warnings
+         * when click happens in the unreachable point of some element. For example, imagine the following situation: you have
+         * a 10x10px "div" element with "overflow : hidden", and inside of it, another inner "div" 10x50px. Then you ask Siesta
+         * to click on the inner div (by default it clicks in the center). The center of inner div is hidden by the outer div,
+         * so click will happen on some other element and a warning will be issued.
+         * 
+         * Usually this behaviour is what you want, since it protects you from various mistakes, but sometimes you may want
+         * to disable it, for example if you want to write your clicks like this: `{ click : someEl, offset : [ "50%", "100%+10" ] }`
+         * (which means - click 10px to the right from right edge of the `someEl`).
+         * 
+         * Note, that warning won't be issued if in the click point there's some child element of the target element.
+         * 
+         * This option can also be specified in the test file descriptor.
+         */
+        enableUnreachableClickWarning   : true,
+        
+        
+        /**
+         * @cfg {Boolean} maintainViewportSize
+         * 
+         * Enabling this option will cause Siesta to honor the {@link #viewportWidth} and {@link #viewportHeight} configuration options.
+         * 
+         * This option can also be specified in the test file descriptor.
+         */
+        maintainViewportSize        : true,
+        
+        /**
+         * @cfg {Number} viewportWidth 
+         * 
+         * The width of the test iframe, default value is 1024
+         */
+        viewportWidth               : 1024,
+        
+        /**
+         * @cfg {Number} viewportHeight
+         * 
+         * The height of the test iframe, default value is 768
+         */
+        viewportHeight              : 768,
 
-            /**
-             * @cfg {Object} recorderConfig A custom config object used to configure the {@link Siesta.Recorder.Recorder} instance
-             */
-            recorderConfig              : null,
-            
-            /**
-             * @cfg {Boolean} jasmine This option can only be specified in the {@link Siesta.Harness#start test files descriptor}.
-             * If its set to `true`, the `url` property of the descriptor should point to the Jasmine spec runner html page.
-             * Siesta then will automatically import the results from the Jasmine suite.
-             * 
-             * Additionally, one need to add a special reporter to the spec runner page, which is available 
-             * as `SIESTA_FOLDER/bin/jasmine-siesta-reporter.js`.
-             * 
-             * Currently Siesta can import the results from Jasmine 2.0 and above.
-             * 
-             * Typical setup will look like (see also `SIESTA_FOLDER/examples/110-jasmine-suite` example):
+        /**
+         * @cfg {Object} recorderConfig A custom config object used to configure the {@link Siesta.Recorder.Recorder} instance
+         */
+        recorderConfig              : null,
+        
+        /**
+         * @cfg {Boolean} jasmine This option can only be specified in the {@link Siesta.Harness#start test files descriptor}.
+         * If its set to `true`, the `url` property of the descriptor should point to the Jasmine spec runner html page.
+         * Siesta then will automatically import the results from the Jasmine suite.
+         * 
+         * Additionally, one need to add a special reporter to the spec runner page, which is available 
+         * as `SIESTA_FOLDER/bin/jasmine-siesta-reporter.js`.
+         * 
+         * Currently Siesta can import the results from Jasmine 2.0 and above.
+         * 
+         * Typical setup will look like (see also `SIESTA_FOLDER/examples/1.unit-tests/jasmine_suite/SpecRunner.html` example):
 
     <head>
         ...
@@ -34593,7 +35196,7 @@ Class('Siesta.Harness.Browser', {
     </head>
              * &nbsp;
  
-    Harness.start(
+    harness.start(
         // regular Siesta test
         '010_regular_test.t.js',
         
@@ -34606,673 +35209,801 @@ Class('Siesta.Harness.Browser', {
         }
     )
 
-             */
-            
+         */
+        
 
-            needUI                      : true,
-            
-            isAutomated                 : false,
-            
-            // will read the settings from cookies when started
-            stateful                    : true,
-            
-            uiMask                      : null,
-            uiMaskActive                : false,
-            
-            hostPageUrlStopsInheriting  : function () {
-                return {
-                    preload         : true,
-                    innerHtmlHead   : true,
-                    innerHtmlBody   : true
-                }
-            },
+        /**
+         * @cfg {Boolean} needUI This option determines whether the Siesta UI should be rendered. By default, it is enabled
+         * when running suite in the browser and disabled in automation launcher. You can explictly set it to `true`, to show the UI
+         * even in automation mode:
+         * 
 
-            /**
-             * @cfg {String} rerunHotKey The key to press together with CTRL to rerun the latest test
-             */
-            rerunHotKey      : 'E'
+    harness.configure({
+        needUI      : true
+    })
+
+         */
+        needUI                      : true,
+        
+        // will read the settings from cookies when started
+        stateful                    : true,
+        
+        uiMask                      : null,
+        uiMaskActive                : false,
+        
+        hostPageUrlStopsInheriting  : function () {
+            return this.buildHostPageUrlStopsInheriting()
+        },
+
+        /**
+         * @cfg {String} rerunHotKey The key to press together with CTRL to rerun the latest test
+         */
+        rerunHotKey      : 'E',
+        
+        /**
+         * @cfg {Boolean} restartOnBlur
+         * 
+         * **Experimental**. When this option is enabled, Siesta will emit a warning when focus moves outside of the test window.
+         * When running in automation mode Siesta will also restart the test.
+         * 
+         * This option can also be specified in the test file descriptor.
+         */
+        restartOnBlur           : false,
+        
+        focusChecker            : {
+            lazy        : function () {
+                var el      = document.createElement('input')
+                el.setAttribute('style', 'position : absolute; left : -1000px; top : -1000px')
+                el.type     = 'text'
+                
+                document.body.appendChild(el)
+                
+                return el
+            }
+        }
+    },
+    
+    
+    after : {
+        
+        onBeforeScopePreload : function (scopeProvider, url) {
+            if (this.viewport) this.viewport.onBeforeScopePreload(scopeProvider, url)
         },
         
         
-        after : {
+        onTestSuiteStart : function (descriptors, contentManager, launchState) {
+            if (this.viewport) this.viewport.onTestSuiteStart(descriptors, contentManager)
+        },
+        
+        
+        onTestSuiteEnd : function (descriptors, contentManager) {
+            if (this.viewport) this.viewport.onTestSuiteEnd(descriptors, contentManager)
             
-            onBeforeScopePreload : function (scopeProvider, url) {
-                if (this.viewport) this.viewport.onBeforeScopePreload(scopeProvider, url)
-            },
+            // remove the links to forced iframe / test in hope to ease the memory pressure
+            delete this.testOfForcedIFrame
             
+            if (this.uiMaskActive) this.hideUiMask()
+        },
+        
+        
+        onTestStart : function (test) {
+            if (this.viewport) this.viewport.onTestStart(test)
             
-            onTestSuiteStart : function (descriptors, contentManager) {
-                if (this.viewport) this.viewport.onTestSuiteStart(descriptors, contentManager)
-            },
+            if (test.hasForcedIframe()) {
+                if (this.testOfForcedIFrame) this.hideForcedIFrame(this.testOfForcedIFrame)
             
+                this.showForcedIFrame(test)
             
-            onTestSuiteEnd : function (descriptors, contentManager) {
-                if (this.viewport) this.viewport.onTestSuiteEnd(descriptors, contentManager)
-                
-                // remove the links to forced iframe / test in hope to ease the memory pressure
-                delete this.testOfForcedIFrame
-                
+                this.testOfForcedIFrame     = test
+            } else {
                 if (this.uiMaskActive) this.hideUiMask()
-            },
-            
-            
-            onTestStart : function (test) {
-                if (this.viewport) this.viewport.onTestStart(test)
-                
-                if (test.hasForcedIframe()) {
-                    if (this.testOfForcedIFrame) this.hideForcedIFrame(this.testOfForcedIFrame)
-                
-                    this.showForcedIFrame(test)
-                
-                    this.testOfForcedIFrame     = test
-                } else {
-                    if (this.uiMaskActive) this.hideUiMask()
-                }
-            },
-            
-            
-            onTestUpdate : function (test, result, parentResult) {
-                if (this.viewport) this.viewport.onTestUpdate(test, result, parentResult)
-                
-                if ((result instanceof Siesta.Result.Diagnostic) && result.isWarning && this.needUI) { 
-                    if (typeof console != 'undefined' && console.warn) console.warn(result + '')
-                }
-            },
-            
-            
-            onTestEnd : function (test) {
-                if (test.hasForcedIframe())             this.hideForcedIFrame(test)
-                
-                if (test == this.testOfForcedIFrame)    this.testOfForcedIFrame = null
-                
-                if (this.viewport) this.viewport.onTestEnd(test)
-                
-                // when browser is simulating the event on the element that is not visible in the iframe
-                // it will scroll that point into view, using the `scrollLeft` property of the parent element
-                // this line fixes that displacement
-                var wrapper     = test.scopeProvider.wrapper
-                
-                if (wrapper) {
-                    wrapper.scrollLeft      = wrapper.scrollTop = 0
-                }
-                document.body.scrollLeft    = document.body.scrollTop = 0
-            },
-            
-            
-            onTestFail : function (test, exception, stack) {
-                if (this.viewport) this.viewport.onTestFail(test, exception, stack)
             }
         },
         
         
-        methods : {
-            buildSandboxHashStructure : function () {
-                return [
-                    'preload',
-                    'alsoPreload',
-                    'hostPageUrl',
-                    'useStrictMode',
-                    'overrideSetTimeout'
-                ]
-            },
+        onTestUpdate : function (test, result, parentResult) {
+            if (this.viewport) this.viewport.onTestUpdate(test, result, parentResult)
+            
+            if ((result instanceof Siesta.Result.Diagnostic) && result.isWarning && this.needUI) { 
+                if (typeof console != 'undefined' && console.warn) console.warn(result + '')
+            }
+        },
         
         
-            createViewport       : function(config) {
-                return Ext.create("Siesta.Harness.Browser.UI.Viewport", config);
-            },
+        onTestEnd : function (test) {
+            if (test.hasForcedIframe())             this.hideForcedIFrame(test)
             
+            if (test == this.testOfForcedIFrame)    this.testOfForcedIFrame = null
             
-            canShowCursorForTest : function (test) {
-                // return false for test's running in popups (not iframes), since we can't show any visual accompaniment for them
-                if (!(test.scopeProvider instanceof Scope.Provider.IFrame)) return false;
+            if (this.viewport) this.viewport.onTestEnd(test)
             
-                // if there is a "forced to be on top" test then we only need to compare the tests instances
-                if (this.testOfForcedIFrame) {
-                    return this.testOfForcedIFrame.isFromTheSameGeneration(test)
-                }
-                
-                // finally we can only show cursor for tests with iframe wrapper
-                // (since mouse visualizer puts the cursor in it)
-                return Boolean(test.scopeProvider.wrapper)
-            },
+            // when browser is simulating the event on the element that is not visible in the iframe
+            // it will scroll that point into view, using the `scrollLeft` property of the parent element
+            // this line fixes that displacement
+            var wrapper     = test.scopeProvider.wrapper
             
+            if (wrapper) {
+                wrapper.scrollLeft      = wrapper.scrollTop = 0
+            }
+            document.body.scrollLeft    = document.body.scrollTop = 0
+        },
+        
+        
+        onTestFail : function (test, exception, stack) {
+            if (this.viewport) this.viewport.onTestFail(test, exception, stack)
+        }
+    },
+    
+    
+    methods : {
+        
+        buildHostPageUrlStopsInheriting : function () {
+            return {
+                preload         : true,
+                innerHtmlHead   : true,
+                innerHtmlBody   : true
+            }
+        },
+        
+        
+        buildSandboxHashStructure : function () {
+            return [
+                'preload',
+                'alsoPreload',
+                'hostPageUrl',
+                'pageUrl',
+                'useStrictMode',
+                'overrideSetTimeout'
+            ]
+        },
+    
+    
+        createViewport       : function(config) {
+            return Ext.create("Siesta.Harness.Browser.UI.Viewport", config);
+        },
+        
+        
+        canShowCursorForTest : function (test) {
+            // return false for test's running in popups (not iframes), since we can't show any visual accompaniment for them
+            if (!(test.scopeProvider instanceof Scope.Provider.IFrame)) return false;
+        
+            // if there is a "forced to be on top" test then we only need to compare the tests instances
+            if (this.testOfForcedIFrame) {
+                return this.testOfForcedIFrame.isFromTheSameGeneration(test)
+            }
             
-            configure : function() {
-                this.SUPERARG(arguments);
+            // finally we can only show cursor for tests with iframe wrapper
+            // (since mouse visualizer puts the cursor in it)
+            return Boolean(test.scopeProvider.wrapper)
+        },
+        
+        
+        configure : function() {
+            this.SUPERARG(arguments);
 
-                this.id = this.title || window.location.href;
-            },
+            this.id = this.title || window.location.href;
+        },
 
+        
+        start : function () {
+            // Opera's global variables handling is weird
+            if ($.browser.opera) {
+                this.autoCheckGlobals = false;
+            }
             
-            start : function () {
-                // Opera's global variables handling is weird
-                if ($.browser.opera) {
-                    this.autoCheckGlobals = false;
-                }
-                
-                if ($.browser.msie && $.browser.version !== "9.0") {
-                    if (!this.hasOwnProperty('runCore')) this.runCore = 'sequential'
-                }
-                
-                this.SUPERARG(arguments)
-            },
+            if ($.browser.msie && $.browser.version !== "9.0") {
+                if (!this.hasOwnProperty('runCore')) this.runCore = 'sequential'
+            }
             
+            this.SUPERARG(arguments)
+        },
+        
+        
+        populateCleanScopeGlobals : function (scopeProvider, callback) {
+            if ($.browser.msie && Number(/^(\d+)/.exec($.browser.version)[ 1 ]) < 9) {
+                // do nothing for IE < 9 - testing leakage of globals is not supported
+                // also IE8 often crashes on this stage
+                this.disableGlobalsCheck = true
+                
+                callback()
+                
+                return
+            }
             
-            launch : function () {
-                var me = this
-                
-                var args        = arguments
-                var SUPER       = this.SUPER
-                
-                if (this.needUI && !this.viewport) {
-                    var cb = function () {
-                        me.viewport = me.createViewport({
-                            title           : me.title,
-                            harness         : me
-                        });
-                        
-                        // if we are here, then we were requested to show the UI for automated launch
-                        // auto-launch the test suite in this case
-                        if (me.isAutomated) SUPER.apply(me, args) 
-                    };
+            // always populate the globals from IFrame (even if user specified the Window provider)
+            this.SUPER('Scope.Provider.IFrame', callback)
+        },
+        
+        
+        onUnload : function () {
+            Joose.O.each(this.scopesByURL, function (scopeProvider, url) {
+                // to close opened popups when harness page unloads
+                scopeProvider.cleanup()
+            })
+        },
+        
+        
+        setup : function (callback) {
+            var me      = this
+            var sup     = this.SUPER
+            
+            window.onunload     = function () { me.onUnload() }
+            
+            // required to bring the window to front in FF
+            window.focus()
 
-                    if (Ext.setup) {
-                        Ext.setup({ onReady : cb });
-                    } else {
-                        Ext.onReady(cb) 
-                    }
-                } else {
-                    this.SUPERARG(arguments)
-                }
-            },
-            
-            
-            populateCleanScopeGlobals : function (scopeProvider, callback) {
-                if ($.browser.msie && Number(/^(\d+)/.exec($.browser.version)[ 1 ]) < 9) {
-                    // do nothing for IE < 9 - testing leakage of globals is not supported
-                    // also IE8 often crashes on this stage
-                    this.disableGlobalsCheck = true
+            $(function () {
+                // init the singleton
+                Siesta.Harness.Browser.FeatureSupport();
+                
+                var needUI      = me.hasOwnProperty('needUI') || !me.isAutomated ? me.needUI : false
+                
+                if (typeof Ext != 'undefined' && needUI) {
+                    me.autoLaunchTests  = false
                     
-                    callback()
-                    
-                    return
-                }
-                
-                // always populate the globals from IFrame (even if user specified the Window provider)
-                this.SUPER('Scope.Provider.IFrame', callback)
-            },
-            
-            
-            onUnload : function () {
-                Joose.O.each(this.scopesByURL, function (scopeProvider, url) {
-                    // to close opened popups when harness page unloads
-                    if (scopeProvider instanceof Scope.Provider.Window) scopeProvider.cleanup()
-                })
-            },
-            
-            
-            setup : function (callback) {
-                var me      = this
-                var sup     = this.SUPER
-                
-                window.onunload     = function () { me.onUnload() }
-                
-                // required to bring the window to front in FF
-                window.focus()
-
-                // delay the super setup until dom ready
-                if (!this.isAutomated) {
                     Ext.onReady(function () {
-                        // init the singleton
-                        Siesta.Harness.Browser.FeatureSupport();
-                    
-                        sup.call(me, callback);
-                    });
-                } else {
-                    $(function () {
-                        // init the singleton
-                        Siesta.Harness.Browser.FeatureSupport();
-                    
-                        sup.call(me, callback);
-                    });
-                }
-            },
-            
-            
-            getDescriptorConfig : function (descriptor, configName, doNotLookAtRoot) {
-                // for any "normal" config use regular parent implementation
-                if (!(configName in this.hostPageUrlStopsInheriting)) return this.SUPERARG(arguments)
-                
-                var testConfig          = descriptor.testConfig
-                
-                var hasOwnValue         = testConfig && testConfig.hasOwnProperty(configName) || descriptor.hasOwnProperty(configName)
-                // this will include lookup in the "testConfig"
-                var configValue         = this.lookUpValueInDescriptorTree(descriptor, configName)
-                
-                var hasHostPageUrl      = Boolean(this.getDescriptorConfig(descriptor, 'hostPageUrl', true))
-                
-                // for host page url, if we found preload value which is not inherit, then return it if its own 
-                // (defined on the descriptor) otherwise return empty array
-                if (hasHostPageUrl && configValue != 'inherit') return hasOwnValue ? configValue : []
-                        
-                do {
-                    var testConfig      = descriptor.testConfig
-                    var testHasValue    = testConfig && testConfig.hasOwnProperty(configName)
-                    
-                    if (testHasValue || descriptor.hasOwnProperty(configName)) {
-                        var value       = testHasValue ? testConfig[ configName ] : descriptor[ configName ]
-                        
-                        if (value != 'inherit') return value
-                    }
-                    
-                    descriptor          = descriptor.parent
-                    
-                } while (descriptor && descriptor != this)
-                    
-                if (doNotLookAtRoot) 
-                    return undefined
-                else
-                    return this[ configName ]
-            },
-            
-            
-            normalizeScopeProvider : function (desc) {
-                this.SUPERARG(arguments)
-                
-                if (this.getDescriptorConfig(desc, 'runInPopup')) desc.scopeProvider = 'Scope.Provider.Window'
-            },
-            
-            
-            getScopeProviderConfigFor : function (desc, launchId) {
-                var config                      = this.SUPERARG(arguments)
-                
-                config.name                     = desc.title || desc.url.replace(/(.*\/)?(.*)/, '$2')
-                config.cls                      = 'tr-iframe'
-                config.performWrap              = true
-                config.wrapCls                  = 'tr-iframe-wrapper'
-                config.sourceURL                = config.sourceURL || this.getDescriptorConfig(desc, 'hostPageUrl')
-                config.minViewportSize          = config.minViewportSize || {
-                    width   : this.getDescriptorConfig(desc, 'viewportWidth'),
-                    height  : this.getDescriptorConfig(desc, 'viewportHeight')
-                }
-                
-                config.innerHtmlHead            = this.getDescriptorConfig(desc, 'innerHtmlHead')
-                config.innerHtmlBody            = this.getDescriptorConfig(desc, 'innerHtmlBody')
-                
-                if (!config.hasOwnProperty('useStrictMode')) config.useStrictMode = this.getDescriptorConfig(desc, 'useStrictMode')
-                
-                return config
-            },
-            
-            
-            getNewTestConfiguration : function (desc, scopeProvider, contentManager, launchOptions) {
-                var config          = this.SUPERARG(arguments)
-                
-                if (this.getDescriptorConfig(desc, 'speedRun')) {
-                    Joose.O.extend(config, {
-                        actionDelay         : 1,
-                        dragPrecision       : 20,
-                        dragDelay           : 10
+                        sup.call(me, function () {
+                            me.viewport = me.createViewport({
+                                title           : me.title,
+                                harness         : me
+                            })
+                            
+                            callback && callback()
+                        })
                     })
-                }
-                
-                if (this.hasOwnProperty('simulateEventsWith')) config.simulateEventsWith = this.simulateEventsWith
-                
-                config.forceDOMVisible              = this.getDescriptorConfig(desc, 'forceDOMVisible')
-                config.autoScrollElementsIntoView   = this.getDescriptorConfig(desc, 'autoScrollElementsIntoView')
-                config.enableUnreachableClickWarning = this.getDescriptorConfig(desc, 'enableUnreachableClickWarning')
-                
-                return config
-            },
-            
-            
-            assignUniqueTag     : function (value, configName) {
-                // has to be an Object-like value (object, array, function, etc)
-                if (value == null) return ''
-                
-                if (value === Object(value)) {
-                    if (value.__UNIQUE__) return value.__UNIQUE__
-                    
-                    return value.__UNIQUE__ = (this.uniqueCounter++).toString(36)
                 } else {
-                    value                   = value + ''
-                    
-                    var configIndex         = this.valueToHashIndicies[ configName ]
-                    
-                    if (!configIndex) configIndex = this.valueToHashIndicies[ configName ] = {}
-                    
-                    if (configIndex[ value ]) return configIndex[ value ]
-                    
-                    return configIndex[ value ] = (this.uniqueCounter++).toString(36)
+                    sup.call(me, callback)
                 }
-            },
-            
-            
-            calculateSharedContextGroupHash : function (desc) {
-                var me              = this
-                var structure       = this.getSandboxHashStructure()
-                
-                var hash            = ''
-                
-                Joose.A.each(structure, function (configName) {
-                    hash            += me.assignUniqueTag(me.getDescriptorConfig(desc, configName), configName)
-                })
-                
-                if (this.sandboxBoundaryByGroup) hash += this.assignUniqueTag(desc.parent)
-                    
-                return hash
-            },
-            
-            
-            runCoreGeneral : function (descriptors, contentManager, launchOptions, callback) {
-                var me                  = this
-                var canRunParallel      = []
-                var mustRunSequential   = []
-                
-                // array of { groupHash : ..., items : [] } objects
-                var sharedContextGroups = []
-                var groupsByHash        = {}
-                
-                var forcedRunCore       = this.forcedRunCore
-                
-                Joose.A.each(descriptors, function (desc) {
-                    if (!me.getDescriptorConfig(desc, 'sandbox')) {
-                        var hash        = me.calculateSharedContextGroupHash(desc)
-                        var group       = groupsByHash[ hash ]
-                        
-                        if (!group) {
-                            group = groupsByHash[ hash ] = { groupHash : hash, items : [] }
-                            sharedContextGroups.push(group)
-                        }
-                        
-                        group.items.push(desc)
-                    } else {
-                        var runCore         = forcedRunCore || me.getDescriptorConfig(desc, 'runCore')
-                        
-                        if (runCore == 'sequential' || me.getDescriptorConfig(desc, 'forceDOMVisible'))
-                            mustRunSequential.push(desc)
-                        else
-                            canRunParallel.push(desc)
-                    }
-                })
-                
-                me.runCoreSharedContext(sharedContextGroups, contentManager, launchOptions, function () {
-                        
-                    me.runCoreParallel(canRunParallel, contentManager, launchOptions, function () {
-                        
-                        me.runCoreSequential(mustRunSequential, contentManager, launchOptions, callback)
-                    })
-                })
-            },
-            
-            
-            runCoreSharedContext : function (sharedContextGroups, contentManager, launchOptions, callback) {
-                var me                  = this
-                
-                var processDescriptor   = function (descriptors, isFirst, scopeProvider) {
-                    if (!descriptors.length) { processGroup(sharedContextGroups); return }
-                    
-                    var desc            = descriptors.shift()
-                    
-                    // if there's a descriptor left after the shift do not cleanup the
-                    // scope provider at the end of the test (as its going to be re-used by the next test)
-                    var noCleanup       = descriptors.length > 0
-                    
-                    if (isFirst) {
-                        // new context should be created for the 1st item in the group
-                        me.processURL(desc, desc.index, contentManager, launchOptions, function () {
-                            processDescriptor(descriptors, false, me.scopesByURL[ desc.url ])
-                        }, noCleanup)
-                    } else {
-                        // same context should be re-used
-                        me.processUrlShared(desc, desc.index, contentManager, launchOptions, function () {
-                            processDescriptor(descriptors, false, scopeProvider)
-                        }, noCleanup, scopeProvider)
-                    }
-                }
-                    
-                var processGroup        = function (sharedContextGroups) {
-                    if (!sharedContextGroups.length) { callback(); return }
-                    
-                    var group           = sharedContextGroups.shift()
-                    
-                    processDescriptor(group.items, true)
-                }
-                
-                processGroup(sharedContextGroups)
-            },
-            
-            
-            processUrlShared : function (desc, index, contentManager, launchOptions, callback, noCleanup, scopeProvider) {
-                var me      = this
-                var url     = desc.url
-                
-                if (desc.isMissing) {
-                    callback()
-                    
-                    return
-                }
-                
-                // a magical shared object, which will contain the `test` property with test instance, once the test will be created
-                var testHolder      = {}
-                // an array of errors occured during preload phase
-                var preloadErrors   = []    
-                
-                var transparentEx   = this.getDescriptorConfig(desc, 'transparentEx')
-                
-                var onErrorHandler  = function (msg, url, lineNumber, col, error) {
-                    var test = testHolder.test
-                    
-                    if (test && test.isStarted()) {
-                        test.nbrExceptions++;
-                        test.failWithException(error || (msg + ' ' + url + ' ' + lineNumber))
-                    } else {
-                        preloadErrors.push(msg + ' ' + url + ' ' + lineNumber)
-                    }
-                }
-                
-                // trying to setup the `onerror` handler as early as possible - to detect each and every exception from the test
-                scopeProvider.addOnErrorHandler(onErrorHandler, !transparentEx)
-                
-                if (desc.testCode || this.cachePreload && contentManager.hasContentOf(desc.url))
-                    scopeProvider.runCode(desc.testCode || contentManager.getContentOf(desc.url), cont)
-                else
-                    scopeProvider.runScript(this.resolveURL(desc.url, scopeProvider, desc), cont)
-                    
-                function cont() {
-                    // scope provider has been cleaned up while setting up? (may be user has restarted the test)
-                    // then do nothing
-                    if (!scopeProvider.scope) { callback(); return }
-                    
-                    var testClass       = me.getDescriptorConfig(desc, 'testClass')
-                    if (me.typeOf(testClass) == 'String') testClass = Joose.S.strToClass(testClass)
-                    
-                    var testConfig      = me.getNewTestConfiguration(desc, scopeProvider, contentManager, launchOptions)
-                    
-                    // create the test instance early, so that one can perform some setup (as the test class method call)
-                    // even before the "hostPageUrl" starts loading
-                    var test            = testHolder.test = new testClass(testConfig)
-                    
-                    me.launchTest({
-                        testHolder          : testHolder,
-                        desc                : desc,
-                        scopeProvider       : scopeProvider,
-                        contentManager      : contentManager,
-                        launchOptions       : launchOptions,
-                        preloadErrors       : preloadErrors,
-                        onErrorHandler      : onErrorHandler,
-                        
-                        startTestAnchor     : scopeProvider.scope.StartTest,
-                        noCleanup           : noCleanup,
-                        reusingSandbox      : true
-                    }, callback)
-                }
-            },
-            
-            
-            normalizeURL : function (url) {
-                // ref to JSAN module - DEPRECATED
-                if (/^jsan:/.test(url)) url = '/jsan/' + url.replace(/^jsan:/, '').replace(/\./g, '/') + '.js'
-                
-                // ref to lib in current dist (no `/` and trailing `.js`) - DEPRECATED 
-                if (!/\.js$/.test(url) && !/\//.test(url) && !/\.css(\?.*)?$/i.test(url)) url = '../lib/' + url.replace(/\./g, '/') + '.js'
-                
-                return url
-            },
-            
-            
-            normalizeDescriptor : function (desc, parent, index, level) {
-                var desc        = this.SUPERARG(arguments)
-                
-                if (!desc.group && desc.jasmine) {
-                    desc.hostPageUrl        = desc.url
-                    desc.testCode           = this.getJasmineTestCode()
-                    // preloads will not be inherited anyway because "hostPageUrl" option presents
-                    // but we explicitly remove them one more time
-                    desc.preload            = []
-                }
-                
-                return desc
-            },
-
+            })
+        },
         
-            resolveURL : function (url, scopeProvider, desc) {
-                // if the `scopeProvider` is provided and it has a sourceURL - then absolutize the preloads relative to that url
-                if (scopeProvider && scopeProvider.sourceURL) url = this.absolutizeURL(url)
+        
+        getDescriptorConfig : function (descriptor, configName, doNotLookAtRoot) {
+            // for any "normal" config use regular parent implementation
+            if (!(configName in this.hostPageUrlStopsInheriting)) return this.SUPERARG(arguments)
+            
+            var testConfig          = descriptor.testConfig
+            
+            var hasOwnValue         = testConfig && testConfig.hasOwnProperty(configName) || descriptor.hasOwnProperty(configName)
+            // this will include lookup in the "testConfig"
+            var configValue         = this.lookUpValueInDescriptorTree(descriptor, configName)
+            
+            var hasPageUrl          = Boolean(this.getDescriptorConfig(descriptor, 'pageUrl', true))
+            
+            // for host page url, if we found preload value which is not inherit, then return it if its own 
+            // (defined on the descriptor) otherwise return empty array
+            if (hasPageUrl && configValue != 'inherit') return hasOwnValue ? configValue : []
+                    
+            do {
+                var testConfig      = descriptor.testConfig
+                var testHasValue    = testConfig && testConfig.hasOwnProperty(configName)
                 
-                if (this.disableCaching)
-                    // if there's a ?param string in url - append new param
-                    if (/\?./.test(url))
-                        url += '&disableCaching=' + new Date().getTime()
+                if (testHasValue || descriptor.hasOwnProperty(configName)) {
+                    var value       = testHasValue ? testConfig[ configName ] : descriptor[ configName ]
+                    
+                    if (value != 'inherit') return value
+                }
+                
+                descriptor          = descriptor.parent
+                
+            } while (descriptor && descriptor != this)
+                
+            if (doNotLookAtRoot) 
+                return undefined
+            else
+                return this[ configName ]
+        },
+        
+        
+        normalizeScopeProvider : function (desc) {
+            this.SUPERARG(arguments)
+            
+            if (this.getDescriptorConfig(desc, 'runInPopup')) desc.scopeProvider = 'Scope.Provider.Window'
+        },
+        
+        
+        getScopeProviderConfigFor : function (desc, launchId) {
+            var me                          = this
+            var config                      = this.SUPERARG(arguments)
+            
+            config.cleanupDelay             = 0
+            config.name                     = desc.title || desc.url.replace(/(.*\/)?(.*)/, '$2')
+            config.cls                      = 'tr-iframe'
+            
+            config.performWrap              = true
+            
+            var wrapper                     = document.createElement('div')
+            
+            wrapper.className               = 'tr-iframe-wrapper'
+            wrapper.innerHTML               = "<div class='tr-close fa fa-close'>&nbsp;</div><div class='tr-iframe-wrapper-inner'></div>"
+            
+            wrapper.childNodes[ 0 ].onclick = function () {
+                var test                    = me.getTestByURL(desc.url)
+                
+                if (test) {
+                    me.hideForcedIFrame(test)
+                    
+                    if (me.viewport) me.viewport.onManualCloseOfForcedIframe(test)
+                } else {
+                    this.parentElement.style.left   = '-10000px'
+                    this.parentElement.style.top    = '-10000px'
+                }
+            }
+            
+            config.wrapper                  = wrapper
+            config.iframeParentEl           = wrapper.childNodes[ 1 ]
+            
+            config.sourceURL                = config.sourceURL || this.getDescriptorConfig(desc, 'pageUrl')
+            config.minViewportSize          = config.minViewportSize || {
+                width   : this.getDescriptorConfig(desc, 'viewportWidth'),
+                height  : this.getDescriptorConfig(desc, 'viewportHeight')
+            }
+            
+            config.innerHtmlHead            = this.getDescriptorConfig(desc, 'innerHtmlHead')
+            config.innerHtmlBody            = this.getDescriptorConfig(desc, 'innerHtmlBody')
+            
+            
+            if (!config.hasOwnProperty('useStrictMode')) config.useStrictMode = this.getDescriptorConfig(desc, 'useStrictMode')
+            
+            return config
+        },
+        
+        
+        getNewTestConfiguration : function (desc, scopeProvider, contentManager, launchState) {
+            var me              = this
+            var config          = this.SUPERARG(arguments)
+            
+            if (this.getDescriptorConfig(desc, 'speedRun')) {
+                Joose.O.extend(config, {
+                    actionDelay         : 1,
+                    dragPrecision       : 20,
+                    dragDelay           : 10
+                })
+            }
+            
+            if (this.hasOwnProperty('simulateEventsWith')) config.simulateEventsWith = this.simulateEventsWith
+            
+            Joose.A.each([
+                'forceDOMVisible',
+                'autoScrollElementsIntoView',
+                'enableUnreachableClickWarning',
+                'restartOnBlur'
+            ], function (name) {
+                config[ name ]  = me.getDescriptorConfig(desc, name)
+            })
+            
+            return config
+        },
+        
+        
+        assignUniqueTag     : function (value, configName) {
+            // has to be an Object-like value (object, array, function, etc)
+            if (value == null) return ''
+            
+            if (value === Object(value)) {
+                if (value.__UNIQUE__) return value.__UNIQUE__
+                
+                return value.__UNIQUE__ = (this.uniqueCounter++).toString(36)
+            } else {
+                value                   = value + ''
+                
+                var configIndex         = this.valueToHashIndicies[ configName ]
+                
+                if (!configIndex) configIndex = this.valueToHashIndicies[ configName ] = {}
+                
+                if (configIndex[ value ]) return configIndex[ value ]
+                
+                return configIndex[ value ] = (this.uniqueCounter++).toString(36)
+            }
+        },
+        
+        
+        calculateSharedContextGroupHash : function (desc) {
+            var me              = this
+            var structure       = this.getSandboxHashStructure()
+            
+            var hash            = ''
+            
+            Joose.A.each(structure, function (configName) {
+                hash            += me.assignUniqueTag(me.getDescriptorConfig(desc, configName), configName)
+            })
+            
+            if (this.sandboxBoundaryByGroup) hash += this.assignUniqueTag(desc.parent)
+                
+            return hash
+        },
+        
+        
+        sortDescriptors : function (descriptors, forcedRunCore, idsOnly) {
+            var me                  = this
+            var canRunParallel      = []
+            var mustRunSequential   = []
+            
+            // array of { groupHash : ..., items : [] } objects
+            var sharedContextGroups = []
+            var groupsByHash        = {}
+            
+            Joose.A.each(descriptors, function (desc) {
+                if (!me.getDescriptorConfig(desc, 'sandbox')) {
+                    var hash        = me.calculateSharedContextGroupHash(desc)
+                    var group       = groupsByHash[ hash ]
+                    
+                    if (!group) {
+                        group       = groupsByHash[ hash ] = { groupHash : hash, items : [] }
+                        sharedContextGroups.push(group)
+                    }
+                    
+                    group.items.push(idsOnly ? desc.id : desc)
+                } else {
+                    var runCore         = forcedRunCore || me.getDescriptorConfig(desc, 'runCore')
+                    
+                    if (runCore == 'sequential' || me.getDescriptorConfig(desc, 'forceDOMVisible'))
+                        mustRunSequential.push(idsOnly ? desc.id : desc)
                     else
-                        if (!/\?$/.test(url)) 
-                            url += '?disableCaching=' + new Date().getTime()
-                
-                // otherwise assumed to be a raw filename, relative or absolute
-                return url
-            },
-            
-            
-            absolutizeURL : function (url, baseUrl) {
-                // if the url is already absolute - just return it (perhaps with some normalization - 2nd case)
-                // the url starting with // is also valid absolute url
-                if (/^((https?|file):)?\/\//.test(url))  return url
-                if (/^\//.test(url))    return this.baseProtocol + '//' + this.baseHost + url
-                
-                baseUrl             = baseUrl || this.baseUrl
-                
-                // strip the potential query and filename from baseURL, leaving only the "directory" part
-                baseUrl             = baseUrl.replace(/\?.*$/,'').replace(/\/[^/]*$/, '/')
-                
-                // first absolutize the base url relative the harness page (which will be always global, so it won't recurse)
-                var absBaseUrl      = this.absolutizeURL(baseUrl, this.baseUrl)
-                
-                // add a trailing "/" if missing
-                absBaseUrl          = absBaseUrl.replace(/\/?$/, '/')
-                
-                return absBaseUrl + url
-            },
-            
-            
-            getUiMask : function () {
-                if (this.uiMask) return this.uiMask
-                
-                var uiMask              = this.uiMask = document.createElement('div')
-                
-                uiMask.className        = 'tr-ui-mask'
-                uiMask.style.display    = 'none'
-                
-                document.body.appendChild(uiMask)
-                
-                return uiMask
-            },
-            
-            
-            showUiMask  : function () {
-                var mask            = this.getUiMask()
-                
-                mask.style.display  = 'block'
-                
-                this.uiMaskActive   = true
-            },
-            
-            
-            hideUiMask  : function () {
-                var mask            = this.getUiMask()
-                
-                mask.style.display  = 'none'
-                
-                this.uiMaskActive   = false
-            },
-            
-            
-            showForcedIFrame : function (test) {
-                $.rebindWindowContext(window);
-                
-                test.isDOMForced    = true
-                
-                var wrapper         = test.scopeProvider.wrapper
-                
-                $(wrapper).addClass('tr-iframe-forced')
-                $(wrapper).removeClass('tr-iframe-hidden')
-            
-                $(wrapper).center()
-                
-                test.fireEvent('testframeshow')
-            },
-        
-        
-            hideForcedIFrame : function (test) {
-                $.rebindWindowContext(window);
-                
-                test.isDOMForced    = false
-                
-                var wrapper         = test.scopeProvider.wrapper
-                
-                $(wrapper).removeClass('tr-iframe-forced')
-                $(wrapper).addClass('tr-iframe-hidden')
-                
-                test.fireEvent('testframehide')
-            },
-            
-            
-            showForcedIFrameScreenshot : function (test) {
-                this.showUiMask()
-                
-                $.rebindWindowContext(window);
-                
-                var wrapper         = test.scopeProvider.wrapper
-                
-                $(wrapper).addClass('tr-iframe-forced-screenshot')
-                $(wrapper).removeClass('tr-iframe-forced')
-                $(wrapper).removeClass('tr-iframe-hidden')
-                
-                test.fireEvent('testframeshow')
-            },
-        
-        
-            hideForcedIFrameScreenshot : function (test) {
-                this.hideUiMask()
-                
-                $.rebindWindowContext(window);
-                
-                var wrapper         = test.scopeProvider.wrapper
-                
-                $(wrapper).removeClass('tr-iframe-forced-screenshot')
-                // if there's a viewport, then the frame will be re-positioned by the DOM container
-                // so no need to add the "hidden" class
-//                if (!this.viewport) $(wrapper).addClass('tr-iframe-hidden')
-                
-                if (test.isDOMForced) {
-                    $(wrapper).addClass('tr-iframe-forced')
-                    $(wrapper).center()
+                        canRunParallel.push(idsOnly ? desc.id : desc)
                 }
+            })
+            
+            return {
+                sharedContextGroups     : sharedContextGroups,
+                mustRunSequential       : mustRunSequential,
+                canRunParallel          : canRunParallel
+            }
+        },
+        
+        
+        runCoreGeneral : function (descriptors, contentManager, launchState, callback) {
+            var me          = this
+            var sorted      = this.sortDescriptors(descriptors, this.forcedRunCore, false)
+            
+            me.runCoreSharedContext(sorted.sharedContextGroups, contentManager, launchState, function () {
+                    
+                me.runCoreParallel(sorted.canRunParallel, contentManager, launchState, function () {
+                    
+                    me.runCoreSequential(sorted.mustRunSequential, contentManager, launchState, callback)
+                })
+            })
+        },
+        
+        
+        runCoreSharedContext : function (sharedContextGroups, contentManager, launchState, callback) {
+            var me                  = this
+            
+            var processDescriptor   = function (descriptors, isFirst, scopeProvider, firstDesc) {
+                if (!descriptors.length) { processGroup(sharedContextGroups); return }
                 
-                test.fireEvent('testframehide')
+                var desc            = descriptors.shift()
+                
+                // if there's a descriptor left after the shift do not cleanup the
+                // scope provider at the end of the test (as its going to be re-used by the next test)
+                var noCleanup       = descriptors.length > 0
+                
+                if (isFirst) {
+                    // new context should be created for the 1st item in the group
+                    me.processURL(desc, desc.index, contentManager, launchState, function () {
+                        processDescriptor(descriptors, false, me.scopesByURL[ desc.url ], desc)
+                    }, noCleanup)
+                } else {
+                    // same context should be re-used
+                    me.processUrlShared(desc, desc.index, contentManager, launchState, function () {
+                        processDescriptor(descriptors, false, scopeProvider, firstDesc)
+                    }, noCleanup, scopeProvider, firstDesc)
+                }
+            }
+                
+            var processGroup        = function (sharedContextGroups) {
+                if (!sharedContextGroups.length) { callback(); return }
+                
+                var group           = sharedContextGroups.shift()
+                
+                processDescriptor(group.items, true)
+            }
+            
+            processGroup(sharedContextGroups)
+        },
+        
+        
+        processUrlShared : function (desc, index, contentManager, launchState, callback, noCleanup, scopeProvider, firstDesc) {
+            var me      = this
+            var url     = desc.url
+            
+            if (desc.isMissing) {
+                callback()
+                
+                return
+            }
+            
+            // a magical shared object, which will contain the `test` property with test instance, once the test will be created
+            var testHolder      = {}
+            // an array of errors occured during preload phase
+            var preloadErrors   = []    
+            
+            var transparentEx   = this.getDescriptorConfig(desc, 'transparentEx')
+            
+            var onErrorHandler  = function (msg, url, lineNumber, col, error) {
+                var test = testHolder.test
+                
+                if (test && test.isStarted()) {
+                    test.nbrExceptions++;
+                    test.failWithException(error || (msg + ' ' + url + ' ' + lineNumber))
+                } else {
+                    preloadErrors.push(msg + ' ' + url + ' ' + lineNumber)
+                }
+            }
+            
+            // trying to setup the `onerror` handler as early as possible - to detect each and every exception from the test
+            scopeProvider.addOnErrorHandler(onErrorHandler, !transparentEx)
+            
+            if (desc.testCode || this.cachePreload && contentManager.hasContentOf(desc.url))
+                scopeProvider.runCode(desc.testCode || contentManager.getContentOf(desc.url), cont)
+            else
+                scopeProvider.runScript(this.resolveURL(desc.url, scopeProvider, desc), cont)
+                
+            function cont() {
+                // scope provider has been cleaned up while setting up? (may be user has restarted the test)
+                // then do nothing
+                if (!scopeProvider.scope) { callback(); return }
+                
+                var testClass       = me.getDescriptorConfig(desc, 'testClass')
+                if (me.typeOf(testClass) == 'String') testClass = Joose.S.strToClass(testClass)
+                
+                var testConfig      = me.getNewTestConfiguration(desc, scopeProvider, contentManager, launchState)
+                
+                // create the test instance early, so that one can perform some setup (as the test class method call)
+                // even before the "pageUrl" starts loading
+                var test            = testHolder.test = new testClass(testConfig)
+                
+                me.launchTest({
+                    testHolder          : testHolder,
+                    desc                : desc,
+                    scopeProvider       : scopeProvider,
+                    contentManager      : contentManager,
+                    launchState         : launchState,
+                    preloadErrors       : preloadErrors,
+                    onErrorHandler      : onErrorHandler,
+                    
+                    startTestAnchor     : scopeProvider.scope.StartTest,
+                    noCleanup           : noCleanup,
+                    cleanupUrl          : firstDesc.url,
+                    reusingSandbox      : true
+                }, callback)
+            }
+        },
+        
+        
+        normalizeURL : function (url) {
+            // ref to JSAN module - DEPRECATED
+            if (/^jsan:/.test(url)) url = '/jsan/' + url.replace(/^jsan:/, '').replace(/\./g, '/') + '.js'
+            
+            // ref to lib in current dist (no `/` and trailing `.js`) - DEPRECATED 
+            if (!/\.js$/.test(url) && !/\//.test(url) && !/\.css(\?.*)?$/i.test(url)) url = '../lib/' + url.replace(/\./g, '/') + '.js'
+            
+            return url
+        },
+        
+        
+        normalizeDescriptor : function (desc, parent, index, level) {
+            var desc        = this.SUPERARG(arguments)
+            
+            if (!desc.group && desc.jasmine) {
+                desc.pageUrl            = desc.url
+                desc.testCode           = this.getJasmineTestCode()
+                // preloads will not be inherited anyway because "pageUrl" option presents
+                // but we explicitly remove them one more time
+                desc.preload            = []
+            }
+            
+            return desc
+        },
+
+    
+        resolveURL : function (url, scopeProvider, desc) {
+            // if the `scopeProvider` is provided and it has a sourceURL - then absolutize the preloads relative to that url
+            if (scopeProvider && scopeProvider.sourceURL) url = this.absolutizeURL(url)
+            
+            if (this.disableCaching)
+                // if there's a ?param string in url - append new param
+                if (/\?./.test(url))
+                    url += '&disableCaching=' + new Date().getTime()
+                else
+                    if (!/\?$/.test(url)) 
+                        url += '?disableCaching=' + new Date().getTime()
+            
+            // otherwise assumed to be a raw filename, relative or absolute
+            return url
+        },
+        
+        
+        absolutizeURL : function (url, baseUrl) {
+            // if the url is already absolute - just return it (perhaps with some normalization - 2nd case)
+            // the url starting with // is also valid absolute url
+            if (/^((https?|file):)?\/\//.test(url))  return url
+            if (/^\//.test(url))    return this.baseProtocol + '//' + this.baseHost + url
+            
+            baseUrl             = baseUrl || this.baseUrl
+            
+            // strip the potential query and filename from baseURL, leaving only the "directory" part
+            baseUrl             = baseUrl.replace(/\?.*$/,'').replace(/\/[^/]*$/, '/')
+            
+            // first absolutize the base url relative the harness page (which will be always global, so it won't recurse)
+            var absBaseUrl      = this.absolutizeURL(baseUrl, this.baseUrl)
+            
+            // add a trailing "/" if missing
+            absBaseUrl          = absBaseUrl.replace(/\/?$/, '/')
+            
+            return absBaseUrl + url
+        },
+        
+        
+        getUiMask : function () {
+            if (this.uiMask) return this.uiMask
+            
+            var uiMask              = this.uiMask = document.createElement('div')
+            
+            uiMask.className        = 'tr-ui-mask'
+            uiMask.style.display    = 'none'
+            
+            document.body.appendChild(uiMask)
+            
+            return uiMask
+        },
+        
+        
+        showUiMask  : function () {
+            var mask            = this.getUiMask()
+            
+            mask.style.display  = 'block'
+            
+            this.uiMaskActive   = true
+        },
+        
+        
+        hideUiMask  : function () {
+            var mask            = this.getUiMask()
+            
+            mask.style.display  = 'none'
+            
+            this.uiMaskActive   = false
+        },
+        
+        
+        showForcedIFrame : function (test) {
+            $.rebindWindowContext(window);
+            
+            test.isDOMForced    = true
+            
+            var wrapper         = test.scopeProvider.wrapper
+            
+            $(wrapper).addClass('tr-iframe-forced')
+            $(wrapper).removeClass('tr-iframe-hidden')
+        
+            $(wrapper).center()
+            
+            test.fireEvent('testframeshow')
+        },
+    
+    
+        hideForcedIFrame : function (test) {
+            $.rebindWindowContext(window);
+            
+            // once hidden, forced iframe will be never be shown again as "forced", only as "normal"
+            test.isDOMForced        = false
+            test.forceDOMVisible    = false
+            
+            var wrapper         = test.scopeProvider.wrapper
+            
+            $(wrapper).removeClass('tr-iframe-forced')
+            $(wrapper).addClass('tr-iframe-hidden')
+            
+            test.fireEvent('testframehide')
+        },
+        
+        
+        showForcedIFrameScreenshot : function (test) {
+            this.showUiMask()
+            
+            $.rebindWindowContext(window);
+            
+            var wrapper         = test.scopeProvider.wrapper
+            
+            $(wrapper).addClass('tr-iframe-forced-screenshot')
+            $(wrapper).removeClass('tr-iframe-forced')
+            $(wrapper).removeClass('tr-iframe-hidden')
+        },
+    
+    
+        hideForcedIFrameScreenshot : function (test) {
+            this.hideUiMask()
+            
+            $.rebindWindowContext(window);
+            
+            var wrapper         = test.scopeProvider.wrapper
+            
+            $(wrapper).removeClass('tr-iframe-forced-screenshot')
+            
+            if (test.isDOMForced) {
+                $(wrapper).addClass('tr-iframe-forced')
+                $(wrapper).center()
+            }
+        },
+        
+        
+        getQueryParam : function (paramName) {
+            return this.my.getQueryParam(paramName, true)
+        },
+        
+        
+        getJasmineTestCode : function () {
+            return ';(' + (function () {
+                
+                StartTest(function (t) {
+                    t.expectGlobals(
+                        'getJasmineRequireObj', 'jasmineRequire', 'jasmine', 'xdescribe', 'describe', 'xdescribe', 'fdescribe',
+                        'it', 'xit', 'fit', 'spyOn', 'fail', 'jsApiReporter', 'beforeEach', 'afterEach', 'beforeAll', 'afterAll',
+                        'expect', 'pending'
+                    )
+                    
+                    if (!window.jasmine) {
+                        t.fail(t.resource('Siesta.Harness.Browser', 'noJasmine'))
+                        
+                        return
+                    }
+                    
+                    if (!jasmine.SiestaReporter) {
+                        t.fail(t.resource('Siesta.Harness.Browser', 'noJasmineSiestaReporter'))
+                        
+                        return
+                    }
+                    
+                    jasmine.SiestaReporter.importResults(t)
+                })
+                
+            }).toString() + ')();'
+        },
+        
+        
+        /**
+         * This methos returns `true` if this harness is being run on the 
+         * [Standard package](http://www.bryntum.com/products/siesta/) of Siesta, `false` otherwise.
+         * 
+         * @return {Boolean}
+         */
+        isStandardPackage : function () {
+            return this.my.isStandardPackage(true)
+        },
+        
+        
+        // should only be used when no tests are running
+        // does not work for IE
+        // Safari webdriver has known problem of starting browser in the background, w/o focus
+        browserWindowHasFocus : function () {
+            window.focus()
+            
+            var el      = this.getFocusChecker()
+            
+            el.focus()
+            
+            $.rebindWindowContext(window);
+            
+            return $(el).is(':focus')    
+        }
+    },
+    
+    
+    my : {
+        
+        methods : {
+            
+            isStandardPackage : function (calledFromInstance) {
+                if (!calledFromInstance) this.staticDeprecationWarning('isStandardPackage')
+                
+                return Boolean(Siesta.Harness.Browser.Automation)
             },
             
             
-            getQueryParam : function (paramName) {
+            getQueryParam : function (paramName, calledFromInstance) {
+                if (!calledFromInstance) this.staticDeprecationWarning('getQueryParam')
+                
                 var regex       = new RegExp('(?:\\?|&)' + paramName + '=(.*?)(?:\\?|&|$)', 'i')
             
                 var match       = regex.exec(window.location.search)
@@ -35280,51 +36011,9 @@ Class('Siesta.Harness.Browser', {
                 if (!match) return null
             
                 return match[ 1 ]
-            },
-            
-            
-            getJasmineTestCode : function () {
-                return ';(' + (function () {
-                    
-                    StartTest(function (t) {
-                        t.expectGlobals(
-                            'getJasmineRequireObj', 'jasmineRequire', 'jasmine', 'xdescribe', 'describe', 'xdescribe', 'fdescribe',
-                            'it', 'xit', 'fit', 'spyOn', 'fail', 'jsApiReporter', 'beforeEach', 'afterEach', 'beforeAll', 'afterAll',
-                            'expect', 'pending'
-                        )
-                        
-                        if (!window.jasmine) {
-                            t.fail(t.resource('Siesta.Harness.Browser', 'noJasmine'))
-                            
-                            return
-                        }
-                        
-                        if (!jasmine.SiestaReporter) {
-                            t.fail(t.resource('Siesta.Harness.Browser', 'noJasmineSiestaReporter'))
-                            
-                            return
-                        }
-                        
-                        jasmine.SiestaReporter.importResults(t)
-                    })
-                    
-                }).toString() + ')();'
-            },
-            
-            
-            /**
-             * This methos returns `true` if this harness is being run on the 
-             * [Standard package](http://www.bryntum.com/products/siesta/) of Siesta, `false` otherwise.
-             * 
-             * @return {Boolean}
-             */
-            isStandardPackage : function () {
-                return Boolean(Siesta.Harness.Browser.Automation)
             }
         }
-        
     }
-    //eof my
 })
 //eof Siesta.Harness.Browser;
 Singleton('Siesta.Harness.Browser.FeatureSupport', {
@@ -35578,6 +36267,8 @@ Role('Siesta.Harness.Browser.ExtJSCore', {
          * use {@link #getLoaderPathHook} method. 
          *
          * This option can be also specified in the test file descriptor. 
+         * 
+         * **Note**, that the value of this config will not be inherited from the parent tests group, if test has {@link Siesta.Harness.Browser#pageUrl} option set.
          */
         loaderPath              : null,
         
@@ -35596,8 +36287,10 @@ Role('Siesta.Harness.Browser.ExtJSCore', {
         failKnownBugIn          : false
     },
     
+    
     override : {
-        getNewTestConfiguration : function (desc, scopeProvider, contentManager, launchOptions) {
+        
+        getNewTestConfiguration : function (desc, scopeProvider, contentManager, launchState) {
             var config              = this.SUPERARG(arguments)
             
             config.loaderPath       = this.getDescriptorConfig(desc, 'loaderPath')
@@ -35613,8 +36306,18 @@ Role('Siesta.Harness.Browser.ExtJSCore', {
             structure.push('loaderPath', 'requires')
             
             return structure
+        },
+        
+        
+        buildHostPageUrlStopsInheriting : function () {
+            var res         = this.SUPER()
+            
+            res.loaderPath  = true
+            
+            return res
         }
     },
+    
     
     methods : {
         
@@ -35637,26 +36340,28 @@ Role('Siesta.Harness.Browser.ExtJSCore', {
         
         
         /**
-         * Returns a string presentation of the ExtJS/SenchaTouch hook for setting "Ext.Loader" paths, suitable to be used in the test's 
-         * {@link Siesta.Harness#preload preloads}. This will allow you to install the hook at the earliest possible point, 
+         * Returns a string presentation of the ExtJS/SenchaTouch hook for setting "Ext.Loader" paths, 
+         * suitable to be used in the test's {@link Siesta.Harness#preload preloads}. 
+         * This will allow you to install the hook at the earliest possible point, 
          * right after preloading Ext and before "requiring" any classes. 
          * 
          * The value for the paths should be provided in the {@link #loaderPath} config. 
-         * The inheritance of the value from groups is supported as usually.   
+         * The inheritance of the value from groups is supported as usually, except the tests with 
+         * {@link Siesta.Harness.Browser#pageUrl} option set.   
          * 
          * Typical usage will be:
          * 
     
-    var Harness = Siesta.Harness.Browser.ExtJS;
+    var harness = new Siesta.Harness.Browser.ExtJS();
 
-    Harness.configure({
+    harness.configure({
         loaderPath              : { 'My' : 'js', 'My.Namespace' : 'js/somepath' },
         
         preload                 : [
             'http://cdn.sencha.io/ext-4.2.0-gpl/ext-all.js',
             {
                 // inject the loader paths right after ExtJS and before the application file
-                text    : Harness.getLoaderPathHook()
+                text    : harness.getLoaderPathHook()
             },
             'app.js'
         ]
@@ -35692,9 +36397,9 @@ This file is for reference only, for a getting start guide and manual, please re
 Synopsys
 ========
 
-    var Harness = Siesta.Harness.Browser.ExtJS;
+    var harness = new Siesta.Harness.Browser.ExtJS();
     
-    Harness.configure({
+    harness.configure({
         title     : 'Awesome ExtJS Application Test Suite',
         
         transparentEx       : true,
@@ -35715,7 +36420,7 @@ Synopsys
     })
     
     
-    Harness.start(
+    harness.start(
         // simple string - url relative to harness file
         'sanity.t.js',
         
@@ -35751,112 +36456,111 @@ Class('Siesta.Harness.Browser.ExtJS', {
     
     isa     : Siesta.Harness.Browser,
     
-    // pure static class, no need to instantiate it
-    my : {
+    does    : [
+        Siesta.Harness.Browser.ExtJSCore
+    ],
+    
+    has     : {
+        /**
+         * @cfg {Class} testClass The test class which will be used for creating test instances, defaults to {@link Siesta.Test.ExtJS}.
+         * You can subclass {@link Siesta.Test.ExtJS} and provide a new class. 
+         * 
+         * This option can be also specified in the test file descriptor. 
+         */
+        testClass               : Siesta.Test.ExtJS,
         
-        does    : [
-            Siesta.Harness.Browser.ExtJSCore
-        ],
+        /**
+         * @cfg {Boolean} waitForExtReady
+         * 
+         * By default the `StartTest` function will be executed after `Ext.onReady`. Set to `false` to launch `StartTest` immediately.  
+         * 
+         * This option can be also specified in the test file descriptor. 
+         */
+        waitForExtReady         : true,
         
-        has     : {
-            /**
-             * @cfg {Class} testClass The test class which will be used for creating test instances, defaults to {@link Siesta.Test.ExtJS}.
-             * You can subclass {@link Siesta.Test.ExtJS} and provide a new class. 
-             * 
-             * This option can be also specified in the test file descriptor. 
-             */
-            testClass               : Siesta.Test.ExtJS,
-            
-            /**
-             * @cfg {Boolean} waitForExtReady
-             * 
-             * By default the `StartTest` function will be executed after `Ext.onReady`. Set to `false` to launch `StartTest` immediately.  
-             * 
-             * This option can be also specified in the test file descriptor. 
-             */
-            waitForExtReady         : true,
-            
-            /**
-             * @cfg {Boolean} waitForAppReady
-             * 
-             * Setting this configuration option to "true" will cause Siesta to wait until the ExtJS MVC application on the test page will become ready,
-             * before starting the test. More precisely it will wait till the first "launch" event from any instance of `Ext.app.Application` class on the page.
-             *   
-             * This option can (and probably should) be also specified in the test file descriptor. 
-             */
-            waitForAppReady         : false,
-            
+        /**
+         * @cfg {Boolean} waitForAppReady
+         * 
+         * Setting this configuration option to "true" will cause Siesta to wait until the ExtJS MVC application on the test page will become ready,
+         * before starting the test. More precisely it will wait till the first "launch" event from any instance of `Ext.app.Application` class on the page.
+         *   
+         * This option can (and probably should) be also specified in the test file descriptor. 
+         */
+        waitForAppReady         : false,
+        
 
-            extVersion              : null,
+        extVersion              : null,
 
-            /**
-             * @cfg {Boolean} failOnMultipleComponentMatches
-             *
-             * True to fail when providing a Component Query matching multiple components. False to warn only.
-             * Component Queries should ideally always be unique to identify only one target in the DOM.
-             */
-            failOnMultipleComponentMatches   : false,
+        /**
+         * @cfg {Boolean} failOnMultipleComponentMatches
+         *
+         * True to fail when providing a Component Query matching multiple components. False to warn only.
+         * Component Queries should ideally always be unique to identify only one target in the DOM.
+         */
+        failOnMultipleComponentMatches   : false,
+        
+        extVersionRegExp        : /ext(?:js)?-(\d\.\d+\.\d+.*?)\//,
+        
+        contentManagerClass     : Siesta.Content.Manager.Browser.ExtJSCore,
+
+        // Required by Ext JS 6
+        innerHtmlHead           : '<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">'
+    },
+    
+    
+    methods : {
+        
+        setup : function (callback) {
+            var me      = this
             
-            extVersionRegExp        : /ext(?:js)?-(\d\.\d+\.\d+.*?)\//,
+            /*
+                This is to be able to pass "next" function form the chain step to the Ext as callback:
+                    function (next) {
+                        resourceStore.reload({
+                            callback : next
+                        })
+                    }
+                For some reason, Ext performs "isFunction" check on the callback value and only calls it if this check passes
+                (assuming programmer does not know what he is doing)
+                "isFunction" check in turn relies on the presence of this property in the Function prototype
+                
+                This line can be removed once "isFunction" in Ext will become cross-context or Ext will stop
+                using "isFunction" check for callbacks
+            */
+            Function.prototype.$extIsFunction = true;
             
-            contentManagerClass     : Siesta.Content.Manager.Browser.ExtJSCore
+            this.SUPER(function () {
+                callback()
+            })
+        },
+        
+    
+        getNewTestConfiguration : function (desc, scopeProvider, contentManager, launchState) {
+            var config          = this.SUPERARG(arguments)
+            
+            config.waitForExtReady  = this.getDescriptorConfig(desc, 'waitForExtReady')
+            config.waitForAppReady  = this.getDescriptorConfig(desc, 'waitForAppReady')
+            
+            return config
         },
         
         
-        methods : {
+        findExtVersion : function () {
+            var me      = this
             
-            setup : function (callback) {
-                var me      = this
+            var found
+            
+            this.mainPreset.eachResource(function (resource) {
+                var match   = me.extVersionRegExp.exec(resource.url)
                 
-                /*
-                    This is to be able to pass "next" function form the chain step to the Ext as callback:
-                        function (next) {
-                            resourceStore.reload({
-                                callback : next
-                            })
-                        }
-                    For some reason, Ext performs "isFunction" check on the callback value and only calls it if this check passes
-                    (assuming programmer does not know what he is doing)
-                    "isFunction" check in turn relies on the presence of this property in the Function prototype
+                if (match) {
+                    found   = match[ 1 ]
                     
-                    This line can be removed once "isFunction" in Ext will become cross-context or Ext will stop
-                    using "isFunction" check for callbacks
-                */
-                Function.prototype.$extIsFunction = true;
-                
-                this.SUPER(function () {
-                    callback()
-                })
-            },
+                    return false
+                }
+            })
             
-        
-            getNewTestConfiguration : function (desc, scopeProvider, contentManager, launchOptions) {
-                var config          = this.SUPERARG(arguments)
-                
-                config.waitForExtReady  = this.getDescriptorConfig(desc, 'waitForExtReady')
-                config.waitForAppReady  = this.getDescriptorConfig(desc, 'waitForAppReady')
-                
-                return config
-            },
-            
-            
-            findExtVersion : function () {
-                var me      = this
-                
-                var found
-                
-                this.mainPreset.eachResource(function (resource) {
-                    var match   = me.extVersionRegExp.exec(resource.url)
-                    
-                    if (match) {
-                        found   = match[ 1 ]
-                        
-                        return false
-                    }
-                })
-                
-                return found
-            }
+            return found
         }
     }
 });
@@ -35877,9 +36581,9 @@ This file is for reference only, for a getting start guide and manual, please re
 Synopsys
 ========
 
-    var Harness = Siesta.Harness.Browser.SenchaTouch;
+    var harness = new Siesta.Harness.Browser.SenchaTouch();
         
-    Harness.configure({
+    harness.configure({
         title           : 'Awesome Sencha Touch Application Test Suite',
                 
         transparentEx   : true,
@@ -35891,7 +36595,7 @@ Synopsys
     })
         
         
-    Harness.start(
+    harness.start(
         // simple string - url relative to harness file
         'sanity.t.js',
                 
@@ -35927,71 +36631,66 @@ Class('Siesta.Harness.Browser.SenchaTouch', {
 
     isa: Siesta.Harness.Browser,
 
-    // pure static class, no need to instantiate it
-    my: {
+    does    : [
+        Siesta.Harness.Browser.ExtJSCore
+    ],
+    
+    has     : {
+        /**
+        * @cfg {Class} testClass The test class which will be used for creating test instances, defaults to {@link Siesta.Test.SenchaTouch}.
+        * You can subclass {@link Siesta.Test.SenchaTouch} and provide a new class. 
+        * 
+        * This option can be also specified in the test file descriptor. 
+        */
+        testClass           : Siesta.Test.SenchaTouch,
 
-        does    : [
-            Siesta.Harness.Browser.ExtJSCore
-        ],
+        /**
+         * @cfg {Boolean} transparentEx
+         */
+        transparentEx       : true,
+        keepNLastResults    : 0,
         
-        has     : {
-            /**
-            * @cfg {Class} testClass The test class which will be used for creating test instances, defaults to {@link Siesta.Test.SenchaTouch}.
-            * You can subclass {@link Siesta.Test.SenchaTouch} and provide a new class. 
-            * 
-            * This option can be also specified in the test file descriptor. 
-            */
-            testClass           : Siesta.Test.SenchaTouch,
+        /**
+         * @cfg {Boolean} performSetup When set to `true`, Siesta will perform a `Ext.setup()` call, so you can safely assume there's a viewport for example.
+         * If, however your test code, performs `Ext.setup()` itself, you need to disable this option.
+         * 
+         * If this option is not explicitly specified in the test descritor, but instead inherited, it will be automatically disabled if test has {@link #pageUrl} value.
+         * 
+         * This option can be also specified in the test file descriptor.
+         */
+        performSetup        : true,
+        
+        forcedRunCore       : 'sequential',
 
-            /**
-             * @cfg {Boolean} transparentEx
-             */
-            transparentEx       : true,
-            keepNLastResults    : 0,
-            
-            /**
-             * @cfg {Boolean} performSetup When set to `true`, Siesta will perform a `Ext.setup()` call, so you can safely assume there's a viewport for example.
-             * If, however your test code, performs `Ext.setup()` itself, you need to disable this option.
-             * 
-             * If this option is not explicitly specified in the test descritor, but instead inherited, it will be automatically disabled if test has {@link #hostPageUrl} value.
-             * 
-             * This option can be also specified in the test file descriptor.
-             */
-            performSetup        : true,
-            
-            forcedRunCore       : 'sequential',
+        isRunningOnMobile   : true,
+        
+        contentManagerClass : Siesta.Content.Manager.Browser.ExtJSCore
+    },
 
-            isRunningOnMobile   : true,
+
+    methods: {
+        
+        setup : function () {
+            // TODO fix proper mobile detection, since Ext may be absent in "no-ui" harness
+            this.isRunningOnMobile = typeof Ext !== 'undefined' && Ext.getVersion && Ext.getVersion('touch')
             
-            contentManagerClass : Siesta.Content.Manager.Browser.ExtJSCore
+            if (!this.isRunningOnMobile) this.keepNLastResults = 2
+            
+            this.SUPERARG(arguments)
         },
 
 
-        methods: {
+        getNewTestConfiguration: function (desc, scopeProvider, contentManager, launchState) {
+            var config      = this.SUPERARG(arguments)
+            var pageUrl     = this.getDescriptorConfig(desc, 'pageUrl');
             
-            setup : function () {
-                // TODO fix proper mobile detection, since Ext may be absent in "no-ui" harness
-                this.isRunningOnMobile = typeof Ext !== 'undefined' && Ext.getVersion && Ext.getVersion('touch')
-                
-                if (!this.isRunningOnMobile) this.keepNLastResults = 2
-                
-                this.SUPERARG(arguments)
-            },
-
-
-            getNewTestConfiguration: function (desc, scopeProvider, contentManager, launchOptions) {
-                var config = this.SUPERARG(arguments)
-
-                var hostPageUrl = this.getDescriptorConfig(desc, 'hostPageUrl');
-                
-                if (!desc.hasOwnProperty('performSetup') && hostPageUrl) {
-                    config.performSetup = false;
-                } else {
-                    config.performSetup = this.getDescriptorConfig(desc, 'performSetup')
-                }
-                
-                return config
+            if (!desc.hasOwnProperty('performSetup') && pageUrl) {
+                config.performSetup = false;
+            } else {
+                config.performSetup = this.getDescriptorConfig(desc, 'performSetup')
             }
+            
+            return config
         }
     }
 })
@@ -37207,8 +37906,8 @@ Ext.define('Siesta.Harness.Browser.UI.TreeFilterField', {
     andChecker      : null,
     andCheckerScope : null,
 
-    triggerLeafCls  : 'icon-file-2',
-    triggerGroupCls : 'icon-folder',
+    triggerLeafCls  : 'fa-file-o',
+    triggerGroupCls : 'fa-folder-o',
     tipText         : null,
 
     constructor : function (config) {
@@ -37217,7 +37916,7 @@ Ext.define('Siesta.Harness.Browser.UI.TreeFilterField', {
         Ext.apply(config, {
             triggers : {
                 clear : {
-                    cls     : 'icon-close',
+                    cls     : 'fa-close',
                     handler : function () {
                         me.store.clearTreeFilter()
                         me.reset()
@@ -37443,34 +38142,40 @@ Ext.define('Siesta.Harness.Browser.UI.CanFillAssertionsStore', {
 ;
 Ext.define('Siesta.Harness.Browser.UI.ComponentInspector', {
     extend                  : 'Ext.util.Observable',
+    
     inspectedComponent      : null,
     inspectedComponentXType : null,
     boxIndicatorEl          : null,
     active                  : false,
     window                  : null,
+    
+    bufferTime              : 30,
 
     resolveTarget : function(target) {
         throw 'resolveTarget API method must be provided by owner';
     },
 
+    
     getIndicatorEl : function() {
         return this.boxIndicatorEl;
     },
 
+    
     getExt : function() {
         return this.window.Ext;
     },
 
+    
     start : function (window, containerEl) {
         window = window || this.window;
 
         if (!window) throw 'Must provide a window context for the inspector';
 
-        this.window = window;
+        this.window     = window;
 
-        var _Ext = this.getExt();
-        var me = this;
-        var wrap = containerEl || window.document.body;
+        var _Ext        = this.getExt();
+        var me          = this;
+        var wrap        = containerEl || window.document.body;
 
         me.boxIndicatorEl = me.boxIndicatorEl || Ext.fly(wrap).createChild({
             cls      : 'target-inspector-box',
@@ -37489,9 +38194,8 @@ Ext.define('Siesta.Harness.Browser.UI.ComponentInspector', {
 
         this.fireEvent('start', this);
 
-        this.active = true;
+        this.active     = true;
     },
-
 
 
     stop : function (suppressEvent) {
@@ -37519,21 +38223,21 @@ Ext.define('Siesta.Harness.Browser.UI.ComponentInspector', {
 
     // Listen for mousemove in the frame and any direct iframe children too
     toggleMouseMoveListener : function (enabled) {
-        var _Ext = this.getExt();
+        var _Ext    = this.getExt();
 
         if (!_Ext) return;
 
-        var frames = _Ext.getBody().select('iframe');
-        var fn = enabled ? 'on' : 'un';
+        var frames  = _Ext.getBody().select('iframe');
+        var fn      = enabled ? 'on' : 'un';
 
         //                                                  Avoid using "this" directly due to Touch incompatibilities with Ext
-        _Ext.getBody()[fn]('mousemove', this.onMouseMove, { me : this }, { buffer : 30 });
+        _Ext.getBody()[fn]('mousemove', this.onMouseMove, { me : this }, { buffer : this.bufferTime });
 
         for (var i = 0; i < frames.getCount(); i++) {
             var innerExt = frames.item(i).dom.contentWindow.Ext;
 
             //                                                                                     Avoid using "this" directly due to Touch incompatibilities with Ext
-            innerExt && innerExt.getBody && innerExt.getBody()[fn]('mousemove', this.onMouseMove, { me : this }, { buffer : 30 });
+            innerExt && innerExt.getBody && innerExt.getBody()[fn]('mousemove', this.onMouseMove, { me : this }, { buffer : this.bufferTime });
         }
     },
 
@@ -37555,12 +38259,11 @@ Ext.define('Siesta.Harness.Browser.UI.ComponentInspector', {
 
 
     onMouseMove : function (e, t) {
-
         //Have to avoid using "this" directly due to Touch incompatibilities with Ext
         var me = this.me;
 
         if (!me.boxIndicatorEl) return;
-
+        
         var cmp = me.findComponentByTarget(t);
 
         if (cmp) {
@@ -37672,19 +38375,20 @@ Ext.define('Siesta.Harness.Browser.UI.ComponentInspector', {
 
 
     findComponentByTarget : function (target) {
-        var Ext = this.getExt();
-        var testDoc = window.document;
-        var cmp;
+        var Ext         = this.getExt();
+        var testDoc     = this.window.document;
 
         // Handle potentially having another Ext copy loaded in another frame
         if (target.ownerDocument !== testDoc) {
-            var innerFrame = (target.ownerDocument.parentWindow || target.ownerDocument.defaultView).frameElement;
-            Ext = innerFrame.contentWindow.Ext;
+            var innerFrame  = (target.ownerDocument.parentWindow || target.ownerDocument.defaultView).frameElement;
+            Ext             = innerFrame.contentWindow.Ext;
         }
 
+        var cmp
+        
         while (!cmp && target && target.nodeName !== 'BODY') {
-            cmp = Ext.getCmp(target.id);
-            target = target.parentNode;
+            cmp             = Ext.getCmp(target.id);
+            target          = target.parentNode;
         }
 
         return cmp;
@@ -37692,8 +38396,8 @@ Ext.define('Siesta.Harness.Browser.UI.ComponentInspector', {
 
 
     getOffsets : function (node) {
-        var targetDoc = this.window.document;
-        var offsets = [0, 0];
+        var targetDoc   = this.window.document;
+        var offsets     = [ 0, 0 ]
 
         if (node.ownerDocument !== targetDoc) {
             var innerFrame = (node.ownerDocument.parentWindow || node.ownerDocument.defaultView).frameElement;
@@ -37718,9 +38422,6 @@ Ext.define('Siesta.Harness.Browser.UI.ComponentInspector', {
 
         return '';
     }
-
-    // END Inspection related code
-    // -----------------------------
 });;
 Ext.define('Siesta.Harness.Browser.UI.DomContainer', {
     extend : 'Ext.Panel',
@@ -37752,7 +38453,7 @@ Ext.define('Siesta.Harness.Browser.UI.DomContainer', {
         //    'targethover',
         //    'targetselected'
         //)
-
+        
         Ext.apply(this, {
 
             dockedItems : this.consoleCt = {
@@ -37831,21 +38532,21 @@ Ext.define('Siesta.Harness.Browser.UI.DomContainer', {
     },
 
 
-    getIFrameWrapper : function () {
+    getIFrameWrapper : function (force) {
         var test = this.test;
 
         if (test)
-            return this.canManageDOM && test.scopeProvider && test.scopeProvider.wrapper || null
+            return (this.canManageDOM || force) && test.scopeProvider && test.scopeProvider.wrapper || null
         else
             return null;
     },
 
 
-    getIFrame : function () {
+    getIFrame : function (force) {
         var test = this.test;
 
         if (test)
-            return this.canManageDOM && test.scopeProvider && test.scopeProvider.iframe || null
+            return (this.canManageDOM || force) && test.scopeProvider && test.scopeProvider.iframe || null
         else
             return null;
     },
@@ -37856,8 +38557,8 @@ Ext.define('Siesta.Harness.Browser.UI.DomContainer', {
     },
 
 
-    alignIFrame : function () {
-        var wrapper = this.getIFrameWrapper();
+    alignIFrame : function (force) {
+        var wrapper = this.getIFrameWrapper(force);
 
         if (!this.isFrameVisible() || !wrapper) return
 
@@ -37869,7 +38570,7 @@ Ext.define('Siesta.Harness.Browser.UI.DomContainer', {
         Ext.fly(wrapper).setBox(box)
 
         if (!this.maintainViewportSize) {
-            Ext.fly(this.getIFrame()).setSize(this.body.getSize())
+            Ext.fly(this.getIFrame(force)).setSize(this.body.getSize())
         }
 
         var test = this.test
@@ -37925,7 +38626,7 @@ Ext.define('Siesta.Harness.Browser.UI.DomContainer', {
         this.testListeners = [
             test.on('testfinalize', this.onTestFinalize, this)
         ]
-
+        
         // when starting the test with forcedIframe - do not allow the assertion grid to change the location of the iframe
         // (canManageDOM is set to false)
         this.setCanManageDOM(!test.hasForcedIframe())
@@ -37940,8 +38641,8 @@ Ext.define('Siesta.Harness.Browser.UI.DomContainer', {
         // this prevents harness from hiding the iframe, because "test.hasForcedIframe()" will return null
         // we've moved the iframe to the correct position, and it can never be "forced" again anyway
         if (this.isFrameVisible()) {
-            test.forceDOMVisible = false
-            test.isDOMForced = false
+            test.forceDOMVisible    = false
+            test.isDOMForced        = false
         }
     },
 
@@ -37982,6 +38683,8 @@ Ext.define('Siesta.Harness.Browser.UI.DomContainer', {
     },
 
     startInspection : function (showConsole) {
+        if (!this.test || !this.test.global) return;
+
         this.inspector.start(this.test.global, this.getIFrameWrapper());
 
         var wrap = Ext.get(this.getIFrameWrapper());
@@ -38085,7 +38788,7 @@ Ext.define('Siesta.Harness.Browser.UI.MouseVisualizer', {
 
         return this.cursorEl = Ext.fly(currentContainer).down('.ghost-cursor') || Ext.fly(currentContainer).createChild({
             tag     : 'div',
-            cls     : 'ghost-cursor'
+            cls     : 'ghost-cursor fa fa-mouse-pointer'
         })
     },
     
@@ -38101,6 +38804,7 @@ Ext.define('Siesta.Harness.Browser.UI.MouseVisualizer', {
         if (harness) {
             harness.on('testframeshow', this.onTestFrameShow, this);
             harness.on('testframehide', this.onTestFrameHide, this);
+            harness.on('recorderplay', this.onRecorderPlay, this);
         }
     },
 
@@ -38123,9 +38827,17 @@ Ext.define('Siesta.Harness.Browser.UI.MouseVisualizer', {
     
     
     onTestFrameShow : function (event) {
-        var test                            = event.source
-        
-        // do not react on re-positions of the same running test 
+        var test = event.source;
+
+        this.beginCursorVisusalization(test);
+    },
+
+    onRecorderPlay : function(recorder, test) {
+        this.beginCursorVisusalization(test);
+    },
+
+    beginCursorVisusalization : function (test) {
+        // do not react on re-positions of the same running test
         if (test == this.currentTest) return
         
         this.reset()
@@ -38133,7 +38845,7 @@ Ext.define('Siesta.Harness.Browser.UI.MouseVisualizer', {
         this.currentTest    = test
         
         if (this.harness.canShowCursorForTest(test)) {
-            this.currentContainer           = test.scopeProvider.wrapper
+            this.currentContainer           = test.scopeProvider.wrapper.childNodes[ 1 ]
             
             this.onEventSimulatedListener   = test.on('eventsimulated', this.onEventSimulated, this);
             this.onTestFinishedListener     = test.on('testfinalize', this.onTestFinished, this);
@@ -38167,7 +38879,7 @@ Ext.define('Siesta.Harness.Browser.UI.MouseVisualizer', {
             }
             
             try {
-                Ext.select('.ghost-cursor-click-indicator', false, currentContainer).remove()
+                Ext.select('.ghost-cursor-click-indicator-big', false, currentContainer).remove()
             } catch (e) {
                 // catch potential exceptions for example
                 // if iframe of test has been already removed
@@ -38177,11 +38889,6 @@ Ext.define('Siesta.Harness.Browser.UI.MouseVisualizer', {
     
 
     onTestFinished : function (event, test) {
-        // If recorder is open, leave the cursor visible
-        if (Ext.ComponentQuery.query('recorderpanel{isVisible()}').length > 0) {
-            return;
-        }
-
         var cursorEl            = this.cursorEl
         var currentContainer    = this.currentContainer
         
@@ -38216,7 +38923,7 @@ Ext.define('Siesta.Harness.Browser.UI.MouseVisualizer', {
         }
     },
 
-    // This method shows a fading circle at the position of click/dblclick/mousedown/contextmenu
+    // This method shows a fading growing circle at the xy position
     showClickIndicator : function(type, x, y) {
         var clickCircle = Ext.fly(this.currentContainer).createChild({
             cls     : 'ghost-cursor-click-indicator ' ,
@@ -38226,14 +38933,14 @@ Ext.define('Siesta.Harness.Browser.UI.MouseVisualizer', {
         // need to a delay to make it work in FF
         setTimeout(function() {
             clickCircle.addCls('ghost-cursor-click-indicator-big');
-        }, 5);
+        }, 20);
     },
 
     
-    // This method updates the ghost cursor position and appearance
+    // Updates the ghost cursor position and appearance
     updateGhostCursor: function (type, x, y) {
         var cursorEl        = this.getCursorEl(),
-            translate3d     = 'translate3d(' + (x - 5) + 'px, ' + y + 'px, 0px)';
+            translate3d     = 'translate3d(' + x + 'px, ' + y + 'px, 0px)';
         
         cursorEl.setStyle({
             '-webkit-transform' : translate3d,
@@ -38267,7 +38974,6 @@ Ext.define('Siesta.Harness.Browser.UI.MouseVisualizer', {
 ;
 Ext.define('Siesta.Harness.Browser.UI.AssertionGrid', {
     alias : 'widget.assertiongrid',
-
     extend : 'Ext.tree.Panel',
 
     mixins : [
@@ -38286,7 +38992,7 @@ Ext.define('Siesta.Harness.Browser.UI.AssertionGrid', {
     enableColumnMove   : false,
     enableColumnResize : false,
     sortableColumns    : false,
-
+    useArrows          : true,
     border             : false,
     minWidth           : 100,
     trackMouseOver     : false,
@@ -38526,77 +39232,26 @@ Ext.define('Siesta.Harness.Browser.UI.AssertionTreeColumn', {
         return retVal;
     },
 
-    // TODO
-    _treeRenderer : function (value, metaData, record, rowIdx, colIdx, store, view) {
-        var me = this,
-            buf = [],
-            format = Ext.String.format,
-            depth = record.getDepth(),
-            treePrefix = me.treePrefix,
-            elbowPrefix = me.elbowPrefix,
-            expanderCls = me.expanderCls,
-            imgText = me.imgText,
-            checkboxText = me.checkboxText,
-            formattedValue = me.origRenderer.apply(me.origScope, arguments),
-            blank = Ext.BLANK_IMAGE_URL,
-            href = record.get('href'),
-            target = record.get('hrefTarget'),
-            cls = record.get('cls');
+    // HACK OVERRIDE
+    treeRenderer : function (value, metaData, record) {
+        var result = record.getResult()
 
-        while (record) {
-            if (!record.isRoot() || (record.isRoot() && view.rootVisible)) {
-                if (record.getDepth() === depth) {
-                    buf.unshift(format(imgText,
-                        treePrefix + 'icon ' +
-                        treePrefix + 'icon' + (record.get('icon') ? '-inline ' : (record.isLeaf() ? '-leaf ' : '-parent ')) +
-                        (record.get('iconCls') || ''),
-                        record.get('icon') || blank
-                    ));
-                    if (record.get('checked') !== null) {
-                        buf.unshift(format(
-                            checkboxText,
-                            (treePrefix + 'checkbox') + (record.get('checked') ? ' ' + treePrefix + 'checkbox-checked' : ''),
-                            record.get('checked') ? 'aria-checked="true"' : ''
-                        ));
-                        if (record.get('checked')) {
-                            metaData.tdCls += (' ' + treePrefix + 'checked');
-                        }
-                    }
-                    if (record.isLast()) {
-                        if (record.isExpandable()) {
-                            buf.unshift(format(imgText, (elbowPrefix + 'end-plus ' + expanderCls), blank));
-                        } else {
-                            buf.unshift(format(imgText, (elbowPrefix + 'end'), blank));
-                        }
-
-                    } else {
-                        if (record.isExpandable()) {
-                            buf.unshift(format(imgText, (elbowPrefix + 'plus ' + expanderCls), blank));
-                        } else {
-                            buf.unshift(format(imgText, (treePrefix + 'elbow'), blank));
-                            buf.unshift(format(this.imgWithOffsetText, (treePrefix + 'elbow-line tr-elbow-line'), blank, (record.getDepth() - 1) * 16));
-                        }
-                    }
-                } else {
-                    if (record.isLast() || record.getDepth() === 0) {
-                        buf.unshift(format(imgText, (elbowPrefix + 'empty'), blank));
-                    } else if (record.getDepth() !== 0) {
-                        buf.unshift(format(imgText, (elbowPrefix + 'line'), blank));
-                        buf.unshift(format(imgText, (elbowPrefix + 'line tr-elbow-line'), blank));
-                    }
-                }
+        if (result instanceof Siesta.Result.Assertion) {
+            if (result.isWaitFor)
+                record.data.iconCls = result.completed ? 'fa-clock-o' : 'fa-spinner fa-spin'
+            else if (result.isException)
+                record.data.iconCls = 'fa-flag';
+            else
+                record.data.iconCls = result.passed ? 'fa-check' : 'fa-bug'
+        } else if (result instanceof Siesta.Result.SubTest) {
+            if( record.get('folderStatus') === 'working') {
+                record.data.iconCls = 'fa-spinner fa-spin';
+            } else {
+                record.data.iconCls = '';
             }
-            record = record.parentNode;
         }
-        if (href) {
-            buf.push('<a href="', href, '" target="', target, '">', formattedValue, '</a>');
-        } else {
-            buf.push(formattedValue);
-        }
-        if (cls) {
-            metaData.tdCls += ' ' + cls;
-        }
-        return buf.join('');
+
+        return this.callParent(arguments);
     }
 });
 ;
@@ -38636,11 +39291,12 @@ Ext.define('Siesta.Harness.Browser.UI.TestNameColumn', {
         this.callParent(arguments);
     },
 
-    renderer : function (value, metaData, testFile) {
+    // HACK OVERRIDE
+    treeRenderer : function (value, metaData, testFile) {
         var cls = '';
         var folderIcon = '';
 
-        metaData.tdCls = 'tr-test-status '
+        metaData.tdCls = 'test-name-cell-' + (testFile.data.leaf ? 'leaf' : 'parent');
 
         if (testFile.isLeaf()) {
 
@@ -38649,55 +39305,46 @@ Ext.define('Siesta.Harness.Browser.UI.TestNameColumn', {
             if (test) {
 
                 if (testFile.get('isFailed'))
-                    cls = 'icon-flag'
+                    testFile.data.iconCls = 'siesta-test-failed fa-flag'
 
                 else if (testFile.get('isRunning') && !test.isFinished())
-                    cls = 'icon-lightning'
+                    testFile.data.iconCls = 'fa-flash siesta-running-not-finished'
                 else if (test.isFinished()) {
 
                     if (test.isPassed())
-                        cls = 'icon-checkmark'
+                        testFile.data.iconCls = 'fa-check siesta-test-passed'
                     else
-                        cls = 'icon-bug'
+                        testFile.data.iconCls = 'fa-bug siesta-test-failed'
                 } else
-                    cls = 'icon-busy'
+                    testFile.data.iconCls = 'fa-hourglass-o siesta-test-starting'
 
             } else {
 
                 if (testFile.get('isMissing'))
-                    cls = 'icon-close'
+                    testFile.data.iconCls = 'fa-close siesta-test-file-missing'
                 else if (testFile.get('isStarting'))
-                    cls = 'icon-busy'
+                    testFile.data.iconCls = 'fa-hourglass-o siesta-test-starting'
                 else
-                    cls = 'icon-file-2'
+                    testFile.data.iconCls = 'fa-file-o siesta-test-file'
             }
         } else {
             var status = testFile.get('folderStatus');
 
-            if (testFile.data.expanded) {
-                cls += ' icon-folder-open';
-            } else {
-                cls += ' icon-folder';
-            }
-
             if (status == 'working') {
-                cls += ' icon-busy';
+                testFile.data.iconCls = ' fa-hourglass-o siesta-folder-running';
+            } else if (status == 'green') {
+                testFile.data.iconCls = ' fa-check siesta-folder-pass';
+            } else if (status == 'red') {
+                testFile.data.iconCls = ' fa-bug siesta-folder-fail';
             } else {
-                if (status == 'working') {
-                    cls += ' icon-busy';
-                } else if (status == 'green') {
-                    folderIcon += ' <span class="folder-status-icon icon-checkmark"></span>';
-                }
-                //else if (status == 'red') {
-                //    folderIcon += ' <span class="folder-status-icon icon-bug"></span>';
-                //}
+                testFile.data.iconCls = '';
             }
-
-            cls += ' tr-folder-' + status;
-
         }
-        return '<span class="test-icon ' + cls + '"></span>' + folderIcon + value;
-    }
+
+        return this.callParent(arguments);
+    },
+
+    renderer : function(v, m, r) {return v;}
 })
 ;
 Ext.define('Siesta.Harness.Browser.UI.TestGridController', {
@@ -38765,6 +39412,7 @@ Ext.define('Siesta.Harness.Browser.UI.TestGrid', {
     rootVisible : false,
     header      : false,
     rowLines    : false,
+    useArrows            : true,
     border               : false,
     cls                  : 'tr-testgrid',
     iconCls              : 'tr-status-neutral-small',
@@ -38784,9 +39432,9 @@ Ext.define('Siesta.Harness.Browser.UI.TestGrid', {
     coverageReportButton : null,
 
     initComponent : function () {
-        var me = this;
-        var R = Siesta.Resource('Siesta.Harness.Browser.UI.TestGrid');
-        var state = this.stateConfig;
+        var me      = this;
+        var R       = Siesta.Resource('Siesta.Harness.Browser.UI.TestGrid');
+        var state   = this.stateConfig;
 
         Ext.apply(this, {
             title      : R.get('title'),
@@ -38795,6 +39443,11 @@ Ext.define('Siesta.Harness.Browser.UI.TestGrid', {
                 toggleOnDblClick    : false,
                 markDirty           : false,
                 trackOver           : false,
+                getRowClass         : function(record) {
+                    if (record.get('descriptor').isSystemDescriptor) {
+                        return 'siesta-system-descriptor';
+                    }
+                },
 
                 // Avoid DOM updates when irrelevant
                 shouldUpdateCell    : function(record, column, changedFieldNames) {
@@ -38871,34 +39524,34 @@ Ext.define('Siesta.Harness.Browser.UI.TestGrid', {
 
                 items : [
                     {
-                        glyph      : 0xe60f,
+                        glyph      : 0xf04b,
                         cls        : 'run-checked',
-                        text       : '<span class="icon-checkmark"></span>',
+                        text       : '<span class="subicon fa-check"></span>',
                         tooltip    : R.get('runCheckedText'),
                         actionName : 'run-checked'
                     },
                     {
-                        glyph      : 0xe612,
+                        glyph      : 0xf04e,
                         cls        : 'run-all',
                         tooltip    : R.get('runAllText'),
                         actionName : 'run-all'
                     },
                     {
-                        glyph      : 0xe60f,
+                        glyph      : 0xf04b,
                         cls        : 'run-failed',
-                        text       : '<span class="icon-bug"></span>',
+                        text       : '<span class="subicon fa-bug"></span>',
                         tooltip    : R.get('runFailedText'),
                         actionName : 'run-failed'
                     },
                     {
-                        glyph      : 0xe617,
+                        glyph      : 0xf02d,
                         tooltip    : R.get('showCoverageReportText'),
                         cls        : 'show-coverage',
                         actionName : 'show-coverage',
                         disabled   : true
                     },
                     {
-                        glyph   : 0xe618,
+                        glyph   : 0xf013,
                         tooltip : R.get('optionsText'),
                         cls     : 'options',
                         action  : 'options',
@@ -38959,7 +39612,7 @@ Ext.define('Siesta.Harness.Browser.UI.TestGrid', {
                             pass : 0,
                             fail : 0
                         },
-                        tpl    : '<div><span class="total-pass">{pass}</span><span class="icon-checkmark"></span></div><div><span class="total-fail">{fail}</span><span class="icon-bug"></span></div>'
+                        tpl    : '<div><span class="total-pass">{pass}</span><span class="icon fa-check"></span></div><div><span class="total-fail">{fail}</span><span class="icon fa-bug"></span></div>'
                     }
                 ]
             },
@@ -39122,6 +39775,10 @@ Ext.define('Siesta.Harness.Browser.UI.TestGridContextMenu', {
             itemId : 'runThis',
             text   : Siesta.Resource('Siesta.Harness.Browser.UI.Viewport').get('runThisText')
         },
+        {
+            itemId : 'viewSource',
+            text   : Siesta.Resource('Siesta.Harness.Browser.UI.Viewport').get('viewSource')
+        },
         { xtype   : 'menuseparator' },
         {
             itemId : 'expandAll',
@@ -39205,27 +39862,32 @@ Ext.define('Siesta.Harness.Browser.UI.ResultPanel', {
 
     maintainViewportSize : true,
 
-    viewDOM      : false,
-    border       : false,
-    canManageDOM : true,
+    viewDOM         : false,
+    border          : false,
+    canManageDOM    : true,
 
-    harness : null,
+    harness         : null,
 
-    isStandalone : false,
-    showToolbar  : true,
-
-    minWidth : 100,
-    layout   : 'border',
+    isStandalone    : false,
+    showToolbar     : true,
+    title           : 'Result panel',
+    header          : false,
+    minWidth        : 100,
+    layout          : 'border',
 
     sourceButton     : null,
     filterButton     : null,
     inspectionButton : null,
     recorderPanel    : null,
     recorderConfig   : null,
+    
+    domContainerRegion      : 'east',
 
     initComponent : function () {
-        var me = this;
-        var R = Siesta.Resource('Siesta.Harness.Browser.UI.ResultPanel');
+        var me      = this;
+        var R       = Siesta.Resource('Siesta.Harness.Browser.UI.ResultPanel');
+        
+        var domContainerRegion      = this.domContainerRegion || 'east'
 
         Ext.apply(this, {
             cls   : 'tr-container',
@@ -39238,9 +39900,8 @@ Ext.define('Siesta.Harness.Browser.UI.ResultPanel', {
                 items    : !this.showToolbar ? null : [
                     {
                         text    : R.get('rerunText'),
-                        padding : '0 10',
                         cls     : 'rerun-button',
-                        glyph   : 0xE60f,
+                        glyph   : 0xf04b,
                         scale   : 'medium',
                         handler : this.onRerun
                     },
@@ -39258,7 +39919,7 @@ Ext.define('Siesta.Harness.Browser.UI.ResultPanel', {
                         cls          : 'testaction-button',
                         action       : 'view-dom',
                         scale        : 'medium',
-                        glyph        : 0xE619,
+                        glyph        : 0xf26c,
                         enableToggle : true,
                         scope        : this,
                         pressed      : this.viewDOM,
@@ -39270,7 +39931,7 @@ Ext.define('Siesta.Harness.Browser.UI.ResultPanel', {
                         tooltip      : R.get('viewSourceText'),
                         action       : 'view-source',
                         cls          : 'testaction-button',
-                        glyph        : 0xE600,
+                        glyph        : 0xf0f6,
                         scale        : 'medium',
                         tooltipType  : 'title',
                         disabled     : true,
@@ -39290,14 +39951,14 @@ Ext.define('Siesta.Harness.Browser.UI.ResultPanel', {
                         action       : 'show-failed-only',
                         cls         : 'testaction-button',
                         scale       : 'medium',
-                        glyph       : 0xE622,
+                        glyph       : 0xf188,
                         tooltipType : 'title',
                         scope        : this,
                         enableToggle : true,
                         handler      : this.onAssertionFilterClick
                     }),
                     this.inspectionButton = new Ext.Button({
-                        glyph        : 0xE613,
+                        glyph        : 0xf002,
                         cls          : 'testaction-button cmp-inspector',
                         action       : 'toggle-cmp-inspector',
                         scale        : 'medium',
@@ -39308,7 +39969,7 @@ Ext.define('Siesta.Harness.Browser.UI.ResultPanel', {
                         enableToggle : true
                     }),
                     this.recorderButton = new Ext.Button({
-                        glyph        : 0xE614,
+                        glyph        : 0xf03d,
                         action       : 'toggle-recorder',
                         cls          : 'testaction-button',
                         scale        : 'medium',
@@ -39382,22 +40043,22 @@ Ext.define('Siesta.Harness.Browser.UI.ResultPanel', {
                 },
                 {
                     xtype       : 'domcontainer',
-                    region      : 'east',
+                    region      : domContainerRegion,
                     collapsible : true,
-                    split       : {
-                        size : 7
-                    },
+                    
+                    split       : { size : 7 },
 
-                    bodyStyle : 'text-align : center',
+                    bodyStyle   : 'text-align : center',
 
-                    slot     : 'domContainer',
-                    stateful : true,             // Turn off for recursive siesta demo
+                    slot        : 'domContainer',
+                    stateful    : true,             // Turn off for recursive siesta demo
 
-                    id    : this.id + '-domContainer',
-                    width : '50%',
-                    cls   : 'siesta-domcontainer',
+                    id          : this.id + '-domContainer',
+                    width       : (domContainerRegion == 'east' || domContainerRegion == 'west') ? '50%' : null,
+                    height      : (domContainerRegion == 'south' || domContainerRegion == 'north') ? '50%' : null,
+                    cls         : 'siesta-domcontainer',
 
-                    collapsed : !this.viewDOM
+                    collapsed   : !this.viewDOM
                 }
             ]
         })
@@ -39484,7 +40145,7 @@ Ext.define('Siesta.Harness.Browser.UI.ResultPanel', {
         if (value)
             domContainer.expand(false)
         else
-            domContainer.collapse(Ext.Component.DIRECTION_RIGHT, false)
+            domContainer.collapse(null, false)
     },
 
 
@@ -39517,7 +40178,8 @@ Ext.define('Siesta.Harness.Browser.UI.ResultPanel', {
 
         this.sourceButton && this.sourceButton.enable()
 
-        var url = test.url
+        var url  = test.url;
+        var name = url === '/' ? recorder.getRecordingName() : url;
 
         Ext.suspendLayouts();
 
@@ -39525,15 +40187,13 @@ Ext.define('Siesta.Harness.Browser.UI.ResultPanel', {
         this.slots.domContainer.showTest(test, assertionsStore)
 
         if (recorder) {
-            recorder.stop();
-            recorder.attachTo(test);
-
-            if (this.test && test.url !== this.test.url) {
-                this.slots.cardContainer.layout.setActiveItem(0);
+            if (!recorder.test || test.url !== recorder.test.url) {
+                recorder.stop();
+                recorder.attachTo(test);
             }
         }
 
-        this.setTestTitle(url);
+        this.setTestTitle(name);
 
         Ext.resumeLayouts();
 
@@ -39607,16 +40267,22 @@ Ext.define('Siesta.Harness.Browser.UI.ResultPanel', {
                 recorderConfig : this.recorderConfig,
                 closeButton    : {
                     text    : Siesta.Resource('Siesta.Harness.Browser.UI.ResultPanel', 'closeText'),
+                    cls     : 'recorder-tool',
                     handler : function () {
                         cardContainer.layout.setActiveItem(0);
                     }
                 },
                 listeners      : {
-                    startrecord : function (pnl) {
-                        this.fireEvent('startrecord', pnl);
+                    startrecord : function (pnl, test) {
+                        this.fireEvent('startrecord', pnl, test);
+
+                        this.showTest(test);
                     },
                     show        : function() {
                         this.recorderButton.toggle(true);
+                    },
+                    play        : function(pnl, test) {
+                        this.showTest(test);
                     },
                     hide        : function() {
                         this.recorderButton.toggle(false);
@@ -39626,6 +40292,7 @@ Ext.define('Siesta.Harness.Browser.UI.ResultPanel', {
             });
             this.slots.cardContainer.add(this.recorderPanel);
 
+            this.relayEvents(this.recorderPanel, ['startrecord', 'play'], 'recorder');
             if (this.test) {
                 this.slots.recorderPanel.attachTo(this.test);
             }
@@ -39778,22 +40445,20 @@ Ext.define('Siesta.Harness.Browser.UI.VersionUpdateButton', {
 
         win.show();
         win.body.mask(R.get('loadingChangelogText'));
-        Ext.data.Connection.prototype.useDefaultXhrHeader = false;
 
         Ext.Ajax.request({
-            url      : 'http://bryntum.com/changelogs/_siesta.php',
-            callback : function (o, success, response) {
+            useDefaultXhrHeader : false,
+            url                 : 'http://bryntum.com/changelogs/_siesta.php',
+            callback            : function (o, success, response) {
                 win.body.unmask();
 
                 if (success && response && response.responseText) {
                     win.body.update(response.responseText);
                 } else {
-                    win.body.update(Siesta.Resource('Siesta.Harness.Browser.UI.ResultPanel', 'changelogLoadFailedText'));
+                    win.body.update(Siesta.Resource('Siesta.Harness.Browser.UI.VersionUpdateButton', 'changelogLoadFailedText'));
                 }
             }
         })
-
-        Ext.data.Connection.prototype.useDefaultXhrHeader = true;
     }
 });;
 Ext.define('Siesta.Harness.Browser.UI.Header', {
@@ -39875,6 +40540,7 @@ Ext.define('Siesta.Harness.Browser.UI.ViewportController', {
         'testgridcontextmenu #collapseAll'   : { click : 'collapseAll' },
         'testgridcontextmenu #filterToCurrentGroup'   : { click : 'filterToCurrentGroup' },
         'testgridcontextmenu #filterToFailed'   : { click : 'filterToFailed' },
+        'testgridcontextmenu #viewSource'   : { click : 'viewSource' },
 
         resultpanel : {
             viewdomchange : 'onDomPanelVisibilityChange',
@@ -40074,6 +40740,26 @@ Ext.define('Siesta.Harness.Browser.UI.ViewportController', {
 
         viewport.slots.filesTree.collapseAll()
     },
+
+    viewSource : function() {
+        var testRecord      = this.getView().currentFile;
+        var test            = testRecord.get('test');
+        var win             = window.open(null, 'siesta-source');
+        var head            = win.document.documentElement.getElementsByTagName('head')[0];
+        var body            = win.document.body;
+
+        head.innerHTML = '<title>' + testRecord.get('title') + '</title>'
+
+        if (test) {
+            body.innerHTML      = '<pre>' + test.getSource() + '</pre>';
+        } else {
+            $.ajax(testRecord.get('url'), {
+                success: function(text) {
+                    body.innerHTML  = '<pre>' + text + '</pre>';
+                }
+            });
+        }
+    },
     // EOF Test Grid Context Menu events
 
     // Result Panel events
@@ -40164,6 +40850,8 @@ Ext.define('Siesta.Harness.Browser.UI.Viewport', {
 
     showSizeControls : false,
 
+    expectedExtJSVersion : '6.0.1.250',
+
     viewportSizes : [
         [640, 480],
         [800, 600],
@@ -40178,7 +40866,7 @@ Ext.define('Siesta.Harness.Browser.UI.Viewport', {
         Ext.getBody().addCls('siesta')
 
         Ext.getBody().on('keydown', this.onBodyKeyDown, this)
-        Ext.setGlyphFontFamily('icomoon');
+        Ext.setGlyphFontFamily('FontAwesome');
 
         Ext.state.Manager.setProvider(Ext.supports.LocalStorage ? new Ext.state.LocalStorageProvider() : new Ext.state.CookieProvider())
 
@@ -40246,7 +40934,8 @@ Ext.define('Siesta.Harness.Browser.UI.Viewport', {
                     harness        : harness,
                     recorderConfig : harness.recorderConfig,
 
-                    maintainViewportSize : harness.maintainViewportSize
+                    maintainViewportSize    : harness.maintainViewportSize,
+                    domContainerRegion      : harness.domContainerRegion
                 }
             ]
             // eof main content area
@@ -40273,6 +40962,12 @@ Ext.define('Siesta.Harness.Browser.UI.Viewport', {
         harness.on('testsuitelaunch', this.onTestSuiteLaunch, this)
         harness.on('assertiondiscard', this.onAssertionDiscarded, this)
 
+        if (this.mouseVisualizer) {
+            this.slots.resultPanel.on('recorderplay', function(pnl, test) {
+                this.mouseVisualizer.beginCursorVisusalization(test);
+            }, this);
+        }
+
         if (window.location.href.match('^file:///')) {
             var R = Siesta.Resource('Siesta.Harness.Browser.UI.Viewport');
 
@@ -40295,9 +40990,9 @@ Ext.define('Siesta.Harness.Browser.UI.Viewport', {
         }
 
 
-        var me = this
-        var prevId = data.id
-        var collapsedNodes = this.collapsedNodes || {}
+        var me              = this
+        var prevId          = data.id
+        var collapsedNodes  = this.collapsedNodes || {}
 
         if (descriptor.group) {
 
@@ -40613,8 +41308,10 @@ Ext.define('Siesta.Harness.Browser.UI.Viewport', {
         testRecord = testRecord || this.testsStore.getNodeById(test.url)
 
         var currentTest = testRecord.get('test')
+        
+        if (!currentTest) return true
 
-        return currentTest && currentTest.isFromTheSameGeneration(test)
+        return currentTest && currentTest.isFromTheSameGeneration(test) && currentTest.launchId == test.launchId
     },
 
 
@@ -40879,22 +41576,41 @@ Ext.define('Siesta.Harness.Browser.UI.Viewport', {
         }
     },
 
+    
     afterRender : function () {
         this.callParent(arguments);
 
+        if (!Ext.versions.extjs.equals(this.expectedExtJSVersion)) {
+            Ext.Msg.alert('Wrong Ext JS version detected', 'The Siesta UI expects that you use Ext JS version: ' + this.expectedExtJSVersion + '. You may experience errors when using another version');
+        }
+        
+        if (!this.harness.isAutomated) setTimeout(Ext.Function.bind(this.deferredSetup, this), 1000);
+    },
+
+    
+    deferredSetup : function() {
+        Ext.QuickTips && Ext.QuickTips.init();
+
         if (this.enableVersionCheck && Siesta.Harness.Browser.UI.VersionUpdateButton) {
-            setTimeout(function () {
-                new Siesta.Harness.Browser.UI.VersionUpdateButton();
-            }, 3000);
+            new Siesta.Harness.Browser.UI.VersionUpdateButton();
         }
     },
 
+    
     onHasSomeCoverageInfo : function () {
         this.slots.filesTree.enableCoverageButton();
     },
 
+    
     onNoCoverageInfo : function () {
         this.slots.filesTree.disableCoverageButton()
+    },
+    
+    
+    onManualCloseOfForcedIframe : function (test) {
+        var domContainer        = this.down('domcontainer')
+        
+        if (domContainer && domContainer.test == test) domContainer.alignIFrame(true)
     }
 })
 //eof Siesta.Harness.Browser.UI.Viewport
