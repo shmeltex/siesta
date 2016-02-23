@@ -1,7 +1,7 @@
 /*
 
-Siesta 4.0.0
-Copyright(c) 2009-2015 Bryntum AB
+Siesta 4.0.5
+Copyright(c) 2009-2016 Bryntum AB
 http://bryntum.com/contact
 http://bryntum.com/products/siesta/license
 
@@ -95,6 +95,7 @@ http://bryntum.com/products/siesta/license
     -o-transition-duration      : 2s;
     transition-duration         : 2s;
     pointer-events              : none;
+    font-family                 : FontAwesome;
 }
 
 .ghost-cursor-hidden {
@@ -102,53 +103,116 @@ http://bryntum.com/products/siesta/license
 }
 
 .ghost-cursor-click-indicator {
-    position                    : absolute;
-    border-radius               : 100%;
-    margin-left                 : -3px;
-    margin-top                  : -3px;
-    transition-property         : opacity, width, height, margin-left, margin-top;
-    transition-duration         : 1.5s;
-    border                      : 2px solid;
-    opacity                     : 0.7;
-    width                       : 7px;
-    height                      : 7px;
-    z-index                     : 101;
-    pointer-events              : none;
+    position            : absolute;
+    border-radius       : 100%;
+    margin-left         : -25px;
+    margin-top          : -25px;
+    transition-property : scale, opacity;
+    border              : 2px solid;
+    width               : 50px;
+    height              : 50px;
+    z-index             : 101;
+    pointer-events      : none;
+    -webkit-animation   : grow 1.5s ease-out;
+    -moz-animation      : grow 1.5s ease-out;
+    animation           : grow 1.5s ease-out;
 }
 
-.ghost-cursor-click-indicator-big {
-    margin-left : -21px;
-    margin-top  : -21px;
-    height      : 50px;
-    width       : 50px;
-    opacity     : 0;
+@-moz-keyframes grow {
+    0% {
+        transform : scale(0.1);
+        opacity   : 1;
+    }
+    50% {
+        opacity   : 0.5;
+    }
+    100% {
+        transform : scale(1);
+        opacity   : 0.0;
+    }
+}
+
+@-webkit-keyframes grow {
+    0% {
+        transform : scale(0.1);
+        opacity   : 1;
+    }
+    50% {
+        opacity   : 0.5;
+    }
+    100% {
+        transform : scale(1);
+        opacity   : 0.0;
+    }
+}
+
+@-o-keyframes grow {
+    0% {
+        transform : scale(0.1);
+        opacity   : 1;
+    }
+    50% {
+        opacity   : 0.5;
+    }
+    100% {
+        transform : scale(1);
+        opacity   : 0.0;
+    }
+}
+
+@keyframes grow {
+    0% {
+        transform : scale(0.1);
+        opacity   : 1;
+    }
+    50% {
+        opacity   : 0.5;
+    }
+    100% {
+        transform : scale(1);
+        opacity   : 0.0;
+    }
 }
 
 .tr-iframe-forced-screenshot .ghost-cursor,
 .tr-iframe-forced-screenshot .ghost-cursor-click-indicator {
-	display        : none;
-}.target-inspector-box {
-    position            : absolute;
-    pointer-events      : none;
-    z-index             : 100001;
-    border              : 2px solid;
-    transition-property : left, top, width, height;
-    transition-duration : 0.3s;
-}
+    display : none;
+}/*.target-inspector-box {*/
+    /*position       : absolute;*/
+    /*pointer-events : none;*/
+    /*z-index        : 100001;*/
+    /*border         : 2px solid;*/
+/*}*/
 
 .target-inspector-label {
-    display        : inline-block;
-    margin-top     : -10px;
-    font-size      : 10px;
-    padding        : 2px;
-    pointer-events : auto;
-    text-decoration: none;
-    white-space    : nowrap;
+    display         : inline-block;
+    margin-top      : -10px;
+    font-size       : 10px;
+    padding         : 2px;
+    pointer-events  : auto;
+    text-decoration : none;
+    white-space     : nowrap;
 }
 
 .target-inspector-label:hover {
-    text-decoration: underline;
-}.siesta-domcontainer {
+    text-decoration : underline;
+}
+
+/*.target-inspector-coordinate {*/
+    /*width       : 10px;*/
+    /*height      : 10px;*/
+    /*position    : absolute;*/
+    /*margin-top  : -5px;*/
+    /*margin-left : -5px;*/
+/*}*/
+
+/*.target-inspector-box,*/
+/*.target-inspector-coordinate {*/
+
+    /*transition-property : left, top, width, height;*/
+    /*transition-duration : 0.3s;*/
+/*}*/
+.siesta-domcontainer {
 }
 
 /*=======================================================================================================================================================================================================================
@@ -353,10 +417,27 @@ td.tr-td-vertical-align {
 .resultpanel-testtitle {
     white-space : nowrap;
     overflow    : hidden;
+    line-height : 35px; /*prevent text from clipping vertically */
 }
 
 .test-source-ct .syntaxhighlighter {
     overflow : hidden !important;
+}
+
+.si-sourcepanel-close {
+    width    : 14px;
+    height   : 14px;
+    position : absolute;
+    top      : 2px;
+    right    : 2px;
+    font     : normal normal normal 14px/1 FontAwesome;
+    cursor   : pointer;
+    z-index  : 1000;
+    color    : #666;
+}
+
+.test-source-ct .toolbar {
+    display : none;
 }
 
 /* fixes row height sync in Chrome */
@@ -481,7 +562,6 @@ td.tr-td-vertical-align {
     -ms-user-select     : none;
     -moz-user-select    : -moz-none;
     -webkit-user-select : none;
-    text-overflow       : clip;
 }
 
 .test-name-cell .x-grid-cell-inner {
@@ -897,7 +977,6 @@ td.tr-td-vertical-align {
 
 .st-cov-report-tree-panel .x-grid-cell-inner {
     padding-bottom : 2px;
-    text-overflow  : clip;
 }
 
 .st-cov-report-tree-panel .x-grid-row-selected .cov-result-cell {
@@ -1065,10 +1144,6 @@ li.L1, li.L3, li.L5, li.L7, li.L9 { background : #eee }
 .x-grid-tree-node-leaf .action-level-0 .x-tree-elbow-img,
 .siesta-recorderpanel-typecolumn .x-tree-icon {
     display : none;
-}
-
-.siesta-recorderpanel-typecolumn .x-tree-node-text{
-    color : #666;
 }
 
 .action-icon {

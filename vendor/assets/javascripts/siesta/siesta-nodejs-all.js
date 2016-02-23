@@ -1,7 +1,7 @@
 /*
 
-Siesta 4.0.0
-Copyright(c) 2009-2015 Bryntum AB
+Siesta 4.0.5
+Copyright(c) 2009-2016 Bryntum AB
 http://bryntum.com/contact
 http://bryntum.com/products/siesta/license
 
@@ -3703,9 +3703,1738 @@ Role('JooseX.Observable', {
     }
 });
 ;
+Class('JooseX.Namespace.Depended.Manager', {
+    
+    my : {
+    
+        have : {
+            
+            INC                             : [ 'lib', '/jsan' ],
+            
+            disableCaching                  : true,
+            
+            resources                       : {},
+            
+            resourceTypes                   : {},
+            
+            ANONYMOUS_RESOURCE_COUNTER      : 0
+        },
+    
+        
+        
+        methods : {
+            
+            //get own resource of some thing (resource will be also attached to that abstract thing)
+            //if the something is requesting own resource its considered loaded
+            getMyResource : function (type, token, me) {
+                var resource = this.getResource({
+                    type : type,
+                    token : token
+                })
+                
+                if (resource.attachedTo && resource.attachedTo != me) throw resource + " is already attached to [" + resource.attachedTo + "]"
+                
+                resource.attachedTo     = me
+                resource.loaded         = true
+                resource.loading        = false
+                
+                return resource
+            },
+            
+            
+            getResource : function (descriptor) {
+                
+                if (typeof descriptor == 'object') {
+                    var type                = descriptor.type = descriptor.type || 'javascript'
+                    var token               = descriptor.token
+                    var requiredVersion     = descriptor.version
+                    
+                    delete descriptor.version
+                    
+                } else 
+                    if (typeof descriptor == 'string') {
+                    
+                        var match = /^(\w+):\/\/(.+)/.exec(descriptor)
+                        
+                        if (match) {
+                            // type & token are explicitly specified
+                            type    = match[1]
+                            token   = match[2]
+                            
+                            if (type == 'http' || type == 'https') {
+                                token   = type + '://' + token
+                                type    = 'javascript'
+                            }
+                        } else {
+                            // no type specified
+                            token = descriptor
+                            
+                            type = /\//.test(token) || /\.js$/.test(token) ? 'javascript' : 'joose'
+                        }
+                    }
+                    
+                if (!token) {
+                    token       = '__ANONYMOUS_RESOURCE__' + this.ANONYMOUS_RESOURCE_COUNTER++
+                    descriptor  = undefined
+                }
+                
+                var id = type + '://' + token
+                
+                var resource = this.resources[id]
+                
+                if (!resource) {
+                    var resourceClass = this.resourceTypes[type]
+                    if (!resourceClass) throw new Error("Unknown resource type: [" + type + "]")
+                    
+                    resource = this.resources[id] = new resourceClass(typeof descriptor == 'object' ? descriptor : { 
+                        token : token,
+                        
+                        type : type
+                    })
+                }
+                
+                resource.setRequiredVersion(requiredVersion)
+                
+                return resource
+            },
+            
+            
+            registerResourceClass : function (typeName, resourceClass) {
+                this.resourceTypes[typeName] = resourceClass
+            },
+            
+            
+            use : function (dependenciesInfo, callback, scope) {
+                Class({
+                    use    : dependenciesInfo,
+                    
+                    body   : function () {
+                        if (callback) Joose.Namespace.Manager.my.executeIn(Joose.top, function (ns) {
+                            callback.call(scope || this, ns)
+                        })
+                    }
+                })
+            },
+            
+            
+            getINC : function () {
+                var INC         = this.INC
+                var original    = use.__ORIGINAL__
+                var paths       = use.paths
+                
+                // user have modified the `use.path` with direct assignment - return `use.paths`
+                if (INC == original && paths != original) return paths
+                
+                // user have modified the `JooseX.Namespace.Depended.Manager.my.INC` with direct assignment - return it
+                if (INC != original && paths == original) return INC
+                
+                if (INC != original && paths != original) throw "Both INC sources has been modified"
+                
+                // user was only using the in-place array mutations - return any
+                return INC
+            }
+        }
+    }
+})
+
+use = function (dependenciesInfo, callback, scope) {
+    JooseX.Namespace.Depended.Manager.my.use(dependenciesInfo, callback, scope) 
+}
+
+use.paths = use.__ORIGINAL__ = JooseX.Namespace.Depended.Manager.my.INC
+
+
+Joose.I.FutureClass = function (className) { 
+    return function () { 
+        return eval(className) 
+    } 
+}
+
+
+/**
+
+Name
+====
+
+
+JooseX.Namespace.Depended.Manager - A global collection of all resources
+
+
+SYNOPSIS
+========
+
+        JooseX.Namespace.Depended.Manager.my.registerResourceClass('custom-type', JooseX.Namespace.Depended.Resource.Custom)
+        
+
+DESCRIPTION
+===========
+
+`JooseX.Namespace.Depended.Manager` is a global collection of all resources. 
+
+**Note:** Its a pure [static](http://joose.github.com/Joose/doc/html/Joose/Manual/Static.html) class - all its methods and properties are static.
+
+
+METHODS
+=======
+
+### registerResourceClass
+
+> `void registerResourceClass(String type, Class constructor)`
+
+> After you've created your custom resource class, you need to register it with call to this method.
+
+> Then you can refer to new resources with the following descriptors: 
+
+                {
+                    type    : 'custom-type',
+                    token   : 'some-token'
+                }
+
+
+
+GETTING HELP
+============
+
+This extension is supported via github issues tracker: <http://github.com/SamuraiJack/JooseX-Namespace-Depended-Manager/issues>
+
+For general Joose questions you can also visit [#joose](http://webchat.freenode.net/?randomnick=1&channels=joose&prompt=1) on freenode or the mailing list at <http://groups.google.com/group/joose-js>
+ 
+
+
+SEE ALSO
+========
+
+Authoring [JooseX.Namespace.Depended](Authoring.html)
+
+Abstract base resource class: [JooseX.Namespace.Depended.Resource](Resource.html)
+
+General documentation for Joose: <http://joose.github.com/Joose/>
+
+
+BUGS
+====
+
+All complex software has bugs lurking in it, and this module is no exception.
+
+Please report any bugs through the web interface at [http://github.com/SamuraiJack/JooseX-Namespace-Depended-Manager/issues](http://github.com/SamuraiJack/JooseX-Namespace-Depended-Manager/issues)
+
+
+
+AUTHORS
+=======
+
+Nickolay Platonov [nplatonov@cpan.org](mailto:nplatonov@cpan.org)
+
+
+
+COPYRIGHT AND LICENSE
+=====================
+
+Copyright (c) 2009, Nickolay Platonov
+
+All rights reserved.
+
+Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
+
+* Redistributions of source code must retain the above copyright notice, this list of conditions and the following disclaimer.
+* Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following disclaimer in the documentation and/or other materials provided with the distribution.
+* Neither the name of Nickolay Platonov nor the names of its contributors may be used to endorse or promote products derived from this software without specific prior written permission. 
+
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
+
+
+*/
+;
+Class('JooseX.Namespace.Depended.Resource', {
+    
+    has : {
+        
+        attachedTo          : null,
+        
+        type                : null,
+        token               : null,
+        
+        id                  : null,
+        
+        loading             : false,
+        loaded              : false,
+        ready               : false,
+        
+        presence            : null,
+        readyness           : null,
+        
+        loadedFromURL       : null,
+        
+        readyListeners      : Joose.I.Array,
+        
+        dependencies        : Joose.I.Object,
+        
+        onBeforeReady       : { is : 'rw', init : null },
+        readyDelegated      : false,
+        
+        version             : { is : 'rw', init : null },
+        requiredVersion     : { is : 'rw', init : null },
+        
+        hasReadyCheckScheduled  : false
+    },
+    
+    
+    after: {
+        
+        initialize: function () {
+            if (!this.id) this.id = this.type + '://' + this.token
+        }
+        
+    },
+
+    
+    
+    methods: {
+        
+        setOnBeforeReady : function (func) {
+            if (this.onBeforeReady) throw "Can't redefine 'onBeforeReady' for " + this
+            
+            this.onBeforeReady = func
+        },
+        
+        
+        setVersion : function (version) {
+            if (!version) return
+            
+            if (this.version && this.version != version) throw new Error("Cant redefine version of " + this)
+            
+            var requiredVersion = this.requiredVersion
+            
+            if (requiredVersion && version < requiredVersion) throw new Error("Versions conflict on " + this + " required [" + requiredVersion + "], got [" + version + "]")
+                
+            this.version = version
+        },
+        
+        
+        setRequiredVersion : function (version) {
+            if (!version) return
+            
+            var requiredVersion = this.requiredVersion
+            
+            if (!requiredVersion || version > requiredVersion) 
+                if (this.isLoaded() || this.loading)
+                    throw "Cant increase required version - " + this + " is already loaded"
+                else
+                    this.requiredVersion = version
+        },
+        
+        
+        toString : function () {
+            return "Resource: id=[" + this.id + "], type=[" + this.meta.name + "]"
+        },
+        
+        
+        addDescriptor : function (descriptor) {
+            var resource = JooseX.Namespace.Depended.Manager.my.getResource(descriptor)
+            
+            var dependencies    = this.dependencies
+            var resourceID      = resource.id
+            
+            //if there is already such dependency or the resource is ready
+            if (dependencies[ resourceID ] || resource.isReady()) return
+            
+            var me = this
+            //pushing listener to the end(!) of the list
+            resource.readyListeners.push(function () {
+                
+                delete dependencies[ resourceID ]
+                me.checkReady()
+            })
+            
+            //adding dependency
+            dependencies[ resourceID ] = resource
+            
+            //we are not ready, since there are depedencies to load                
+            this.ready = false
+        },
+        
+        
+        handleDependencies : function () {
+            // || {} required for classes on which this Role was applied after they were created - they have this.dependencies not initialized
+            Joose.O.eachOwn(this.dependencies || {}, function (resource) {
+                resource.handleLoad()
+            })
+            
+            this.checkReady()
+        },
+        
+        
+        checkReady : function () {
+            if (!Joose.O.isEmpty(this.dependencies) || this.hasReadyCheckScheduled) return
+            
+            if (this.onBeforeReady) {
+                
+                if (!this.readyDelegated) {
+                    this.readyDelegated = true
+                    
+                    var me = this
+                    
+                    this.onBeforeReady(function(){
+                        me.fireReady()
+                    }, me)
+                }
+            } else 
+                this.fireReady()
+        },
+        
+        
+        fireReady: function () {
+            this.ready      = true
+            
+            var listeners   = this.readyListeners
+            
+            this.readyListeners = []
+            
+            Joose.A.each(listeners, function (listener) {
+                listener()
+            })
+        },
+        
+        
+        isReady : function () {
+            if (!this.isLoaded()) return false
+            
+            var isReady = false
+            
+            try {
+                isReady = this.readyness()
+            } catch (e) {
+            }
+            
+            return isReady || this.ready
+        },
+        
+        
+        isLoaded : function () {
+            var isPresent = false
+            
+            try {
+                isPresent = this.presence()
+            } catch (e) {
+            }
+            
+            return isPresent || this.loaded
+        },
+        
+        
+        handleLoad: function() {
+            
+            if (this.isLoaded()) {
+                this.checkReady()
+                return
+            }
+            
+            if (this.loading) return
+            this.loading = true
+            
+            var urls = Joose.O.wantArray(this.getUrls())
+            
+            var me = this
+            
+            
+            // this delays the 'checkReady' until the resourse will be *fully* materialized
+            // *fully* means that even the main class of the resource is already "ready"
+            // the possible other classes in the same file could be not
+            // see 110_several_classes_in_file.t.js, 120_script_tag_transport.t.js for example
+            me.hasReadyCheckScheduled = true
+            
+            var onsuccess = function (resourceBlob, url) {
+                me.loaded = true
+                me.loading = false
+                
+                me.loadedFromURL = url
+                
+                Joose.Namespace.Manager.my.executeIn(Joose.top, function () {
+                    
+                    me.materialize(resourceBlob, url)
+                })
+                
+                me.hasReadyCheckScheduled = false
+                
+                // handle the dependency of the class after its materialization completition
+                me.handleDependencies()
+            }
+            
+            var onerror = function (e) {
+                //if no more urls
+                if (!urls.length) throw new Error(me + " not found") 
+                
+                me.load(urls.shift(), onsuccess, onerror)
+            }
+            
+            this.load(urls.shift(), onsuccess, onerror)
+        },
+        
+
+        getUrls: function () {
+            throw "Abstract resource method 'getUrls' was called"
+        },
+        
+        
+        load : function (url, onsuccess, onerror) {
+            throw "Abstract resource method 'load' was called"
+        },
+        
+        
+        materialize : function (resourceBlob) {
+            throw "Abstract resource method 'materialize' was called"
+        }
+        
+    }
+})
+
+
+/**
+
+Name
+====
+
+
+JooseX.Namespace.Depended.Resource - Abstract resource class 
+
+
+SYNOPSIS
+========
+        
+        //mostly for subclassing only
+        Class("JooseX.Namespace.Depended.Resource.JavaScript", {
+        
+            isa : JooseX.Namespace.Depended.Resource,
+            
+            ...
+        })
+
+
+DESCRIPTION
+===========
+
+`JooseX.Namespace.Depended.Resource` is an abstract resource class. Its not supposed to be used directly, instead you should use
+one of its subclasses.
+
+
+ATTRIBUTES
+==========
+
+### attachedTo
+
+> `Object attachedTo`
+
+> An arbitrary object to which this resource is attached (its a corresponding class in JooseX.Namespace.Depended)
+
+
+### type
+
+> `String type`
+
+> A type of resource  - plain string. `JooseX.Namespace.Depended.Manager` maintain a collection of resource types, accessible 
+
+
+### token
+
+> `String token`
+
+> A token of resource  - plain string with arbitrary semantic. Each subclass should provide this semantic along with `token -> url` conertion method (locator)  
+
+
+### id
+
+> `String id`
+
+> An id of resource - is computed as `type + '://' + token'
+
+
+### loading
+
+> `Boolean loading`
+
+> A sign whether this resource is currently loading
+
+  
+### loaded
+
+> `Boolean loaded`
+
+> A sign whether this resource is already loaded
+
+
+### ready
+
+> `Boolean ready`
+
+> A sign whether this resource is considered ready. Resource is ready, when its loaded, and all its dependencies are ready.
+
+
+### loadedFromURL
+
+> `String loadedFromURL`
+
+> An url, from which the resource was loaded.
+
+
+### readyListeners
+
+> `Array[Function] readyListeners`
+
+> An array of functions, which will be called after this resource becomes ready. Functions will be called sequentially. 
+
+
+### dependencies
+
+> `Object dependencies`
+
+> An object containing the dependencies of this resource. Keys are the `id`s of resources and the values - the resource instances itself.
+
+ 
+### onBeforeReady
+
+> `Function onBeforeReady`
+
+> A function, which will be called, right after the all dependencies of the resource became ready, but before its own `readyListeners` will be called.
+It supposed to perform any needed additional actions to post-process the loaded resource.
+
+> Function will receive two arguments - the 1st is the callback, which should be called when `onBeforeReady` will finish its work. 2nd is the resource instance.
+
+  
+### version
+
+> `r/w Number version`
+
+> A version of this resource. Currently is handled as Number, this may change in future releases.
+
+  
+### requiredVersion
+
+> `r/w Number requiredVersion`
+
+> A *requiredVersion* version of this resource. Required here means the maximum version from all references to this resource. 
+
+
+
+METHODS
+=======
+
+### addDescriptor
+
+> `void addDescriptor(Object|String descriptor)`
+
+> Add the resource, described with passed descriptor as the dependency for this resource.
+
+
+### getUrls
+
+> `String|Array[String] getUrls()`
+
+> Abstract method, will throw an exception if not overriden. It should return the array of urls (or a single url) from which this resource can be potentially loaded. 
+This method should take into account the `use.paths` setting
+
+
+### load
+
+> `void load(String url, Function onsuccess, Function onerror)`
+
+> Abstract method, will throw an exception if not overriden. It should load the content of the resource from the passed `url`. If there was an error during loading
+(for example file not found) should not throw the exception. Instead, should call the `onerror` continuation with it (exception instance).
+
+> After successfull loading, should call the `onsuccess` continuation with the resource content as 1st argument, and `url` as 2nd: `onsuccess(text, url)`
+
+
+### materialize
+
+> `void materialize(String resourceBlob, String url)`
+
+> Abstract method, will throw an exception if not overriden. It should "materialize" the resource. The concrete semantic of this action is determined by resource nature.
+For example this method can create some tag in the DOM tree, or execute the code or something else.
+
+> Currently this method is supposed to operate synchronously, this may change in future releases. 
+ 
+
+SEE ALSO
+========
+
+Web page of this package: <http://github.com/SamuraiJack/JooseX-Namespace-Depended-Resource/>
+
+General documentation for Joose: <http://joose.github.com/Joose/>
+
+
+BUGS
+====
+
+All complex software has bugs lurking in it, and this module is no exception.
+
+Please report any bugs through the web interface at <http://github.com/SamuraiJack/JooseX-Namespace-Depended-Resource/issues>
+
+
+
+AUTHORS
+=======
+
+Nickolay Platonov <nplatonov@cpan.org>
+
+
+
+COPYRIGHT AND LICENSE
+=====================
+
+Copyright (c) 2009-2010, Nickolay Platonov
+
+All rights reserved.
+
+Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
+
+* Redistributions of source code must retain the above copyright notice, this list of conditions and the following disclaimer.
+* Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following disclaimer in the documentation and/or other materials provided with the distribution.
+* Neither the name of Nickolay Platonov nor the names of its contributors may be used to endorse or promote products derived from this software without specific prior written permission. 
+
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
+
+
+*/
+;
+Role('JooseX.Namespace.Depended.Materialize.Eval', {
+    
+    requires : [ 'handleLoad' ],
+    
+    methods : {
+        
+        materialize : function (resourceBlob) {
+            // "indirect eval" call 
+            (window.execScript || window.eval)(resourceBlob)
+        }
+    }
+})
+
+/**
+
+Name
+====
+
+
+JooseX.Namespace.Depended.Materialize.Eval - materializator, which treat the resource content as JavaScript code, and use `eval` function to evalute it 
+
+
+SYNOPSIS
+========
+        
+        //generally for consuming only
+        
+        Class("JooseX.Namespace.Depended.Resource.Custom", {
+        
+            isa : JooseX.Namespace.Depended.Resource,
+            
+            does : [ JooseX.Namespace.Depended.Materialize.Eval, ...]
+            
+            ...
+        })
+
+
+DESCRIPTION
+===========
+
+`JooseX.Namespace.Depended.Materialize.Eval` is a materializator role. It provide the implementation of `materialize` method. 
+
+
+SEE ALSO
+========
+
+Authoring [JooseX.Namespace.Depended](../Authoring.html)
+
+Abstract base resource class: [JooseX.Namespace.Depended.Resource](../Resource.html)
+
+
+General documentation for Joose: <http://joose.github.com/Joose/>
+
+
+AUTHORS
+=======
+
+Nickolay Platonov <nplatonov@cpan.org>
+
+
+
+COPYRIGHT AND LICENSE
+=====================
+
+Copyright (c) 2009-2010, Nickolay Platonov
+
+All rights reserved.
+
+Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
+
+* Redistributions of source code must retain the above copyright notice, this list of conditions and the following disclaimer.
+* Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following disclaimer in the documentation and/or other materials provided with the distribution.
+* Neither the name of Nickolay Platonov nor the names of its contributors may be used to endorse or promote products derived from this software without specific prior written permission. 
+
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
+
+
+*/;
+Class('JooseX.Namespace.Depended.Resource.JavaScript', {
+    
+    isa : JooseX.Namespace.Depended.Resource,
+    
+    has : {
+        
+        hasDirectUrl    : false
+    },
+    
+    after: {
+        
+        initialize: function () {
+            var me      = this
+            
+            // backward compat
+            if (this.type == 'nonjoose') this.type = 'javascript'
+            
+            
+            var presence = this.presence
+            
+            if (typeof presence == 'string') this.presence = function () {
+                return eval(presence)
+            }
+            
+            if (!presence) this.presence = function () {
+                return eval(me.token)
+            }
+            
+            if (!this.readyness) this.readyness = this.presence
+        }
+        
+    },
+
+    
+    methods : {
+        
+        BUILD : function (config) {
+            var token = config.token
+            
+            var match = /^=(.*)/.exec(token)
+            
+            if (match) {
+                this.hasDirectUrl   = true
+                
+                token               = match[1]
+            }
+            
+            if (/^http/.test(token)) {
+                this.hasDirectUrl   = true
+                
+                config.trait        = JooseX.Namespace.Depended.Transport.ScriptTag
+            }
+            
+            if (/^\//.test(token)) this.hasDirectUrl   = true
+                
+            return config
+        },
+        
+        
+        getUrls : function () {
+            var url = this.token
+            
+            if (this.hasDirectUrl) return [ url ]
+            
+            var manager = JooseX.Namespace.Depended.Manager.my
+            
+            return Joose.A.map(manager.getINC(), function (libroot) {
+                libroot = libroot.replace(/\/$/, '')
+                
+                return [ libroot ].concat(url).join('/') + (manager.disableCaching ? '?disableCaching=' + new Date().getTime() : '')
+            })
+        }
+    }
+
+})
+
+JooseX.Namespace.Depended.Manager.my.registerResourceClass('javascript',    JooseX.Namespace.Depended.Resource.JavaScript)
+JooseX.Namespace.Depended.Manager.my.registerResourceClass('nonjoose',      JooseX.Namespace.Depended.Resource.JavaScript)
+;
+Class('JooseX.Namespace.Depended.Resource.JooseClass', {
+    
+    isa : JooseX.Namespace.Depended.Resource.JavaScript,
+    
+    // NOTE : we don't add the default materialization and transport roles here - they'll be added
+    // in one of the Bootstrap/*.js files
+    
+    after: {
+        
+        initialize: function () {
+            var me = this
+            
+            this.presence = function () {
+                var c = Joose.S.strToClass(me.token)
+                
+                return c && c.meta.resource
+            }
+            
+            this.readyness = function () {
+                var c = eval(me.token)
+                
+                return c && c.meta.resource.ready
+            }
+        }
+        
+    },
+    
+    
+    methods : {
+        
+        addDescriptor : function (descriptor) {
+            if (typeof descriptor == 'object' && !descriptor.token) 
+                Joose.O.eachOwn(descriptor, function (version, name) {
+                    this.addDescriptor({
+                        type : 'joose',
+                        token : name,
+                        version : version
+                    })
+                }, this)
+            else
+                this.SUPER(descriptor)
+        },
+        
+        
+        getUrls : function () {
+            var urls = []
+            var className = this.token.split('.')
+            
+            var manager = JooseX.Namespace.Depended.Manager.my
+            
+            return Joose.A.map(manager.getINC(), function (libroot) {
+                libroot = libroot.replace(/\/$/, '')
+                
+                return [ libroot ].concat(className).join('/') + '.js' + (manager.disableCaching ? '?disableCaching=' + new Date().getTime() : '')
+            })
+        }
+    }
+
+})
+
+JooseX.Namespace.Depended.Manager.my.registerResourceClass('joose', JooseX.Namespace.Depended.Resource.JooseClass);
+;
+if (typeof JooseX != "undefined" && !JooseX.SimpleRequest) {;
+Class("JooseX.SimpleRequest", {
+
+    have : {
+    	req : null
+	},
+
+    
+    methods: {
+    	
+        initialize: function () {
+            if (window.XMLHttpRequest)
+                this.req = new XMLHttpRequest()
+            else
+                this.req = new ActiveXObject("Microsoft.XMLHTTP")
+        },
+        
+        
+        getText: function (urlOrOptions, async, callback, scope) {
+            var req = this.req
+            
+            var headers
+            var url
+            
+            if (typeof urlOrOptions != 'string') {
+                headers = urlOrOptions.headers
+                url = urlOrOptions.url
+                async = async || urlOrOptions.async
+                callback = callback || urlOrOptions.callback
+                scope = scope || urlOrOptions.scope
+            } else url = urlOrOptions
+            
+            req.open('GET', url, async || false)
+            
+            if (headers) Joose.O.eachOwn(headers, function (value, name) {
+                req.setRequestHeader(name, value)
+            })
+            
+            try {
+                req.onreadystatechange = function (event) {  
+                    if (async && req.readyState == 4) {  
+                        // status is set to 0 for failed cross-domain requests.. 
+                        if (req.status == 200 /*|| req.status == 0*/) callback.call(scope || this, true, req.responseText)
+                        else callback.call(scope || this, false, "File not found: " + url)
+                    }  
+                };  
+                req.send(null)
+            } catch (e) {
+                throw "File not found: " + url
+            }
+            
+            if (!async)
+                if (req.status == 200 || req.status == 0) return req.responseText; else throw "File not found: " + url
+            
+            return null
+        }
+    }
+})
+;
+};
+Role('JooseX.Namespace.Depended.Materialize.ScriptTag', {
+    
+    requires : [ 'handleLoad' ],
+    
+    methods : {
+        
+        materialize : function (resourceBlob) {
+            var loaderNode = document.createElement("script")
+            
+            loaderNode.text = resourceBlob
+            
+            //adding to body, because Safari do not create HEAD for iframe's documents
+            document.body.appendChild(loaderNode)
+        }
+    }
+})
+;
+Role('JooseX.Namespace.Depended.Transport.XHRAsync', {
+    
+    requires : [ 'handleLoad' ],
+    
+    override : {
+        
+        load: function (url, onsuccess, onerror) {
+            var req = new JooseX.SimpleRequest()
+            
+            try {
+                req.getText(url, true, function (success, text) {
+                    
+                    if (!success) { 
+                        onerror(this + " not found") 
+                        return 
+                    }
+                    
+                    onsuccess(text, url)
+                })
+            } catch (e) {
+                onerror(e)
+            }
+        }
+    }
+})
+
+
+/**
+
+Name
+====
+
+
+JooseX.Namespace.Depended.Transport.XHRAsync - transport, which use the asynchronous XHR request for resource loading 
+
+
+SYNOPSIS
+========
+        
+        //generally for consuming only
+        
+        Class("JooseX.Namespace.Depended.Resource.Custom", {
+        
+            isa : JooseX.Namespace.Depended.Resource,
+            
+            does : [ JooseX.Namespace.Depended.Transport.XHRAsync, ...]
+            
+            ...
+        })
+
+
+DESCRIPTION
+===========
+
+`JooseX.Namespace.Depended.Transport.XHRAsync` is a transport role. It provide the implementation of `load` method, which use the 
+asynchronous XHR request for resource loading. 
+
+
+
+SEE ALSO
+========
+
+Authoring [JooseX.Namespace.Depended](../Authoring.html)
+
+Abstract base resource class: [JooseX.Namespace.Depended.Resource](../Resource.html)
+
+
+General documentation for Joose: <http://joose.github.com/Joose/>
+
+
+AUTHORS
+=======
+
+Nickolay Platonov <nplatonov@cpan.org>
+
+
+
+COPYRIGHT AND LICENSE
+=====================
+
+Copyright (c) 2009-2010, Nickolay Platonov
+
+All rights reserved.
+
+Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
+
+* Redistributions of source code must retain the above copyright notice, this list of conditions and the following disclaimer.
+* Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following disclaimer in the documentation and/or other materials provided with the distribution.
+* Neither the name of Nickolay Platonov nor the names of its contributors may be used to endorse or promote products derived from this software without specific prior written permission. 
+
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
+
+
+*/;
+Role('JooseX.Namespace.Depended.Transport.ScriptTag', {
+    
+    requires : [ 'handleLoad' ],
+    
+    
+    methods : {
+        
+        getScriptTag : function () {
+            
+        }
+    },
+    
+    
+    override : {
+        
+        load: function (url, onsuccess, onerror) {
+
+            var scriptNode       = document.createElement('script')
+
+            scriptNode.type      = 'text/javascript'
+            scriptNode.src       = url
+            scriptNode.async     = true
+            
+            
+            if (Joose.is_IE) {
+                
+                var timeout    = setTimeout(function () {
+                    
+                    onerror(url + " load failed.")
+                    
+                }, 10000)
+                
+                scriptNode.onreadystatechange = function() {
+                    
+                    var readyState = scriptNode.readyState
+                    
+                    if (readyState == 'complete' || readyState == 'loaded') {
+                        
+                        clearTimeout(timeout)
+                            
+                        onsuccess(null, url)
+                    }
+                }
+                
+                
+            } else {
+                
+                scriptNode.onload = function() {
+                    onsuccess(scriptNode.text, url)
+                }
+            
+                scriptNode.onerror = function () {
+                    onerror(url + " load failed.")
+                }
+            }
+                
+            var head            = document.getElementsByTagName('head')[0] || document.body
+            
+            head.appendChild(scriptNode)
+        },
+        
+        
+        materialize : function (blob, url) {
+        }
+    }
+})
+
+
+
+/**
+
+Name
+====
+
+
+JooseX.Namespace.Depended.Transport.ScriptTag - transport, which use the &lt;script&gt; tag for resource loading 
+
+
+SYNOPSIS
+========
+        
+        //generally for consuming only
+        
+        Class("JooseX.Namespace.Depended.Resource.Custom", {
+        
+            isa : JooseX.Namespace.Depended.Resource,
+            
+            does : [ JooseX.Namespace.Depended.Transport.ScriptTag, ...]
+            
+            ...
+        })
+
+
+DESCRIPTION
+===========
+
+`JooseX.Namespace.Depended.Transport.ScriptTag` is a transport role. It provide the implementation of `load` method, which use the 
+&lt;script&gt; tag for resource loading. It also overrides the `materialize` method as &lt;script&gt; tag execute the code along with loading. 
+
+
+
+SEE ALSO
+========
+
+Authoring [JooseX.Namespace.Depended](../Authoring.html)
+
+Abstract base resource class: [JooseX.Namespace.Depended.Resource](../Resource.html)
+
+
+General documentation for Joose: <http://joose.github.com/Joose/>
+
+
+AUTHORS
+=======
+
+Nickolay Platonov <nplatonov@cpan.org>
+
+
+
+COPYRIGHT AND LICENSE
+=====================
+
+Copyright (c) 2009-2010, Nickolay Platonov
+
+All rights reserved.
+
+Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
+
+* Redistributions of source code must retain the above copyright notice, this list of conditions and the following disclaimer.
+* Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following disclaimer in the documentation and/or other materials provided with the distribution.
+* Neither the name of Nickolay Platonov nor the names of its contributors may be used to endorse or promote products derived from this software without specific prior written permission. 
+
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
+
+
+*/;
+Role('JooseX.Namespace.Depended.Transport.NodeJS', {
+
+    requires : [ 'handleLoad' ],
+    
+    override : {
+        
+        load: function (url, onsuccess, onerror) {
+            var fs = require('fs')
+            
+            try {
+                var content = fs.readFileSync(url, 'utf8')
+                
+            } catch (e) {
+                
+                onerror(e)
+                
+                return
+            }
+            
+            onsuccess(content, url)
+            
+//            fs.readFile(url, function (err, data) {
+//                if (err) {
+//                    onerror(err)
+//                    
+//                    return
+//                }
+//                
+//                onsuccess(data, url)
+//            })            
+        }
+    }
+})
+
+
+/**
+
+Name
+====
+
+
+JooseX.Namespace.Depended.Transport.Node - transport, which use the `fs.readFileSync()` call of NodeJS, to load the content of resource. 
+
+
+SYNOPSIS
+========
+        
+        //generally for consuming only
+        
+        Class("JooseX.Namespace.Depended.Resource.Custom", {
+        
+            isa : JooseX.Namespace.Depended.Resource,
+            
+            does : [ JooseX.Namespace.Depended.Transport.Node, ...]
+            
+            ...
+        })
+
+
+DESCRIPTION
+===========
+
+`JooseX.Namespace.Depended.Transport.Node` is a transport role. It provide the implementation of `load` method, 
+which use the `fs.readFile()` call of NodeJS for resource loading. 
+
+This transport behaves synchronously.
+
+
+
+SEE ALSO
+========
+
+Authoring [JooseX.Namespace.Depended](../Authoring.html)
+
+Abstract base resource class: [JooseX.Namespace.Depended.Resource](../Resource.html)
+
+
+General documentation for Joose: <http://joose.github.com/Joose/>
+
+
+AUTHORS
+=======
+
+Nickolay Platonov <nplatonov@cpan.org>
+
+
+
+COPYRIGHT AND LICENSE
+=====================
+
+Copyright (c) 2009-2010, Nickolay Platonov
+
+All rights reserved.
+
+Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
+
+* Redistributions of source code must retain the above copyright notice, this list of conditions and the following disclaimer.
+* Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following disclaimer in the documentation and/or other materials provided with the distribution.
+* Neither the name of Nickolay Platonov nor the names of its contributors may be used to endorse or promote products derived from this software without specific prior written permission. 
+
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
+
+
+*/;
+Role('JooseX.Namespace.Depended.Materialize.NodeJS', {
+    
+    requires : [ 'handleLoad' ],
+    
+    methods : {
+        
+        materialize : function (resourceBlob, url) {
+            
+            if (global.__PROVIDER__)
+//                require('vm').runInThisContext(resourceBlob + '', url)    
+            
+//                // running in Test.Run
+//                
+                eval(resourceBlob + '')
+            
+            else
+                // global scope
+                require('vm').runInThisContext('(function (exports, require, module, __filename, __dirname) {' + resourceBlob + '})', url)(exports, require, module, __filename, __dirname)
+        }
+    }
+})
+
+/**
+
+Name
+====
+
+
+JooseX.Namespace.Depended.Materialize.NodeJS - materializator, which execute the code, using the `Script.runInThisContext` call of NodeJS. 
+
+
+SYNOPSIS
+========
+        
+        //generally for consuming only
+        
+        Class("JooseX.Namespace.Depended.Resource.Custom", {
+        
+            isa : JooseX.Namespace.Depended.Resource,
+            
+            does : [ JooseX.Namespace.Depended.Materialize.NodeJS, ...]
+            
+            ...
+        })
+
+
+DESCRIPTION
+===========
+
+`JooseX.Namespace.Depended.Materialize.NodeJS` is a materializator role. It provide the implementation of `materialize` method. 
+
+
+SEE ALSO
+========
+
+Authoring [JooseX.Namespace.Depended](../Authoring.html)
+
+Abstract base resource class: [JooseX.Namespace.Depended.Resource](../Resource.html)
+
+
+General documentation for Joose: <http://joose.github.com/Joose/>
+
+
+AUTHORS
+=======
+
+Nickolay Platonov <nplatonov@cpan.org>
+
+
+
+COPYRIGHT AND LICENSE
+=====================
+
+Copyright (c) 2009-2010, Nickolay Platonov
+
+All rights reserved.
+
+Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
+
+* Redistributions of source code must retain the above copyright notice, this list of conditions and the following disclaimer.
+* Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following disclaimer in the documentation and/or other materials provided with the distribution.
+* Neither the name of Nickolay Platonov nor the names of its contributors may be used to endorse or promote products derived from this software without specific prior written permission. 
+
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
+
+
+*/;
+Class('JooseX.Namespace.Depended.Resource.Require', {
+    
+    isa     : JooseX.Namespace.Depended.Resource,
+    
+    
+    methods : {
+        
+        getUrls : function () {
+            return [ this.token ]
+        },
+        
+        
+        load: function (url, onsuccess, onerror) {
+            
+            require.async(url, function (err) {
+                if (err instanceof Error) 
+                    onerror(err)
+                else
+                    onsuccess('', url)
+            })
+            
+        },
+
+        
+        materialize : function () {
+        }
+        
+    }
+
+})
+
+JooseX.Namespace.Depended.Manager.my.registerResourceClass('require', JooseX.Namespace.Depended.Resource.Require)
+;
+Role('JooseX.Namespace.Depended', {
+    
+    /*VERSION,*/
+    
+    meta : Joose.Managed.Role,
+    
+    requires : [ 'prepareProperties' ],
+    
+    
+    have : {
+        containResources                    : [ 'use', 'meta', 'isa', 'does', 'trait', 'traits' ]
+    },
+
+    
+    override: {
+        
+//        GETCURRENT : function () {
+//            var currentModule   = this.getCurrent()
+//            
+//            return currentModule == Joose.top ? 'TOP' : currentModule.meta.name
+//        },
+        
+        
+        prepareProperties : function (name, extend, defaultMeta, callback) {
+            if (name && typeof name != 'string') {
+                extend = name
+                name = null
+            }
+            
+            extend = extend || {}
+            
+            var summaredDeps    = this.collectAllDeps(extend)
+            var currentModule   = this.getCurrent()
+            
+            if (currentModule !== Joose.top && !currentModule.meta) {
+                require('console').log("CURRENT MODULE: %s", require('util').inspect(currentModule))
+                require('console').log("TOP: %s", require('util').inspect(Joose.top))
+            }
+            
+            var resource = JooseX.Namespace.Depended.Manager.my.getResource({
+                type    : 'joose',
+                token   : currentModule == Joose.top ? name : currentModule.meta.name + '.' + name
+            })
+            
+            
+            if (extend.VERSION) resource.setVersion(extend.VERSION)
+            
+            //BEGIN executes right after the all dependencies are loaded, but before this module becomes ready (before body())
+            //this allows to manually control the "ready-ness" of module (custom pre-processing)
+            //BEGIN receives the function (callback), which should be called at the end of custom processing 
+            if (extend.BEGIN) {
+                resource.setOnBeforeReady(extend.BEGIN)
+                
+                delete extend.BEGIN
+            }
+            
+            Joose.A.each(summaredDeps, function (descriptor) {
+                resource.addDescriptor(descriptor)
+            })
+            
+            
+            //skip constructing for classes w/o dependencies 
+            if (Joose.O.isEmpty(resource.dependencies)) {
+                this.inlineAllDeps(extend)
+                
+                var res = this.SUPER(name, extend, defaultMeta, callback)
+                
+                //this will allow to classes which don't have dependencies to be ready synchronously
+                resource.checkReady()
+                
+                return res
+            } else {
+                
+                var me      = this
+                var SUPER   = this.SUPER
+                
+                var current
+                
+                //unshift is critical for correct order of readyListerens processing!
+                //constructing is delaying until resource will become ready 
+                resource.readyListeners.unshift(function () {
+                    me.inlineAllDeps(extend)
+                    
+                    Joose.Namespace.Manager.my.executeIn(currentModule, function () {
+                        
+                        SUPER.call(me, name, extend, defaultMeta, callback)
+                    })
+                })
+                
+                // running as <script> in browser or as main script in node
+                if (!resource.hasReadyCheckScheduled) 
+                    if (Joose.is_NodeJS) 
+                        resource.handleDependencies()
+                    else
+                        // defer the dependencies loading, because they actually could be provided later in the same bundle file
+                        // this, however, affect performance, so bundles should be created in the dependencies-ordered way
+                        setTimeout(function () {
+                            resource.handleDependencies()
+                        }, 0)
+                
+                
+                return this.create(name, Joose.Namespace.Keeper, {})
+            }
+        },
+        
+        
+        prepareMeta : function (meta) {
+            meta.resource = meta.resource || JooseX.Namespace.Depended.Manager.my.getMyResource('joose', meta.name, meta.c)
+        }
+    },
+    //eof override
+    
+    
+    methods : {
+        
+        alsoDependsFrom : function (extend, summaredDeps) {
+        },
+        
+        
+        collectAllDeps : function (extend) {
+            var summaredDeps    = []
+            var me              = this
+            
+            //gathering all the related resourses from various builders
+            this.collectClassDeps(extend, summaredDeps)
+            
+            var extendMy = extend.my
+            
+            //gathering resourses of 'my'
+            this.collectClassDeps(extendMy, summaredDeps)
+            
+
+            //gathering resourses from own attributes
+            if (extend.has) Joose.O.each(extend.has, function (attr, name) {
+                // do not try to collect the dependencies when class is given as init value
+                if (Joose.O.isClass(attr)) return 
+                
+                me.collectClassDeps(attr, summaredDeps)
+            })
+            
+            //gathering resourses from attributes of `my`
+            if (extendMy && extendMy.has) Joose.O.each(extendMy.has, function (attr, name) {
+                // do not try to collect the dependencies when class is given as init value
+                if (Joose.O.isClass(attr)) return
+                
+                me.collectClassDeps(attr, summaredDeps)
+            })
+            
+            //and from externally collected additional resources 
+            this.alsoDependsFrom(extend, summaredDeps)
+            
+            return summaredDeps
+        },
+        
+        
+        collectClassDeps : function (from, to) {
+            
+            if (from) Joose.A.each(this.containResources, function (propName) {
+                
+                this.collectDependencies(from[propName], to, from, propName)
+                
+            }, this)
+        },
+        
+        
+        collectDependencies : function (from, to, extend, propName) {
+            if (from) Joose.A.each(Joose.O.wantArray(from), function (descriptor) {
+                if (descriptor && typeof descriptor != 'function') to.push(descriptor)
+            })
+        },
+        
+        
+        inlineAllDeps : function (extend) {
+            var me              = this
+            
+            this.inlineDeps(extend)
+            
+            var extendMy = extend.my
+            
+            if (extendMy) this.inlineDeps(extendMy)
+            
+
+            if (extend.has) Joose.O.each(extend.has, function (attr, name) {
+                
+                if (attr && typeof attr == 'object') me.inlineDeps(attr)
+            })
+            
+            if (extendMy && extendMy.has) Joose.O.each(extendMy.has, function (attr, name) {
+                
+                if (attr && typeof attr == 'object') me.inlineDeps(attr)
+            })
+        },
+        
+        
+        inlineDeps : function (extend) {
+            delete extend.use
+            
+            Joose.A.each(this.containResources, function (propName) {
+                
+                if (extend[propName]) {
+                
+                    var descriptors = []
+                    
+                    Joose.A.each(Joose.O.wantArray(extend[propName]), function (descriptor, index) {
+                        
+                        var descType = typeof descriptor
+                        
+                        if (descType == 'function')
+                            descriptors.push(descriptor.meta ? descriptor : (propName != 'isa' ? descriptor() : null ))
+                        else
+                            if (descType == 'object')
+                                if (descriptor.token)
+                                    descriptors.push(eval(descriptor.token)) 
+                                else
+                                    Joose.O.each(descriptor, function (version, name) { 
+                                        descriptors.push(eval(name)) 
+                                    })
+                            else 
+                                if (descType == 'string')
+                                    descriptors.push(eval(descriptor))
+                                else 
+                                    throw new Error("Wrong dependency descriptor format: " + descriptor)
+                        
+                    })
+                    
+                    if (propName != 'isa' && propName != 'meta')
+                        extend[propName] = descriptors
+                    else
+                        if (descriptors.length > 1) 
+                            throw "Cant specify several super- or meta- classes"
+                        else
+                            if (descriptors[0]) extend[propName] = descriptors[0]
+                        
+                }
+            })
+        }
+    }
+})
+
+
+Joose.Namespace.Manager.meta.extend({
+    does : JooseX.Namespace.Depended
+})
+
+;
+if (Joose.is_NodeJS) {
+
+    JooseX.Namespace.Depended.Resource.JavaScript.meta.extend({
+        
+        does : [ JooseX.Namespace.Depended.Transport.NodeJS, JooseX.Namespace.Depended.Materialize.NodeJS ]
+    })
+    
+    
+    
+    JooseX.Namespace.Depended.Manager.my.disableCaching = false
+    
+    Joose.Namespace.Manager.my.containResources.unshift('require')
+    
+    
+    
+    JooseX.Namespace.Depended.meta.extend({
+        
+        override : {
+            
+            collectDependencies : function (from, to, extend, propName) {
+                if (propName != 'require') return this.SUPERARG(arguments)
+                
+                if (!from) return
+                
+                Joose.A.each(Joose.O.wantArray(from), function (url) {
+                    to.push({
+                        type    : 'require',
+                        token   : url
+                    })
+                })
+                
+                delete extend.require
+            }
+        }
+    })
+} else
+    JooseX.Namespace.Depended.Resource.JavaScript.meta.extend({
+        
+        does : [ JooseX.Namespace.Depended.Transport.XHRAsync, JooseX.Namespace.Depended.Materialize.Eval ]
+    })
+;
+;
 Class('Scope.Provider', {
     
-    /*PKGVERSION*/VERSION : 0.12,
+    /*VERSION,*/
     
     has     : {
         name                : null,
@@ -3819,36 +5548,46 @@ Role('Scope.Provider.Role.WithDOM', {
         parentWindow    : function () { return window },
         scopeId         : function () { return Math.round(Math.random() * 1e10) },
         
+        failOnResourceLoadError     : false,
+        
         //                init function
         attachToOnError : function () {
             
             // returns the value of the attribute
             // the "handler" argument is no longer used, its now being taken from the __ONERROR__ handler every time
-            return function (window, scopeId, handler, preventDefault) {
+            return function (window, scopeId, handler, preventDefault, failOnResourceLoadError) {
+                handler     = (window.opener || window.parent).Scope.Provider.__ONERROR__[ scopeId  ]
                 
-                var prevHandler         = window.onerror
-                if (prevHandler && prevHandler.__SP_MANAGED__) return
-                
-                // this, "managed" handler is basically a wrapper around the current value in the "__ONERROR__" hash
-                window.onerror = function (message, url, lineNumber) {
-                    handler     = (window.opener || window.parent).Scope.Provider.__ONERROR__[ scopeId  ]
+                if (failOnResourceLoadError && ("ErrorEvent" in window)) {
+//                    if (window.ErrorEvent.__SIESTA_HOOK_INSTALLED__) return
                     
-                    // prevent recursive calls if other authors politely has not overwrite the handler and call it
-                    if (handler.__CALLING__) return
+                    // http://stackoverflow.com/questions/8504673/how-to-detect-on-page-404-errors-using-javascript
+                    window.addEventListener('error', handler, true)
                     
-                    handler.__CALLING__ = true
+//                    window.ErrorEvent.__SIESTA_HOOK_INSTALLED__ = true
+                } else {
+                    var prevHandler         = window.onerror
+                    if (prevHandler && prevHandler.__SP_MANAGED__) return
                     
-                    prevHandler && prevHandler.apply(this, arguments)
-                
-                    handler.apply(this, arguments)
+                    // this, "managed" handler is basically a wrapper around the current value in the "__ONERROR__" hash
+                    window.onerror = function (message, url, lineNumber) {
+                        // prevent recursive calls if other authors politely has not overwrite the handler and call it
+                        if (handler.__CALLING__) return
+                        
+                        handler.__CALLING__ = true
+                        
+                        prevHandler && prevHandler.apply(this, arguments)
                     
-                    handler.__CALLING__ = false
+                        handler.apply(this, arguments)
+                        
+                        handler.__CALLING__ = false
+                        
+                        // in FF/IE need to return `true` to prevent default action
+                        if (preventDefault !== false) return window.WebKitPoint ? false : true 
+                    }
                     
-                    // in FF/IE need to return `true` to prevent default action
-                    if (preventDefault !== false) return window.WebKitPoint ? false : true 
+                    window.onerror.__SP_MANAGED__ = true
                 }
-                
-                window.onerror.__SP_MANAGED__ = true
             } 
         },
         
@@ -3862,11 +5601,17 @@ Role('Scope.Provider.Role.WithDOM', {
     override : {
         
         cleanup : function () {
+            var onErrorHandler  = this.cachedOnError
+            
             this.cachedOnError  = null
             
             // can throw exceptions for cross-domain case
             try {
-                this.scope.onerror  = null
+                var scope       = this.scope
+                
+                if (scope.ErrorEvent && scope.ErrorEvent.__SIESTA_HOOK_INSTALLED__) scope.removeEventListener('error', onErrorHandler)
+                
+                scope.onerror  = null
             } catch (e) {
             }
             
@@ -3897,7 +5642,7 @@ Role('Scope.Provider.Role.WithDOM', {
         installOnErrorHandler : function (handler) {
             if (!this.isAlreadySetUp()) throw "Scope should be already set up"
             
-            this.attachToOnError(this.scope, this.scopeId, handler)
+            this.attachToOnError(this.scope, this.scopeId, handler, false, this.failOnResourceLoadError)
         },
         
         
@@ -3910,7 +5655,12 @@ Role('Scope.Provider.Role.WithDOM', {
             
             this.parentWindow.Scope.Provider.__ONERROR__[ scopeId ] = handler
             
-            var attachToOnError = ';(' + this.attachToOnError.toString() + ')(window, ' + scopeId + ', (window.opener || window.parent).Scope.Provider.__ONERROR__[ ' + scopeId + ' ], ' + preventDefault + ');'
+            var attachToOnError = ';(' + this.attachToOnError.toString() + ')(window, ' 
+                + scopeId 
+                + ', (window.opener || window.parent).Scope.Provider.__ONERROR__[ ' + scopeId + ' ], ' 
+                + preventDefault + ', ' 
+                + this.failOnResourceLoadError 
+            + ');'
             
             if (this.isAlreadySetUp()) 
                 this.runCode(attachToOnError)
@@ -5996,6 +7746,108 @@ Role('Siesta.Util.Role.CanGetType', {
     }
 })
 ;
+/**
+@class Siesta.Util.Role.CanCompareObjects
+
+A mixin, providing the "compareObjects" method. 
+
+*/
+Role('Siesta.Util.Role.CanCompareObjects', {
+    
+    does    : [
+        Siesta.Util.Role.CanGetType
+    ],
+    
+    methods : {
+        
+        countKeys : function (object) {
+            var counter = 0
+
+            Joose.O.eachOwn(object, function () {
+                counter++
+            })
+
+            return counter
+        },
+
+
+        /**
+         * This method performs a deep comparison of the passed JSON objects. Objects must not contain cyclic references.
+         * You can use this method in your own assertions.
+         *
+         * @param {Mixed} obj1 The 1st object to compare
+         * @param {Mixed} obj2 The 2nd object to compare
+         * @param {Boolean} strict When passed the `true` value, the comparison of the primitive values will be performed with the
+         * `===` operator (so [ 1 ] and [ "1" ] object will be different). Additionally, when this flag is set to `true`, then
+         * when comparing Function, RegExp and Date instances, additional check that objects contains the same set of own properties ("hasOwnProperty")
+         * will be performed.
+         * @param {Boolean} onlyPrimitives When set to `true`, the function will not recurse into composite objects (like [] or {}) and will just report that
+         * objects are different. Use this mode when you are only interested in comparison of primitive values (numbers, strings, etc).
+         * @param {Boolean} asObjects When set to `true`, the function will compare various special Object instances, like Functions, RegExp etc,
+         * by comparison of their properties only and not taking the anything else into account.
+         * @return {Boolean} `true` if the passed objects are equal
+         */
+        compareObjects : function (obj1, obj2, strict, onlyPrimitives, asObjects) {
+            var obj1IsPlaceholder       = Joose.O.isInstance(obj1) && obj1.meta.does(Siesta.Test.Role.Placeholder)
+            var obj2IsPlaceholder       = Joose.O.isInstance(obj2) && obj2.meta.does(Siesta.Test.Role.Placeholder)
+
+            if (strict) {
+                if (obj1 === obj2) return true
+            } else
+                if (obj1 == obj2) return true
+
+            if (obj1IsPlaceholder && obj2IsPlaceholder)
+                return obj1.equalsTo(obj2)
+            else if (obj2IsPlaceholder)
+                return obj2.equalsTo(obj1)
+            else if (obj1IsPlaceholder)
+                return obj1.equalsTo(obj2)
+
+            if (onlyPrimitives) return false
+
+            var type1 = this.typeOf(obj1)
+            var type2 = this.typeOf(obj2)
+
+            if (type1 != type2) return false
+
+            var me = this
+
+            if (type1 == 'Object' || asObjects)
+                if (this.countKeys(obj1) != this.countKeys(obj2))
+                    return false
+                else {
+                    var res = Joose.O.eachOwn(obj1, function (value, name) {
+
+                        if (!me.compareObjects(value, obj2[ name ], strict)) return false
+                    })
+
+                    return res === false ? false : true
+                }
+
+            if (type1 == 'Array')
+                if (obj1.length != obj2.length)
+                    return false
+                else {
+                    for (var i = 0; i < obj1.length; i++)
+                        if (!this.compareObjects(obj1[ i ], obj2[ i ], strict)) return false
+
+                    return true
+                }
+
+            if (type1 == 'Function')
+                return obj1.toString() == obj2.toString() && (!strict || this.compareObjects(obj1, obj2, strict, false, true))
+
+            if (type1 == 'RegExp')
+                return obj1.source == obj2.source && obj1.global == obj2.global && obj1.ignoreCase == obj2.ignoreCase
+                    && obj1.multiline == obj2.multiline && (!strict || this.compareObjects(obj1, obj2, strict, false, true))
+
+            if (type1 == 'Date') return !Boolean(obj1 - obj2) && (!strict || this.compareObjects(obj1, obj2, strict, false, true))
+
+            return false
+        }
+    }
+})
+;
 Role('Siesta.Util.Role.CanEscapeRegExp', {
     
     methods : {
@@ -6006,6 +7858,23 @@ Role('Siesta.Util.Role.CanEscapeRegExp', {
     }
 })
 ;
+!function () {
+/* header */
+    
+var id      = 1
+
+Role('Siesta.Util.Role.HasUniqueGeneratedId', {
+    
+    has : {
+        id                      : {
+            is      : 'ro',
+            init    : function () { return id++ }
+        }
+    }
+})
+
+/* footer */
+}();
 Class('Siesta.Util.Queue', {
     
     has     : {
@@ -6689,7 +8558,7 @@ Class('Siesta.Content.Manager', {
 ;
 ;
 Class('Siesta', {
-    /*PKGVERSION*/VERSION : '4.0.0',
+    /*PKGVERSION*/VERSION : '4.0.5',
 
     // "my" should been named "static"
     my : {
@@ -6761,7 +8630,8 @@ Siesta.CurrentLocale = Siesta.CurrentLocale || {
     "Siesta.Harness" : {
         preloadHasFailed            : 'Preload of {url} has failed',
         preloadHasFailedForTest     : 'Preload of {url} has failed for test {test}',
-        staticDeprecationWarning    : 'You are calling static method `{methodName}` of the harness class {harnessClass}. Such usage is deprecated now, please switch to creation of the harness class instance: `var harness = new {harnessClass}()`'
+        staticDeprecationWarning    : 'You are calling static method `{methodName}` of the harness class {harnessClass}. Such usage is deprecated now, please switch to creation of the harness class instance: `var harness = new {harnessClass}()`',
+        resourceFailedToLoad        : 'Loading of a {nodeName} resource failed'
     },
     
     "Siesta.Harness.Browser.UI.AboutWindow" : {
@@ -6995,7 +8865,8 @@ Siesta.CurrentLocale = Siesta.CurrentLocale || {
     },
 
     "Siesta.Test.ExtJS.Grid"     : {
-        waitForRowsVisible          : 'rows to show for panel with id'
+        waitForRowsVisible          : 'rows to show for panel with id',
+        waitForCellEmpty            : 'cell to be empty'
     },
 
     "Siesta.Test.ExtJS.Observable" : {
@@ -7236,6 +9107,7 @@ Siesta.CurrentLocale = Siesta.CurrentLocale || {
         value                        : 'value',
 
         conditionToBeFulfilled       : 'condition to be fulfilled',
+        pageToLoad                   : 'page to load',
         ms                           : 'ms',
         waitingFor                   : 'Waiting for',
         waitedTooLong                : 'Waited too long for',
@@ -7253,7 +9125,8 @@ Siesta.CurrentLocale = Siesta.CurrentLocale || {
         chainStepEx                  : 'Chain step threw an exception',
         stepFn                       : 'Step function',
         notUsingNext                 : 'does not use the provided "next" function anywhere',
-        calledMoreThanOnce           : 'The `next` callback of {num} step (1-based) of `t.chain()` call at line {line} is called more than once.'
+        calledMoreThanOnce           : 'The `next` callback of {num} step (1-based) of `t.chain()` call at line {line} is called more than once.',
+        tooManyDifferences           : 'Showing {num} of {total} differences'
     },
 
 
@@ -7307,11 +9180,11 @@ Siesta.CurrentLocale = Siesta.CurrentLocale || {
         testTearDownTimeout                 : "Test's tear down process has timeout out"
     },
 
-    "Siesta.Recorder.Editor.Code"           : {
+    "Siesta.Recorder.UI.Editor.Code"           : {
         invalidSyntax                       : 'Invalid syntax'
     },
 
-    "Siesta.Recorder.Editor.DragTarget"     : {
+    "Siesta.Recorder.UI.Editor.DragTarget"     : {
         targetLabel                         : 'Target',
         toLabel                             : 'To',
         byLabel                             : 'By',
@@ -7348,7 +9221,8 @@ Siesta.CurrentLocale = Siesta.CurrentLocale || {
     "Siesta.Recorder.UI.TargetColumn"       : {
         headerText                          : 'Target / Value',
         by                                  : 'by',
-        to                                  : 'to'
+        to                                  : 'to',
+        coordinateTargetWarning             : 'Siesta was unable to find a stable selector for this target. Using coordinates as locator is not recommended.'
     }
 };
 
@@ -7712,7 +9586,7 @@ Role('Siesta.Test.Function', {
          * 
          * @param {Function/String} fn The function itself or the name of the function on the host object (2nd argument)
          * @param {Object} host The "owner" of the method
-         * @param {String} desc The description of the assertion.
+         * @param {String} [desc] The description of the assertion.
          */
         isCalled : function(fn, obj, desc) {
             this.isCalledNTimes(fn, obj, 1, desc, true);
@@ -7723,7 +9597,7 @@ Role('Siesta.Test.Function', {
          *
          * @param {Function/String} fn The function itself or the name of the function on the host object (2nd argument)
          * @param {Object} host The "owner" of the method
-         * @param {String} desc The description of the assertion.
+         * @param {String} [desc] The description of the assertion.
          */
         isCalledOnce : function(fn, obj, desc) {
             this.isCalledNTimes(fn, obj, 1, desc, false);
@@ -7735,7 +9609,7 @@ Role('Siesta.Test.Function', {
          * @param {Function/String} fn The function itself or the name of the function on the host object (2nd argument)
          * @param {Object} host The "owner" of the method
          * @param {Number} n The expected number of calls
-         * @param {String} desc The description of the assertion.
+         * @param {String} [desc] The description of the assertion.
          */
         isCalledNTimes : function(fn, obj, n, desc, isGreaterEqual) {
             var me      = this,
@@ -7770,7 +9644,7 @@ Role('Siesta.Test.Function', {
          * @param {Function/String} fn The function itself or the name of the function on the host object (2nd argument)
          * @param {Object} host The "owner" of the method
          * @param {Number} n The expected number of calls
-         * @param {String} desc The description of the assertion.
+         * @param {String} [desc] The description of the assertion.
          */
         isntCalled : function(fn, obj, desc) {
             this.isCalledNTimes(fn, obj, 0, desc);
@@ -7828,7 +9702,7 @@ Role('Siesta.Test.Function', {
          * @param {Function/String} fn The function itself or the name of the method on the class (2nd argument)
          * @param {Function/String} className The constructor function or the name of the class that contains the method
          * @param {Number} n The expected number of calls
-         * @param {String} desc The description of the assertion
+         * @param {String} [desc] The description of the assertion
          */
         methodIsCalledNTimes: function(fn, className, n, desc, isGreaterEqual){
             var me          = this,
@@ -7875,7 +9749,7 @@ Role('Siesta.Test.Function', {
          *
          * @param {Function/String} fn The function itself or the name of the method on the class (2nd argument)
          * @param {Function/String} className The class constructor function or name of the class that contains the method
-         * @param {String} desc The description of the assertion.
+         * @param {String} [desc] The description of the assertion.
          */
         methodIsCalled : function(fn, className, desc) {
             this.methodIsCalledNTimes(fn, className, 1, desc, true);
@@ -7888,7 +9762,7 @@ Role('Siesta.Test.Function', {
          *
          * @param {Function/String} fn The function itself or the name of the method on the class (2nd argument)
          * @param {Function/String} className The class constructor function or name of the class that contains the method
-         * @param {String} desc The description of the assertion.
+         * @param {String} [desc] The description of the assertion.
          */
         methodIsntCalled : function(fn, className, desc) {
             this.methodIsCalledNTimes(fn, className, 0, desc);
@@ -8005,7 +9879,7 @@ Role('Siesta.Test.More', {
          * 
          * @param {Number/Date} value1 The 1st value to compare
          * @param {Number/Date} value2 The 2nd value to compare
-         * @param {String} desc The description of the assertion
+         * @param {String} [desc] The description of the assertion
          */
         isGreater : function (value1, value2, desc) {
             var R       = Siesta.Resource('Siesta.Test.More');
@@ -8033,7 +9907,7 @@ Role('Siesta.Test.More', {
          * 
          * @param {Number/Date} value1 The 1st value to compare
          * @param {Number/Date} value2 The 2nd value to compare
-         * @param {String} desc The description of the assertion
+         * @param {String} [desc] The description of the assertion
          */
         isLess : function (value1, value2, desc) {
             var R       = Siesta.Resource('Siesta.Test.More');
@@ -8067,7 +9941,7 @@ Role('Siesta.Test.More', {
          * 
          * @param {Number/Date} value1 The 1st value to compare
          * @param {Number/Date} value2 The 2nd value to compare
-         * @param {String} desc The description of the assertion
+         * @param {String} [desc] The description of the assertion
          */
         isGreaterOrEqual : function (value1, value2, desc) {
             var R       = Siesta.Resource('Siesta.Test.More');
@@ -8102,7 +9976,7 @@ Role('Siesta.Test.More', {
          * 
          * @param {Number/Date} value1 The 1st value to compare
          * @param {Number/Date} value2 The 2nd value to compare
-         * @param {String} desc The description of the assertion
+         * @param {String} [desc] The description of the assertion
          */
         isLessOrEqual : function (value1, value2, desc) {
             var R       = Siesta.Resource('Siesta.Test.More');
@@ -8133,7 +10007,7 @@ Role('Siesta.Test.More', {
          * @param {Number} value1 The 1st value to compare
          * @param {Number} value2 The 2nd value to compare
          * @param {Number} threshHold The maximum allowed difference between values. This argument can be omited. 
-         * @param {String} desc The description of the assertion
+         * @param {String} [desc] The description of the assertion
          */
         isApprox : function (value1, value2, threshHold, desc) {
             var R       = Siesta.Resource('Siesta.Test.More');
@@ -8187,7 +10061,7 @@ Role('Siesta.Test.More', {
          * 
          * @param {String} string The string to check for "likeness"
          * @param {String/RegExp} regex The regex against which to test the string, can be also a plain string
-         * @param {String} desc The description of the assertion
+         * @param {String} [desc] The description of the assertion
          */
         like : function (string, regex, desc) {
             var R       = Siesta.Resource('Siesta.Test.More');
@@ -8229,7 +10103,7 @@ Role('Siesta.Test.More', {
          * 
          * @param {String} string The string to check for "unlikeness"
          * @param {String/RegExp} regex The regex against which to test the string, can be also a plain string
-         * @param {String} desc The description of the assertion
+         * @param {String} [desc] The description of the assertion
          */
         unlike : function(string, regex, desc) {
             var R       = Siesta.Resource('Siesta.Test.More');
@@ -8287,7 +10161,7 @@ Role('Siesta.Test.More', {
          *
          * @param {Function} func The function which should throw an exception
          * @param {String/RegExp} expected The regex against which to test the stringified exception, can be also a plain string
-         * @param {String} desc The description of the assertion
+         * @param {String} [desc] The description of the assertion
          */
         throwsOk : function (func, expected, desc) {
             var R       = Siesta.Resource('Siesta.Test.More');
@@ -8360,7 +10234,7 @@ Role('Siesta.Test.More', {
          * This method has two synonyms: `lives_ok` and `lives`
          * 
          * @param {Function} func The function which is not supposed to throw an exception
-         * @param {String} desc The description of the assertion
+         * @param {String} [desc] The description of the assertion
          */
         livesOk : function (func, desc) {
             if (this.typeOf(func) != 'Function') {
@@ -8400,7 +10274,7 @@ Role('Siesta.Test.More', {
          * 
          * @param {Mixed} value The value to check for 'isa' relationship
          * @param {Class/String} className The class to check for 'isa' relationship with `value`
-         * @param {String} desc The description of the assertion
+         * @param {String} [desc] The description of the assertion
          */
         isInstanceOf : function (value, className, desc) {
             var R       = Siesta.Resource('Siesta.Test.More');
@@ -8434,7 +10308,7 @@ Role('Siesta.Test.More', {
          * This assertion passes, if supplied value is a String.
          * 
          * @param {Mixed} value The value to check.
-         * @param {String} desc The description of the assertion
+         * @param {String} [desc] The description of the assertion
          */
         isString : function (value, desc) {
             var R       = Siesta.Resource('Siesta.Test.More');
@@ -8456,7 +10330,7 @@ Role('Siesta.Test.More', {
          * This assertion passes, if supplied value is an Object
          * 
          * @param {Mixed} value The value to check.
-         * @param {String} desc The description of the assertion
+         * @param {String} [desc] The description of the assertion
          */
         isObject : function (value, desc) {
             var R       = Siesta.Resource('Siesta.Test.More');
@@ -8478,7 +10352,7 @@ Role('Siesta.Test.More', {
          * This assertion passes, if supplied value is an Array
          * 
          * @param {Mixed} value The value to check.
-         * @param {String} desc The description of the assertion
+         * @param {String} [desc] The description of the assertion
          */
         isArray : function (value, desc) {
             var R       = Siesta.Resource('Siesta.Test.More');
@@ -8500,7 +10374,7 @@ Role('Siesta.Test.More', {
          * This assertion passes, if supplied value is a Number.
          * 
          * @param {Mixed} value The value to check.
-         * @param {String} desc The description of the assertion
+         * @param {String} [desc] The description of the assertion
          */
         isNumber : function (value, desc) {
             var R       = Siesta.Resource('Siesta.Test.More');
@@ -8522,7 +10396,7 @@ Role('Siesta.Test.More', {
          * This assertion passes, if supplied value is a Boolean.
          * 
          * @param {Mixed} value The value to check.
-         * @param {String} desc The description of the assertion
+         * @param {String} [desc] The description of the assertion
          */
         isBoolean : function (value, desc) {
             var R       = Siesta.Resource('Siesta.Test.More');
@@ -8544,7 +10418,7 @@ Role('Siesta.Test.More', {
          * This assertion passes, if supplied value is a Date.
          * 
          * @param {Mixed} value The value to check.
-         * @param {String} desc The description of the assertion
+         * @param {String} [desc] The description of the assertion
          */
         isDate : function (value, desc) {
             var R       = Siesta.Resource('Siesta.Test.More');
@@ -8566,7 +10440,7 @@ Role('Siesta.Test.More', {
          * This assertion passes, if supplied value is a RegExp.
          * 
          * @param {Mixed} value The value to check.
-         * @param {String} desc The description of the assertion
+         * @param {String} [desc] The description of the assertion
          */
         isRegExp : function (value, desc) {
             var R       = Siesta.Resource('Siesta.Test.More');
@@ -8588,7 +10462,7 @@ Role('Siesta.Test.More', {
          * This assertion passes, if supplied value is a Function.
          * 
          * @param {Mixed} value The value to check.
-         * @param {String} desc The description of the assertion
+         * @param {String} [desc] The description of the assertion
          */
         isFunction : function (value, desc) {
             var R       = Siesta.Resource('Siesta.Test.More');
@@ -8620,12 +10494,12 @@ Role('Siesta.Test.More', {
          * 
          * @param {Object} obj1 The 1st object to compare
          * @param {Object} obj2 The 2nd object to compare
-         * @param {String} desc The description of the assertion
+         * @param {String} [desc] The description of the assertion
          */
         isDeeply : function (obj1, obj2, desc) {
+            var R       = Siesta.Resource('Siesta.Test.More');
 
             if (this.typeOf(obj1) === this.typeOf(obj2) && this.compareObjects(obj1, obj2)) {
-                var R       = Siesta.Resource('Siesta.Test.More');
 
                 this.pass(desc, {
                     descTpl             : R.get('isDeeplyPassTpl'),
@@ -8633,12 +10507,30 @@ Role('Siesta.Test.More', {
                     obj2                : obj2
                 })
             }
-            else
-                this.fail(desc, {
-                    assertionName       : 'isDeeply', 
-                    got                 : obj1, 
-                    need                : obj2 
-                })
+            else {
+                var diff = DeepDiff(obj1, obj2);
+
+                if (diff.length > 5) {
+                    this.diag(R.get('tooManyDifferences', { num : 5, total : diff.length}))
+                }
+
+                for (var i = 0; i < Math.min(diff.length, 5); i++) {
+                    var diffItem = diff[i];
+                    var path     = (diffItem.path || []).join('.');
+                    var saw      = path ? (path + ': ' + diffItem.lhs) : obj1;
+                    var expected = path ? (path + ': ' + diffItem.rhs) : obj2;
+
+                    this.fail(desc, {
+                        assertionName       : 'isDeeply',
+                        got                 : saw,
+                        need                : expected
+                    })
+
+                    // Also log it to console for easy inspection
+                    window.console && console.log('DIFF RESULT:', diffItem);
+                }
+
+            }
         },
         
         
@@ -8650,7 +10542,7 @@ Role('Siesta.Test.More', {
          * 
          * @param {Object} obj1 The 1st object to compare
          * @param {Object} obj2 The 2nd object to compare
-         * @param {String} desc The description of the assertion
+         * @param {String} [desc] The description of the assertion
          */
         isDeeplyStrict : function (obj1, obj2, desc) {
             if (this.typeOf(obj1) === this.typeOf(obj2) && this.compareObjects(obj1, obj2, true)) {
@@ -8881,7 +10773,7 @@ Role('Siesta.Test.More', {
                 // errback is called in case "waitFor" has failed
                 errback             = options.errback
             }
-            
+
             var isWaitingForTime        = this.typeOf(method) == 'Number'
 
             callback                    = callback || function () {}
@@ -8927,10 +10819,13 @@ Role('Siesta.Test.More', {
             }, null, { single : true })
 
             if (isWaitingForTime) {
+                if (method < 0) {
+                    throw 'Cannot wait for a negative amount of time';
+                }
                 pollTimeout = originalSetTimeout(function() {
                     isDone      = true
 
-                    me.finalizeWaiting(waitAssertion, true, R.get('Waited') + ' ' + method + ' ' + R.get('ms'), null, null, suppressAssertion);
+                    me.finalizeWaiting(waitAssertion, true, R.get('Waited') + ' ' + method + ' ' + R.get('ms'), null, null, suppressAssertion || method === 0);
                     me.endAsync(async);
                     me.processCallbackFromTest(callback, [], scope || me)
                 }, method);
@@ -8976,7 +10871,7 @@ Role('Siesta.Test.More', {
                         me.endAsync(async);
                         
                         isDone      = true
-                        me.finalizeWaiting(waitAssertion, true, R.get('Waited') + ' ' + time + ' ' + R.get('msFor') + ' ' + description, null, null, suppressAssertion);
+                        me.finalizeWaiting(waitAssertion, true, R.get('Waited') + ' ' + time + ' ' + R.get('msFor') + ' ' + description, null, null, suppressAssertion || time === 0);
                         
                         me.processCallbackFromTest(callback, [ result ], scope || me)
                     } else 
@@ -9616,7 +11511,7 @@ Class('Siesta.Test.BDD.Spy', {
         
         
         /**
-         * This method makes the spy to just return the `undefined` and not execute the original function.
+         * This method makes the spy to just return `undefined` and not execute the original function.
          * 
          * @return {Siesta.Test.BDD.Spy} This spy instance
          */
@@ -10613,20 +12508,26 @@ Role('Siesta.Test.BDD', {
         },
         
         
-        runBeforeSpecHooks : function (done) {
+        runBeforeSpecHooks : function (sourceTest, done) {
             var me          = this
             
             var runOwnHooks = function (done) {
                 me.chainForArray(me.beforeEachHooks, function (hook) {
-                    return hook.isAsync ? hook.code : function (next) {
-                        hook.code()
-                        next()
+                    return function (next) {
+                        var code        = hook.code
+                        
+                        if (hook.isAsync) {
+                            code(sourceTest, next)
+                        } else {
+                            code(sourceTest)
+                            next()
+                        }
                     }
                 }, done)                    
             }
             
             if (this.parent)
-                this.parent.runBeforeSpecHooks(function () {
+                this.parent.runBeforeSpecHooks(sourceTest, function () {
                     runOwnHooks(done)
                 })
             else
@@ -10634,17 +12535,23 @@ Role('Siesta.Test.BDD', {
         },
                 
             
-        runAfterSpecHooks : function (done) {
+        runAfterSpecHooks : function (sourceTest, done) {
             var me      = this
             
             me.chainForArray(
                 this.afterEachHooks, function (hook) {
-                    return hook.isAsync ? hook.code : function (next) {
-                        hook.code()
-                        next()
+                    return function (next) {
+                        var code        = hook.code
+                        
+                        if (hook.isAsync) {
+                            code(sourceTest, next)
+                        } else {
+                            code(sourceTest)
+                            next()
+                        }
                     }
                 }, function () {
-                    me.parent ? me.parent.runAfterSpecHooks(done) : done()
+                    me.parent ? me.parent.runAfterSpecHooks(sourceTest, done) : done()
                 },
                 // reverse
                 true
@@ -10669,29 +12576,38 @@ Role('Siesta.Test.BDD', {
             
             this.chainForArray(exclusiveSubTests.length ? exclusiveSubTests : sequentialSubTests, function (subTest) {
                 return [
-                    subTest.specType == 'it' ? function (next) { me.runBeforeSpecHooks(next) } : null,
+                    subTest.specType == 'it' ? function (next) { me.runBeforeSpecHooks(subTest, next) } : null,
                     subTest,
-                    subTest.specType == 'it' ? function (next) { me.runAfterSpecHooks(next) } : null
+                    subTest.specType == 'it' ? function (next) { me.runAfterSpecHooks(subTest, next) } : null
                 ]
             })
         },
         
         
         /**
-         * This method allows you to execute some "setup" code before every spec ("it" block) of the current test. 
-         * This methos is **not** executed for the "describe" blocks.
-         * Note, that specs can be nested and all `beforeEach` methods are executed in order, starting from the most-nested one.
+         * This method allows you to execute some "setup" code hook before every spec ("it" block) of the current test. 
+         * Such hooks are **not** executed for the "describe" blocks and sub-tests generated with 
+         * the {@link Siesta.Test#getSubTest getSubTest} method.
          * 
-         * By default the setup code is supposed to be synchronous, but you can change it with the `isAsync` argument. 
-         * This method can be called several times, providing several "setup" functions. Note, that `beforeEach` code is not
-         * executed for the sub-tests generated with the {@link Siesta.Test#getSubTest getSubTest} method.
+         * Note, that specs can be nested and all `beforeEach` hooks are executed in order, starting from the outer-most one.
+         * 
+         * The hook function can be declared with 1 or 2 arguments. The 1st argument is always the test 
+         * instance being launched.
+         * 
+         * If hook is declared with only 1 argument - it is supposed to be synchronous. 
+         * 
+         * If hook is declared with 2 arguments - it is supposed to be asynchronous (you can also force the asynchronous
+         * mode with the `isAsync` argument, see below). The completion callback will be provided as the 2nd argument for the hook.
+         *  
+         * This method can be called several times, providing several "hook" functions.
          * 
          * For example:
 
     StartTest(function (t) {
         var baz     = 0
         
-        t.beforeEach(function () {
+        t.beforeEach(function (t) {
+            // the `t` instance here is the "t" instance from the "it" block below
             baz     = 0
         })
         
@@ -10702,27 +12618,29 @@ Role('Siesta.Test.BDD', {
 
          * 
          * @param {Function} code A function to execute before every spec
+         * @param {Siesta.Test} code.t A test instance being launched
          * @param {Function} code.next A callback to call when the `beforeEach` method completes. This argument is only provided
-         * when the `isAsync` argument is passed as `true`
+         * when hook function is declared with 2 arguments (or the `isAsync` argument is passed as `true`)
          * @param {Boolean} isAsync When passed as `true` this argument makes the `beforeEach` method asynchronous. In this case,
-         * the `code` function will receive a callback argument, which should be called once the method has completed its work.
+         * the `code` function will receive an additional callback argument, which should be called once the method has completed its work.
+         * 
          * Note, that `beforeEach` method should complete within {@link Siesta.Test#defaultTimeout defaultTimeout} time, otherwise
          * failing assertion will be added to the test. 
          * 
-         * Example:
+         * Example of asynchronous hook:
 
     StartTest(function (t) {
         var baz     = 0
     
         // asynchronous setup code
-        t.beforeEach(function (next) {
+        t.beforeEach(function (t, next) {
             
             // `beforeEach` will complete in 100ms 
             setTimeout(function () {
                 baz     = 0
                 next()
             }, 100)
-        }, true)
+        })
         
         t.describe("This feature should work", function (t) {
             t.expect(myFunction(baz++)).toEqual('someResult')
@@ -10731,25 +12649,34 @@ Role('Siesta.Test.BDD', {
 
          */
         beforeEach : function (code, isAsync) {
-            this.beforeEachHooks.push({ code : code, isAsync : isAsync })
+            this.beforeEachHooks.push({ code : code, isAsync : isAsync || code.length == 2 })
         },
         
         
         /**
-         * This method allows you to execute some "tear down" code after every spec ("it" block) of the current test. 
-         * This methos is **not** executed for the "describe" blocks.
-         * Note, that specs can be nested and all `afterEach` methods are executed in order, starting from the most-nested one.
+         * This method allows you to execute some "setup" code hook after every spec ("it" block) of the current test. 
+         * Such hooks are **not** executed for the "describe" blocks and sub-tests generated with 
+         * the {@link Siesta.Test#getSubTest getSubTest} method.
          * 
-         * By default the tear down code is supposed to be synchronous, but you can change it with the `isAsync` argument. 
-         * This method can be called several times, providing several "tear down" functions. Note, that `afterEach` code is not
-         * executed for the sub-tests generated with the {@link Siesta.Test#getSubTest getSubTest} method.
+         * Note, that specs can be nested and all `afterEach` hooks are executed in order, starting from the most-nested one.
+         * 
+         * The hook function can be declared with 1 or 2 arguments. The 1st argument is always the test 
+         * instance being launched.
+         * 
+         * If hook is declared with only 1 argument - it is supposed to be synchronous. 
+         * 
+         * If hook is declared with 2 arguments - it is supposed to be asynchronous (you can also force the asynchronous
+         * mode with the `isAsync` argument, see below). The completion callback will be provided as the 2nd argument for the hook.
+         *  
+         * This method can be called several times, providing several "hook" functions.
          * 
          * For example:
 
     StartTest(function (t) {
         var baz     = 0
         
-        t.afterEach(function () {
+        t.afterEach(function (t) {
+            // the `t` instance here is the "t" instance from the "it" block below
             baz     = 0
         })
         
@@ -10760,27 +12687,29 @@ Role('Siesta.Test.BDD', {
 
          * 
          * @param {Function} code A function to execute after every spec
+         * @param {Siesta.Test} code.t A test instance being completed
          * @param {Function} code.next A callback to call when the `afterEach` method completes. This argument is only provided
-         * when the `isAsync` argument is passed as `true`
+         * when hook function is declared with 2 arguments (or the `isAsync` argument is passed as `true`)
          * @param {Boolean} isAsync When passed as `true` this argument makes the `afterEach` method asynchronous. In this case,
-         * the `code` function will receive a callback argument, which should be called once the method has completed its work.
+         * the `code` function will receive an additional callback argument, which should be called once the method has completed its work.
+         * 
          * Note, that `afterEach` method should complete within {@link Siesta.Test#defaultTimeout defaultTimeout} time, otherwise
          * failing assertion will be added to the test. 
          * 
-         * Example:
+         * Example of asynchronous hook:
 
     StartTest(function (t) {
         var baz     = 0
     
         // asynchronous setup code
-        t.afterEach(function (next) {
+        t.afterEach(function (t, next) {
             
             // `afterEach` will complete in 100ms 
             setTimeout(function () {
                 baz     = 0
                 next()
             }, 100)
-        }, true)
+        })
         
         t.describe("This feature should work", function (t) {
             t.expect(myFunction(baz++)).toEqual('someResult')
@@ -10789,7 +12718,7 @@ Role('Siesta.Test.BDD', {
 
          */
         afterEach : function (code, isAsync) {
-            this.afterEachHooks.push({ code : code, isAsync : isAsync })
+            this.afterEachHooks.push({ code : code, isAsync : isAsync || code.length == 2 })
         },
         
 
@@ -10970,6 +12899,7 @@ Role('Siesta.Test.Sub', {
 @mixin Siesta.Test.Date
 @mixin Siesta.Test.Function
 @mixin Siesta.Test.BDD
+@mixin Siesta.Util.Role.CanCompareObjects
 
 `Siesta.Test` is a base testing class in Siesta hierarchy. It's not supposed to be created manually, instead the harness will create it for you.
 
@@ -11004,6 +12934,7 @@ Class('Siesta.Test', {
     does        : [
         Siesta.Util.Role.CanFormatStrings,
         Siesta.Util.Role.CanGetType,
+        Siesta.Util.Role.CanCompareObjects,
         Siesta.Util.Role.CanEscapeRegExp,
         
         Siesta.Test.More,
@@ -11011,7 +12942,10 @@ Class('Siesta.Test', {
         Siesta.Test.Function,
         Siesta.Test.BDD,
         
-        JooseX.Observable
+        JooseX.Observable,
+        
+        // quick "id" attribute, perhaps should be changed later
+        Siesta.Util.Role.HasUniqueGeneratedId
     ],
 
 
@@ -11141,6 +13075,8 @@ Class('Siesta.Test', {
         jUnitClass                  : null,
         groups                      : null,
         automationElementId         : null,
+        
+        enableCodeCoverage          : false,
 
         // user-provided config values
         config                      : null
@@ -11333,7 +13269,7 @@ Class('Siesta.Test', {
          * This method add the passed assertion to this test.
          *
          * @param {String} desc The description of the assertion
-         * @param {String/Object} annotation The string with additional description how exactly this assertion passes. Will be shown with monospace font.
+         * @param {String/Object} [annotation] The string with additional description how exactly this assertion passes. Will be shown with monospace font.
          * Can be also an object with the following properties:
          * @param {String} annotation.annotation The actual annotation text
          * @param {String} annotation.descTpl The template for the default description text. Will be used if user did not provide any description for
@@ -11455,12 +13391,50 @@ Class('Siesta.Test', {
                 }
 
                 if (this.harness.breakOnFail) {
-                    var R = Siesta.Resource('Siesta.Test');
+                    var R   = Siesta.Resource('Siesta.Test');
 
                     this.finalize(true);
                     throw R.get('testFailedAndAborted');
                 }
             }
+        },
+        
+        
+        /**
+         * This method stops the execution of the test early. You can use it if, for example, you already know the status of
+         * test (failed) and further actions involves long waitings etc.
+         * 
+         * This method accepts the same arguments as the {@link #fail} method. If at least the one argument is given,
+         * a failed assertion will be added to the test before the exit.
+         * 
+         * For example:
+         * 
+
+        t.chain(
+            function (next) {
+                // do something
+            
+                next()
+            },
+            function (next) {
+                if (someCondition) 
+                    t.exit("Failure description")
+                else
+                    next()
+            },
+            { waitFor : function () { ... } }
+        )
+
+
+         *
+         * @param {String} [desc] The description of the assertion
+         * @param {String/Object} [annotation] The additional description how exactly this assertion fails. Will be shown with monospace font.
+         */
+        exit : function (desc, annotation) {
+            if (arguments.length > 0) this.fail(desc, annotation)
+            
+            this.finalize(true)
+            throw '__SIESTA_TEST_EXIT_EXCEPTION__'
         },
 
 
@@ -11470,6 +13444,7 @@ Class('Siesta.Test', {
 
 
         getSourceLine : function () {
+            // TODO switch to new Error().stack when dropped supported for IE10;
             try {
                 throw new Error()
             } catch (e) {
@@ -11613,98 +13588,11 @@ Class('Siesta.Test', {
         },
 
 
-        countKeys : function (object) {
-            var counter = 0
-
-            Joose.O.eachOwn(object, function () {
-                counter++
-            })
-
-            return counter
-        },
-
-
-        /**
-         * This method performs a deep comparison of the passed JSON objects. Objects must not contain cyclic references.
-         * You can use this method in your own assertions.
-         *
-         * @param {Mixed} obj1 The 1st object to compare
-         * @param {Mixed} obj2 The 2nd object to compare
-         * @param {Boolean} strict When passed the `true` value, the comparison of the primitive values will be performed with the
-         * `===` operator (so [ 1 ] and [ "1" ] object will be different). Additionally, when this flag is set to `true`, then
-         * when comparing Function, RegExp and Date instances, additional check that objects contains the same set of own properties ("hasOwnProperty")
-         * will be performed.
-         * @param {Boolean} onlyPrimitives When set to `true`, the function will not recurse into composite objects (like [] or {}) and will just report that
-         * objects are different. Use this mode when you are only interested in comparison of primitive values (numbers, strings, etc).
-         * @param {Boolean} asObjects When set to `true`, the function will compare various special Object instances, like Functions, RegExp etc,
-         * by comparison of their properties only and not taking the anything else into account.
-         * @return {Boolean} `true` if the passed objects are equal
-         */
-        compareObjects : function (obj1, obj2, strict, onlyPrimitives, asObjects) {
-            var obj1IsPlaceholder       = Joose.O.isInstance(obj1) && obj1.meta.does(Siesta.Test.Role.Placeholder)
-            var obj2IsPlaceholder       = Joose.O.isInstance(obj2) && obj2.meta.does(Siesta.Test.Role.Placeholder)
-
-            if (strict) {
-                if (obj1 === obj2) return true
-            } else
-                if (obj1 == obj2) return true
-
-            if (obj1IsPlaceholder && obj2IsPlaceholder)
-                return obj1.equalsTo(obj2)
-            else if (obj2IsPlaceholder)
-                return obj2.equalsTo(obj1)
-            else if (obj1IsPlaceholder)
-                return obj1.equalsTo(obj2)
-
-            if (onlyPrimitives) return false
-
-            var type1 = this.typeOf(obj1)
-            var type2 = this.typeOf(obj2)
-
-            if (type1 != type2) return false
-
-            var me = this
-
-            if (type1 == 'Object' || asObjects)
-                if (this.countKeys(obj1) != this.countKeys(obj2))
-                    return false
-                else {
-                    var res = Joose.O.eachOwn(obj1, function (value, name) {
-
-                        if (!me.compareObjects(value, obj2[ name ], strict)) return false
-                    })
-
-                    return res === false ? false : true
-                }
-
-            if (type1 == 'Array')
-                if (obj1.length != obj2.length)
-                    return false
-                else {
-                    for (var i = 0; i < obj1.length; i++)
-                        if (!this.compareObjects(obj1[ i ], obj2[ i ], strict)) return false
-
-                    return true
-                }
-
-            if (type1 == 'Function')
-                return obj1.toString() == obj2.toString() && (!strict || this.compareObjects(obj1, obj2, strict, false, true))
-
-            if (type1 == 'RegExp')
-                return obj1.source == obj2.source && obj1.global == obj2.global && obj1.ignoreCase == obj2.ignoreCase
-                    && obj1.multiline == obj2.multiline && (!strict || this.compareObjects(obj1, obj2, strict, false, true))
-
-            if (type1 == 'Date') return !Boolean(obj1 - obj2) && (!strict || this.compareObjects(obj1, obj2, strict, false, true))
-
-            return false
-        },
-
-
         /**
          * This assertion passes when the supplied `value` evalutes to `true` and fails otherwise.
          *
          * @param {Mixed} value The value, indicating wheter assertions passes or fails
-         * @param {String} desc The description of the assertion
+         * @param {String} [desc] The description of the assertion
          */
         ok : function (value, desc) {
             var R               = Siesta.Resource('Siesta.Test');
@@ -11733,7 +13621,7 @@ Class('Siesta.Test', {
          * It has a synonym - `notok`.
          *
          * @param {Mixed} value The value, indicating wheter assertions passes or fails
-         * @param {String} desc The description of the assertion
+         * @param {String} [desc] The description of the assertion
          */
         notOk : function (value, desc) {
             var R               = Siesta.Resource('Siesta.Test');
@@ -11759,7 +13647,7 @@ Class('Siesta.Test', {
          *
          * @param {Mixed} got The value "we have" - will be shown as "Got:" in case of failure
          * @param {Mixed} expected The value "we expect" - will be shown as "Need:" in case of failure
-         * @param {String} desc The description of the assertion
+         * @param {String} [desc] The description of the assertion
          */
         is : function (got, expected, desc) {
             var R               = Siesta.Resource('Siesta.Test');
@@ -11799,7 +13687,7 @@ Class('Siesta.Test', {
          *
          * @param {Mixed} got The value "we have" - will be shown as "Got:" in case of failure
          * @param {Mixed} expected The value "we expect" - will be shown as "Need:" in case of failure
-         * @param {String} desc The description of the assertion
+         * @param {String} [desc] The description of the assertion
          */
         isNot : function (got, expected, desc) {
             var R               = Siesta.Resource('Siesta.Test');
@@ -11827,7 +13715,7 @@ Class('Siesta.Test', {
          *
          * @param {Mixed} got The value "we have" - will be shown as "Got:" in case of failure
          * @param {Mixed} expected The value "we expect" - will be shown as "Need:" in case of failure
-         * @param {String} desc The description of the assertion
+         * @param {String} [desc] The description of the assertion
          */
         isStrict : function (got, expected, desc) {
             var R               = Siesta.Resource('Siesta.Test');
@@ -11860,7 +13748,7 @@ Class('Siesta.Test', {
          *
          * @param {Mixed} got The value "we have" - will be shown as "Got:" in case of failure
          * @param {Mixed} expected The value "we expect" - will be shown as "Need:" in case of failure
-         * @param {String} desc The description of the assertion
+         * @param {String} [desc] The description of the assertion
          */
         isNotStrict : function (got, expected, desc) {
             var R               = Siesta.Resource('Siesta.Test');
@@ -12305,7 +14193,7 @@ Class('Siesta.Test', {
         },
 
 
-        failWithException : function (e) {
+        failWithException : function (e, description) {
             var R                       = Siesta.Resource('Siesta.Test');
             
             this.failed                 = true
@@ -12319,7 +14207,7 @@ Class('Siesta.Test', {
                 isException     : true,
                 exceptionType   : this.failedExceptionType,
                 passed          : false,
-                description     : (this.parent ? R.get('Subtest') + " `" + this.name + "`" : R.get('Test') + ' ') + ' ' + R.get('threwException'),
+                description     : description ? description : ((this.parent ? R.get('Subtest') + " `" + this.name + "`" : R.get('Test') + ' ') + ' ' + R.get('threwException')),
                 annotation      : this.stringifyException(e, stackTrace)
             }))
 
@@ -12383,7 +14271,7 @@ Class('Siesta.Test', {
                 
                 me.finalize(true)
 
-                return
+                return true
             }
 
             // Sub-tests should not perform the `setup` or wait for `isReady` readyness
@@ -12785,7 +14673,7 @@ Class('Siesta.Test', {
             
             if (me.finalizationStarted || me.isFinished()) return
 
-            me.processed = true
+            me.processed    = true
 
             if (force) {
                 me.clearTimeouts()
@@ -12806,41 +14694,14 @@ Class('Siesta.Test', {
                 return
             }
 
-            if (!me.needDone && !me.isDone) {
-                // this is the early "testfinalize" hook, we need "early" and "regular" hooks, since we want the globals check to be the last assertion
-                me.fireEvent('beforetestfinalizeearly', me)
-
-                // Firing the `beforetestfinalizeearly` events may trigger additional test actions
-                if (!Joose.O.isEmpty(me.timeoutIds)) {
-                    if (force)
-                        me.clearTimeouts()
-                    else
-                        return
-                }
-                
-                // assertion can stil be added in this method and the following event listeners
-                // but not after!
-                me.onBeforeTestFinalize()
-
-                /**
-                 * This event is fired before each individual test case ends (no any corresponding Harness actions will have been run yet).
-                 *
-                 * This event bubbles up to the {@link Siesta.Harness harness}, so you can observe it on the harness as well.
-                 *
-                 * @event beforetestfinalize
-                 * @member Siesta.Test
-                 * @param {JooseX.Observable.Event} event The event instance
-                 * @param {Siesta.Test} test The test instance that is about to finalize
-                 */
-                me.fireEvent('beforetestfinalize', me);
-            }
+            if (!me.isDone && me.doDone(force) === false) return 
             
             me.finalizationStarted  = true
 
             var finalizationCode    = function (tearDownError) {
                 if (tearDownError) me.fail(tearDownError)
                 
-                me.endDate = new Date() - 0
+                me.endDate          = new Date() - 0
     
                 if (!me.parent) me.addResult(new Siesta.Result.Summary({
                     isFailed            : me.isFailed(),
@@ -12867,7 +14728,7 @@ Class('Siesta.Test', {
                 me.callback && me.callback()
                 
                 // help garbage collector to cleanup all the context of this callback (huge impact)
-                me.callback     = null
+                me.callback         = null
             }
             
             // sub-tests don't do the "tearDown" process
@@ -12943,34 +14804,67 @@ Class('Siesta.Test', {
 
 
         /**
-         * This method indicates that the test has completed at the expected point and no more assertions are planned. Adding assertions after the call to `done`
-         * will add a failing assertion "Adding assertion after test completion".
+         * This method indicates that the test has reached the expected point of its completion and no more assertions are planned. 
+         * Adding assertions after the call to `done` will be considered as a failure.
+         * 
+         * This method **does not** stop the execution of the test. For that, see the {@link #exit} method.
+         * 
+         * See also {@link Siesta.Harness#needDone}
+         *
          *
          * @param {Number} delay Optional. When provided, the test will not complete right away, but will wait for `delay` milliseconds for additional assertions.
          */
         done : function (delay) {
-            var me      = this
+            var me                      = this
 
             if (delay) {
-                var async = this.beginAsync()
-
-                var originalSetTimeout = this.originalSetTimeout
+                var async               = this.beginAsync()
+                var originalSetTimeout  = this.originalSetTimeout
 
                 originalSetTimeout(function () {
-
                     me.endAsync(async)
                     me.done()
-
                 }, delay)
 
             } else {
-                this.fireEvent('beforetestfinalizeearly')
-                this.fireEvent('beforetestfinalize');
-
-                this.isDone = true
-
+                this.doDone(false)
+                
                 if (this.processed) this.finalize()
             }
+        },
+
+        
+        doDone : function (force) {
+            var me          = this
+            
+            // this is the early "testfinalize" hook, we need "early" and "regular" hooks, since we want the globals check to be the last assertion
+            me.fireEvent('beforetestfinalizeearly', me)
+
+            // Firing the `beforetestfinalizeearly` events may trigger additional test actions
+            if (!Joose.O.isEmpty(me.timeoutIds)) {
+                if (force)
+                    me.clearTimeouts()
+                else
+                    return false
+            }
+            
+            // assertion can stil be added in this method and the following event listeners
+            // but not after!
+            me.onBeforeTestFinalize()
+
+            /**
+             * This event is fired before each individual test case ends (no any corresponding Harness actions will have been run yet).
+             *
+             * This event bubbles up to the {@link Siesta.Harness harness}, so you can observe it on the harness as well.
+             *
+             * @event beforetestfinalize
+             * @member Siesta.Test
+             * @param {JooseX.Observable.Event} event The event instance
+             * @param {Siesta.Test} test The test instance that is about to finalize
+             */
+            me.fireEvent('beforetestfinalize', me);
+            
+            this.isDone     = true
         },
 
         // `isDoneCorrectly` means that either test does not need the call to `done`
@@ -13505,8 +15399,9 @@ Class('Siesta.Test.Action.Wait', {
 
          */
         trigger         : null,
-        
-        hasOwnAsyncFrame    : true
+
+        hasOwnAsyncFrame    : true,
+        description         : '' // used internally to have custom wait messages that don't produce noise in the UI (chain step automatically adds a t.pass with 'desc')
     },
 
     
@@ -13555,7 +15450,7 @@ Class('Siesta.Test.Action.Wait', {
                     callback        : this.next,
                     scope           : test,
                     timeout         : this.timeout || test.waitForTimeout,
-                    description     : this.desc || ''
+                    description     : this.description || this.desc || ''
                 });
             } else {
                 test[ methodName ].apply(test, this.args.concat(this.next, test, this.timeout || test.waitForTimeout));
@@ -13761,7 +15656,11 @@ Class('Siesta.Test.Action.MethodCall', {
             
             if (test.typeOf(args) == 'Function') args  = args.call(test, this)
             
-            if (test.typeOf(args) != 'Array') args = [ args ]
+            if (test.typeOf(args) == 'Array') {
+                args = args.slice();
+            } else {
+                args = [ args ]
+            }
             
             if (this.callbackIndex != null) 
                 args.splice(this.callbackIndex, 0, this.next)
@@ -14137,8 +16036,9 @@ Class('Siesta.Harness', {
         overrideSetTimeout      : false,
         
         /**
-         * @cfg {Boolean} needDone When set to `true`, the tests will must indicate that that they have reached the correct exit point with `t.done()` call, 
-         * after which, adding any assertions is not allowed. Using this option will ensure that test did not exit prematurely with some exception silently caught.
+         * @cfg {Boolean} needDone When set to `true`, the tests will must indicate that that they have reached the correct 
+         * exit point with `t.done()` call, after which, adding any assertions is not allowed. 
+         * Using this option will ensure that test did not exit prematurely with some exception silently caught.
          * 
          * This option can be also specified in the test file descriptor.
          */
@@ -14868,7 +16768,7 @@ Class('Siesta.Harness', {
                 StartTest.id                = descId
                 
                 // for older IE - the try/catch should be from the same context as the exception
-                StartTest.exceptionCatcher  = function (func) { var ex; try { func() } catch (e) { ex = e; } return ex; };
+                StartTest.exceptionCatcher  = function (func) { var ex; try { func() } catch (e) { ex = e; } return ex == '__SIESTA_TEST_EXIT_EXCEPTION__' ? undefined : ex; };
                 
                 // for Error instances we try to pick up the values from "message" or "description" property
                 // so need to have a correct constructor from the context of test
@@ -14989,12 +16889,12 @@ Class('Siesta.Harness', {
         },
         
         
-        canUseCachedContent : function (resource) {
+        canUseCachedContent : function (resource, desc) {
             return this.cachePreload && resource instanceof Siesta.Content.Resource.JavaScript
         },
         
         
-        addCachedResourceToPreloads : function (scopeProvider, contentManager, resource) {
+        addCachedResourceToPreloads : function (scopeProvider, contentManager, resource, desc) {
             scopeProvider.addPreload({
                 type        : 'js',
                 content     : contentManager.getContentOf(resource)
@@ -15002,11 +16902,51 @@ Class('Siesta.Harness', {
         },
         
         
+        getOnErrorHandler : function (testHolder, preloadErrors) {
+            var R = Siesta.Resource('Siesta.Harness');
+
+            return function (msg, url, lineNumber, col, error) {
+                var test            = testHolder.test
+
+                // Either an HTMLElement load failure - "window.addEventListener('error', handler, true)"
+                // OR
+                // Error in a script on another domain (message Script error)
+                if (arguments.length == 1) {
+                    var event       = msg
+                    
+                    error           = event.error
+
+                    if (event.target && event.target instanceof test.global.HTMLElement && !error) {
+                        msg         = R.get('resourceFailedToLoad', { nodeName : event.target ? event.target.nodeName.toUpperCase() : ''});
+                        url         = event.srcElement ? event.srcElement.href || event.srcElement.src : ''
+                        lineNumber  = ''
+
+                        test.fail(msg + ' ' + (event.target ? event.target.outerHTML : url));
+
+                        return;
+                    } else {
+                        msg = event.message;
+                        url = '';
+                        lineNumber = 0;
+                    }
+                }
+
+                if (test && test.isStarted()) {
+                    test.nbrExceptions++;
+                    test.failWithException(error || (msg + ' ' + url + ' ' + lineNumber))
+                } else {
+                    preloadErrors && preloadErrors.push({
+                        isException     : true,
+                        message         : error && error.stack ? error.stack + '' : msg + ' ' + url + ' ' + lineNumber
+                    })
+                }
+            }
+        },
+        
+        
         processURL : function (desc, index, contentManager, launchState, callback, noCleanup) {
             var me      = this
             var url     = desc.url
-            
-            delete launchState.notLaunchedByAutomationId[ desc.automationElementId ]
             
             if (desc.isMissing) {
                 callback()
@@ -15019,22 +16959,9 @@ Class('Siesta.Harness', {
             // an array of errors occured during preload phase
             var preloadErrors   = []
             
+            var onErrorHandler  = this.getOnErrorHandler(testHolder, preloadErrors)
             var scopeProvider   = this.setupScope(desc, launchState.launchId)
             var transparentEx   = this.getDescriptorConfig(desc, 'transparentEx')
-            
-            var onErrorHandler  = function (msg, url, lineNumber, col, error) {
-                var test = testHolder.test
-
-                if (test && test.isStarted()) {
-                    test.nbrExceptions++;
-                    test.failWithException(error || (msg + ' ' + url + ' ' + lineNumber))
-                } else {
-                    preloadErrors.push({
-                        isException     : true,
-                        message         : error && error.stack ? error.stack + '' : msg + ' ' + url + ' ' + lineNumber
-                    })
-                }
-            }
             
             // trying to setup the `onerror` handler as early as possible - to detect each and every exception from the test
             scopeProvider.addOnErrorHandler(onErrorHandler, !transparentEx)
@@ -15045,10 +16972,10 @@ Class('Siesta.Harness', {
 //            })
             
             desc.preset.eachResource(function (resource) {
-                var hasConent       = contentManager.hasContentOf(resource)
+                var hasContent      = contentManager.hasContentOf(resource)
                 
-                if (hasConent && me.canUseCachedContent(resource)) {
-                    me.addCachedResourceToPreloads(scopeProvider, contentManager, resource)
+                if (hasContent && me.canUseCachedContent(resource, desc)) {
+                    me.addCachedResourceToPreloads(scopeProvider, contentManager, resource, desc)
                 } else {
                     var resourceDesc    = resource.asDescriptor()
                     
@@ -15098,21 +17025,11 @@ Class('Siesta.Harness', {
                             isException : false, 
                             message     : Siesta.Resource('Siesta.Harness', 'preloadHasFailed', { url : url })
                         })
-                        
-                        if (me.isAutomated) {
-                            me.warn(Siesta.Resource('Siesta.Harness', 'preloadHasFailedForTest', { url : url, test : desc.url }))
-                        }
                     })
                     
                     // scope provider has been cleaned up while setting up? (may be user has restarted the test)
                     // then do nothing
                     if (!scopeProvider.scope) { callback(); return }
-                    
-                    // do not try to launch the test in automation if some preload has failed
-                    // in this case test will be repeated Siesta.Launcher.Dispatcher.Element#maxFailuresCount times
-                    // and reported as failed afterwards
-                    // the warnings should give user an idea what is going on
-                    if (me.isAutomated && !Joose.O.isEmpty(failedPreloads)) { callback(); return }
                     
                     me.launchTest({
                         testHolder          : testHolder,
@@ -15198,7 +17115,11 @@ Class('Siesta.Harness', {
                 // in the edge case, test can be already finished before its even started :)
                 // this happens if user re-launch the test during these 10ms - test will be 
                 // finalized forcefully in the "deleteTestByUrl" method
-                if (!test.isFinished()) test.start(options.preloadErrors)
+                if (!test.isFinished()) 
+                    if (test.start(options.preloadErrors) !== true)
+                        // remove the test from the list of "not launched" only if there were no errors
+                        // during test preload
+                        delete options.launchState.notLaunchedByAutomationId[ desc.automationElementId ]
                 
                 options         = null
                 test            = null
@@ -15265,7 +17186,9 @@ Class('Siesta.Harness', {
                 
                 config                      : this.getDescriptorConfig(desc, 'config'),
                 
-                failOnExclusiveSpecsWhenAutomated   : this.getDescriptorConfig(desc, 'failOnExclusiveSpecsWhenAutomated')
+                failOnExclusiveSpecsWhenAutomated   : this.getDescriptorConfig(desc, 'failOnExclusiveSpecsWhenAutomated'),
+                
+                enableCodeCoverage          : this.getDescriptorConfig(desc, 'enableCodeCoverage')
             }
             
             // potentially not safe
@@ -15355,6 +17278,7 @@ Class('Siesta.Harness', {
         
         methods : {
             
+            // backward compat for static harness instance
             staticDeprecationWarning : function (methodName) {
                 var message     = Siesta.Resource('Siesta.Harness', 'staticDeprecationWarning', { methodName : methodName, harnessClass : this.HOST + '' })
                 
@@ -15383,6 +17307,7 @@ Class('Siesta.Harness', {
                 
                 return this.instance.on.apply(this.instance, arguments)
             }
+            // eof backward compat
         }
     }
 })

@@ -1,11 +1,3 @@
-/*
-
-Siesta 4.0.5
-Copyright(c) 2009-2016 Bryntum AB
-http://bryntum.com/contact
-http://bryntum.com/products/siesta/license
-
-*/
 ;!function () {;
 var Joose = {}
 
@@ -39768,1447 +39760,2685 @@ Class('Siesta.Harness.Browser.SenchaTouch', {
 
 ;
 ;
-if (typeof Ext !== "undefined" && Ext.versions && Ext.versions.extjs && Ext.versions.extjs.isGreaterThan("5")) {;
-/**
- * SyntaxHighlighter
- * http://alexgorbatchev.com/SyntaxHighlighter
- *
- * SyntaxHighlighter is donationware. If you are using it, please donate.
- * http://alexgorbatchev.com/SyntaxHighlighter/donate.html
- *
- * @version
- * 3.0.83 (July 02 2010)
- * 
- * @copyright
- * Copyright (C) 2004-2010 Alex Gorbatchev.
- *
- * @license
- * Dual licensed under the MIT and GPL licenses.
- */
-eval(function(p,a,c,k,e,d){e=function(c){return(c<a?'':e(parseInt(c/a)))+((c=c%a)>35?String.fromCharCode(c+29):c.toString(36))};if(!''.replace(/^/,String)){while(c--){d[e(c)]=k[c]||e(c)}k=[function(e){return d[e]}];e=function(){return'\\w+'};c=1};while(c--){if(k[c]){p=p.replace(new RegExp('\\b'+e(c)+'\\b','g'),k[c])}}return p}('K M;I(M)1S 2U("2a\'t 4k M 4K 2g 3l 4G 4H");(6(){6 r(f,e){I(!M.1R(f))1S 3m("3s 15 4R");K a=f.1w;f=M(f.1m,t(f)+(e||""));I(a)f.1w={1m:a.1m,19:a.19?a.19.1a(0):N};H f}6 t(f){H(f.1J?"g":"")+(f.4s?"i":"")+(f.4p?"m":"")+(f.4v?"x":"")+(f.3n?"y":"")}6 B(f,e,a,b){K c=u.L,d,h,g;v=R;5K{O(;c--;){g=u[c];I(a&g.3r&&(!g.2p||g.2p.W(b))){g.2q.12=e;I((h=g.2q.X(f))&&h.P===e){d={3k:g.2b.W(b,h,a),1C:h};1N}}}}5v(i){1S i}5q{v=11}H d}6 p(f,e,a){I(3b.Z.1i)H f.1i(e,a);O(a=a||0;a<f.L;a++)I(f[a]===e)H a;H-1}M=6(f,e){K a=[],b=M.1B,c=0,d,h;I(M.1R(f)){I(e!==1d)1S 3m("2a\'t 5r 5I 5F 5B 5C 15 5E 5p");H r(f)}I(v)1S 2U("2a\'t W 3l M 59 5m 5g 5x 5i");e=e||"";O(d={2N:11,19:[],2K:6(g){H e.1i(g)>-1},3d:6(g){e+=g}};c<f.L;)I(h=B(f,c,b,d)){a.U(h.3k);c+=h.1C[0].L||1}Y I(h=n.X.W(z[b],f.1a(c))){a.U(h[0]);c+=h[0].L}Y{h=f.3a(c);I(h==="[")b=M.2I;Y I(h==="]")b=M.1B;a.U(h);c++}a=15(a.1K(""),n.Q.W(e,w,""));a.1w={1m:f,19:d.2N?d.19:N};H a};M.3v="1.5.0";M.2I=1;M.1B=2;K C=/\\$(?:(\\d\\d?|[$&`\'])|{([$\\w]+)})/g,w=/[^5h]+|([\\s\\S])(?=[\\s\\S]*\\1)/g,A=/^(?:[?*+]|{\\d+(?:,\\d*)?})\\??/,v=11,u=[],n={X:15.Z.X,1A:15.Z.1A,1C:1r.Z.1C,Q:1r.Z.Q,1e:1r.Z.1e},x=n.X.W(/()??/,"")[1]===1d,D=6(){K f=/^/g;n.1A.W(f,"");H!f.12}(),y=6(){K f=/x/g;n.Q.W("x",f,"");H!f.12}(),E=15.Z.3n!==1d,z={};z[M.2I]=/^(?:\\\\(?:[0-3][0-7]{0,2}|[4-7][0-7]?|x[\\29-26-f]{2}|u[\\29-26-f]{4}|c[A-3o-z]|[\\s\\S]))/;z[M.1B]=/^(?:\\\\(?:0(?:[0-3][0-7]{0,2}|[4-7][0-7]?)?|[1-9]\\d*|x[\\29-26-f]{2}|u[\\29-26-f]{4}|c[A-3o-z]|[\\s\\S])|\\(\\?[:=!]|[?*+]\\?|{\\d+(?:,\\d*)?}\\??)/;M.1h=6(f,e,a,b){u.U({2q:r(f,"g"+(E?"y":"")),2b:e,3r:a||M.1B,2p:b||N})};M.2n=6(f,e){K a=f+"/"+(e||"");H M.2n[a]||(M.2n[a]=M(f,e))};M.3c=6(f){H r(f,"g")};M.5l=6(f){H f.Q(/[-[\\]{}()*+?.,\\\\^$|#\\s]/g,"\\\\$&")};M.5e=6(f,e,a,b){e=r(e,"g"+(b&&E?"y":""));e.12=a=a||0;f=e.X(f);H b?f&&f.P===a?f:N:f};M.3q=6(){M.1h=6(){1S 2U("2a\'t 55 1h 54 3q")}};M.1R=6(f){H 53.Z.1q.W(f)==="[2m 15]"};M.3p=6(f,e,a,b){O(K c=r(e,"g"),d=-1,h;h=c.X(f);){a.W(b,h,++d,f,c);c.12===h.P&&c.12++}I(e.1J)e.12=0};M.57=6(f,e){H 6 a(b,c){K d=e[c].1I?e[c]:{1I:e[c]},h=r(d.1I,"g"),g=[],i;O(i=0;i<b.L;i++)M.3p(b[i],h,6(k){g.U(d.3j?k[d.3j]||"":k[0])});H c===e.L-1||!g.L?g:a(g,c+1)}([f],0)};15.Z.1p=6(f,e){H J.X(e[0])};15.Z.W=6(f,e){H J.X(e)};15.Z.X=6(f){K e=n.X.1p(J,14),a;I(e){I(!x&&e.L>1&&p(e,"")>-1){a=15(J.1m,n.Q.W(t(J),"g",""));n.Q.W(f.1a(e.P),a,6(){O(K c=1;c<14.L-2;c++)I(14[c]===1d)e[c]=1d})}I(J.1w&&J.1w.19)O(K b=1;b<e.L;b++)I(a=J.1w.19[b-1])e[a]=e[b];!D&&J.1J&&!e[0].L&&J.12>e.P&&J.12--}H e};I(!D)15.Z.1A=6(f){(f=n.X.W(J,f))&&J.1J&&!f[0].L&&J.12>f.P&&J.12--;H!!f};1r.Z.1C=6(f){M.1R(f)||(f=15(f));I(f.1J){K e=n.1C.1p(J,14);f.12=0;H e}H f.X(J)};1r.Z.Q=6(f,e){K a=M.1R(f),b,c;I(a&&1j e.58()==="3f"&&e.1i("${")===-1&&y)H n.Q.1p(J,14);I(a){I(f.1w)b=f.1w.19}Y f+="";I(1j e==="6")c=n.Q.W(J,f,6(){I(b){14[0]=1f 1r(14[0]);O(K d=0;d<b.L;d++)I(b[d])14[0][b[d]]=14[d+1]}I(a&&f.1J)f.12=14[14.L-2]+14[0].L;H e.1p(N,14)});Y{c=J+"";c=n.Q.W(c,f,6(){K d=14;H n.Q.W(e,C,6(h,g,i){I(g)5b(g){24"$":H"$";24"&":H d[0];24"`":H d[d.L-1].1a(0,d[d.L-2]);24"\'":H d[d.L-1].1a(d[d.L-2]+d[0].L);5a:i="";g=+g;I(!g)H h;O(;g>d.L-3;){i=1r.Z.1a.W(g,-1)+i;g=1Q.3i(g/10)}H(g?d[g]||"":"$")+i}Y{g=+i;I(g<=d.L-3)H d[g];g=b?p(b,i):-1;H g>-1?d[g+1]:h}})})}I(a&&f.1J)f.12=0;H c};1r.Z.1e=6(f,e){I(!M.1R(f))H n.1e.1p(J,14);K a=J+"",b=[],c=0,d,h;I(e===1d||+e<0)e=5D;Y{e=1Q.3i(+e);I(!e)H[]}O(f=M.3c(f);d=f.X(a);){I(f.12>c){b.U(a.1a(c,d.P));d.L>1&&d.P<a.L&&3b.Z.U.1p(b,d.1a(1));h=d[0].L;c=f.12;I(b.L>=e)1N}f.12===d.P&&f.12++}I(c===a.L){I(!n.1A.W(f,"")||h)b.U("")}Y b.U(a.1a(c));H b.L>e?b.1a(0,e):b};M.1h(/\\(\\?#[^)]*\\)/,6(f){H n.1A.W(A,f.2S.1a(f.P+f[0].L))?"":"(?:)"});M.1h(/\\((?!\\?)/,6(){J.19.U(N);H"("});M.1h(/\\(\\?<([$\\w]+)>/,6(f){J.19.U(f[1]);J.2N=R;H"("});M.1h(/\\\\k<([\\w$]+)>/,6(f){K e=p(J.19,f[1]);H e>-1?"\\\\"+(e+1)+(3R(f.2S.3a(f.P+f[0].L))?"":"(?:)"):f[0]});M.1h(/\\[\\^?]/,6(f){H f[0]==="[]"?"\\\\b\\\\B":"[\\\\s\\\\S]"});M.1h(/^\\(\\?([5A]+)\\)/,6(f){J.3d(f[1]);H""});M.1h(/(?:\\s+|#.*)+/,6(f){H n.1A.W(A,f.2S.1a(f.P+f[0].L))?"":"(?:)"},M.1B,6(){H J.2K("x")});M.1h(/\\./,6(){H"[\\\\s\\\\S]"},M.1B,6(){H J.2K("s")})})();1j 2e!="1d"&&(2e.M=M);K 1v=6(){6 r(a,b){a.1l.1i(b)!=-1||(a.1l+=" "+b)}6 t(a){H a.1i("3e")==0?a:"3e"+a}6 B(a){H e.1Y.2A[t(a)]}6 p(a,b,c){I(a==N)H N;K d=c!=R?a.3G:[a.2G],h={"#":"1c",".":"1l"}[b.1o(0,1)]||"3h",g,i;g=h!="3h"?b.1o(1):b.5u();I((a[h]||"").1i(g)!=-1)H a;O(a=0;d&&a<d.L&&i==N;a++)i=p(d[a],b,c);H i}6 C(a,b){K c={},d;O(d 2g a)c[d]=a[d];O(d 2g b)c[d]=b[d];H c}6 w(a,b,c,d){6 h(g){g=g||1P.5y;I(!g.1F){g.1F=g.52;g.3N=6(){J.5w=11}}c.W(d||1P,g)}a.3g?a.3g("4U"+b,h):a.4y(b,h,11)}6 A(a,b){K c=e.1Y.2j,d=N;I(c==N){c={};O(K h 2g e.1U){K g=e.1U[h];d=g.4x;I(d!=N){g.1V=h.4w();O(g=0;g<d.L;g++)c[d[g]]=h}}e.1Y.2j=c}d=e.1U[c[a]];d==N&&b!=11&&1P.1X(e.13.1x.1X+(e.13.1x.3E+a));H d}6 v(a,b){O(K c=a.1e("\\n"),d=0;d<c.L;d++)c[d]=b(c[d],d);H c.1K("\\n")}6 u(a,b){I(a==N||a.L==0||a=="\\n")H a;a=a.Q(/</g,"&1y;");a=a.Q(/ {2,}/g,6(c){O(K d="",h=0;h<c.L-1;h++)d+=e.13.1W;H d+" "});I(b!=N)a=v(a,6(c){I(c.L==0)H"";K d="";c=c.Q(/^(&2s;| )+/,6(h){d=h;H""});I(c.L==0)H d;H d+\'<17 1g="\'+b+\'">\'+c+"</17>"});H a}6 n(a,b){a.1e("\\n");O(K c="",d=0;d<50;d++)c+="                    ";H a=v(a,6(h){I(h.1i("\\t")==-1)H h;O(K g=0;(g=h.1i("\\t"))!=-1;)h=h.1o(0,g)+c.1o(0,b-g%b)+h.1o(g+1,h.L);H h})}6 x(a){H a.Q(/^\\s+|\\s+$/g,"")}6 D(a,b){I(a.P<b.P)H-1;Y I(a.P>b.P)H 1;Y I(a.L<b.L)H-1;Y I(a.L>b.L)H 1;H 0}6 y(a,b){6 c(k){H k[0]}O(K d=N,h=[],g=b.2D?b.2D:c;(d=b.1I.X(a))!=N;){K i=g(d,b);I(1j i=="3f")i=[1f e.2L(i,d.P,b.23)];h=h.1O(i)}H h}6 E(a){K b=/(.*)((&1G;|&1y;).*)/;H a.Q(e.3A.3M,6(c){K d="",h=N;I(h=b.X(c)){c=h[1];d=h[2]}H\'<a 2h="\'+c+\'">\'+c+"</a>"+d})}6 z(){O(K a=1E.36("1k"),b=[],c=0;c<a.L;c++)a[c].3s=="20"&&b.U(a[c]);H b}6 f(a){a=a.1F;K b=p(a,".20",R);a=p(a,".3O",R);K c=1E.4i("3t");I(!(!a||!b||p(a,"3t"))){B(b.1c);r(b,"1m");O(K d=a.3G,h=[],g=0;g<d.L;g++)h.U(d[g].4z||d[g].4A);h=h.1K("\\r");c.39(1E.4D(h));a.39(c);c.2C();c.4C();w(c,"4u",6(){c.2G.4E(c);b.1l=b.1l.Q("1m","")})}}I(1j 3F!="1d"&&1j M=="1d")M=3F("M").M;K e={2v:{"1g-27":"","2i-1s":1,"2z-1s-2t":11,1M:N,1t:N,"42-45":R,"43-22":4,1u:R,16:R,"3V-17":R,2l:11,"41-40":R,2k:11,"1z-1k":11},13:{1W:"&2s;",2M:R,46:11,44:11,34:"4n",1x:{21:"4o 1m",2P:"?",1X:"1v\\n\\n",3E:"4r\'t 4t 1D O: ",4g:"4m 4B\'t 51 O 1z-1k 4F: ",37:\'<!4T 1z 4S "-//4V//3H 4W 1.0 4Z//4Y" "1Z://2y.3L.3K/4X/3I/3H/3I-4P.4J"><1z 4I="1Z://2y.3L.3K/4L/5L"><3J><4N 1Z-4M="5G-5M" 6K="2O/1z; 6J=6I-8" /><1t>6L 1v</1t></3J><3B 1L="25-6M:6Q,6P,6O,6N-6F;6y-2f:#6x;2f:#6w;25-22:6v;2O-3D:3C;"><T 1L="2O-3D:3C;3w-32:1.6z;"><T 1L="25-22:6A-6E;">1v</T><T 1L="25-22:.6C;3w-6B:6R;"><T>3v 3.0.76 (72 73 3x)</T><T><a 2h="1Z://3u.2w/1v" 1F="38" 1L="2f:#3y">1Z://3u.2w/1v</a></T><T>70 17 6U 71.</T><T>6T 6X-3x 6Y 6D.</T></T><T>6t 61 60 J 1k, 5Z <a 2h="6u://2y.62.2w/63-66/65?64=5X-5W&5P=5O" 1L="2f:#3y">5R</a> 5V <2R/>5U 5T 5S!</T></T></3B></1z>\'}},1Y:{2j:N,2A:{}},1U:{},3A:{6n:/\\/\\*[\\s\\S]*?\\*\\//2c,6m:/\\/\\/.*$/2c,6l:/#.*$/2c,6k:/"([^\\\\"\\n]|\\\\.)*"/g,6o:/\'([^\\\\\'\\n]|\\\\.)*\'/g,6p:1f M(\'"([^\\\\\\\\"]|\\\\\\\\.)*"\',"3z"),6s:1f M("\'([^\\\\\\\\\']|\\\\\\\\.)*\'","3z"),6q:/(&1y;|<)!--[\\s\\S]*?--(&1G;|>)/2c,3M:/\\w+:\\/\\/[\\w-.\\/?%&=:@;]*/g,6a:{18:/(&1y;|<)\\?=?/g,1b:/\\?(&1G;|>)/g},69:{18:/(&1y;|<)%=?/g,1b:/%(&1G;|>)/g},6d:{18:/(&1y;|<)\\s*1k.*?(&1G;|>)/2T,1b:/(&1y;|<)\\/\\s*1k\\s*(&1G;|>)/2T}},16:{1H:6(a){6 b(i,k){H e.16.2o(i,k,e.13.1x[k])}O(K c=\'<T 1g="16">\',d=e.16.2x,h=d.2X,g=0;g<h.L;g++)c+=(d[h[g]].1H||b)(a,h[g]);c+="</T>";H c},2o:6(a,b,c){H\'<2W><a 2h="#" 1g="6e 6h\'+b+" "+b+\'">\'+c+"</a></2W>"},2b:6(a){K b=a.1F,c=b.1l||"";b=B(p(b,".20",R).1c);K d=6(h){H(h=15(h+"6f(\\\\w+)").X(c))?h[1]:N}("6g");b&&d&&e.16.2x[d].2B(b);a.3N()},2x:{2X:["21","2P"],21:{1H:6(a){I(a.V("2l")!=R)H"";K b=a.V("1t");H e.16.2o(a,"21",b?b:e.13.1x.21)},2B:6(a){a=1E.6j(t(a.1c));a.1l=a.1l.Q("47","")}},2P:{2B:6(){K a="68=0";a+=", 18="+(31.30-33)/2+", 32="+(31.2Z-2Y)/2+", 30=33, 2Z=2Y";a=a.Q(/^,/,"");a=1P.6Z("","38",a);a.2C();K b=a.1E;b.6W(e.13.1x.37);b.6V();a.2C()}}}},35:6(a,b){K c;I(b)c=[b];Y{c=1E.36(e.13.34);O(K d=[],h=0;h<c.L;h++)d.U(c[h]);c=d}c=c;d=[];I(e.13.2M)c=c.1O(z());I(c.L===0)H d;O(h=0;h<c.L;h++){O(K g=c[h],i=a,k=c[h].1l,j=3W 0,l={},m=1f M("^\\\\[(?<2V>(.*?))\\\\]$"),s=1f M("(?<27>[\\\\w-]+)\\\\s*:\\\\s*(?<1T>[\\\\w-%#]+|\\\\[.*?\\\\]|\\".*?\\"|\'.*?\')\\\\s*;?","g");(j=s.X(k))!=N;){K o=j.1T.Q(/^[\'"]|[\'"]$/g,"");I(o!=N&&m.1A(o)){o=m.X(o);o=o.2V.L>0?o.2V.1e(/\\s*,\\s*/):[]}l[j.27]=o}g={1F:g,1n:C(i,l)};g.1n.1D!=N&&d.U(g)}H d},1M:6(a,b){K c=J.35(a,b),d=N,h=e.13;I(c.L!==0)O(K g=0;g<c.L;g++){b=c[g];K i=b.1F,k=b.1n,j=k.1D,l;I(j!=N){I(k["1z-1k"]=="R"||e.2v["1z-1k"]==R){d=1f e.4l(j);j="4O"}Y I(d=A(j))d=1f d;Y 6H;l=i.3X;I(h.2M){l=l;K m=x(l),s=11;I(m.1i("<![6G[")==0){m=m.4h(9);s=R}K o=m.L;I(m.1i("]]\\>")==o-3){m=m.4h(0,o-3);s=R}l=s?m:l}I((i.1t||"")!="")k.1t=i.1t;k.1D=j;d.2Q(k);b=d.2F(l);I((i.1c||"")!="")b.1c=i.1c;i.2G.74(b,i)}}},2E:6(a){w(1P,"4k",6(){e.1M(a)})}};e.2E=e.2E;e.1M=e.1M;e.2L=6(a,b,c){J.1T=a;J.P=b;J.L=a.L;J.23=c;J.1V=N};e.2L.Z.1q=6(){H J.1T};e.4l=6(a){6 b(j,l){O(K m=0;m<j.L;m++)j[m].P+=l}K c=A(a),d,h=1f e.1U.5Y,g=J,i="2F 1H 2Q".1e(" ");I(c!=N){d=1f c;O(K k=0;k<i.L;k++)(6(){K j=i[k];g[j]=6(){H h[j].1p(h,14)}})();d.28==N?1P.1X(e.13.1x.1X+(e.13.1x.4g+a)):h.2J.U({1I:d.28.17,2D:6(j){O(K l=j.17,m=[],s=d.2J,o=j.P+j.18.L,F=d.28,q,G=0;G<s.L;G++){q=y(l,s[G]);b(q,o);m=m.1O(q)}I(F.18!=N&&j.18!=N){q=y(j.18,F.18);b(q,j.P);m=m.1O(q)}I(F.1b!=N&&j.1b!=N){q=y(j.1b,F.1b);b(q,j.P+j[0].5Q(j.1b));m=m.1O(q)}O(j=0;j<m.L;j++)m[j].1V=c.1V;H m}})}};e.4j=6(){};e.4j.Z={V:6(a,b){K c=J.1n[a];c=c==N?b:c;K d={"R":R,"11":11}[c];H d==N?c:d},3Y:6(a){H 1E.4i(a)},4c:6(a,b){K c=[];I(a!=N)O(K d=0;d<a.L;d++)I(1j a[d]=="2m")c=c.1O(y(b,a[d]));H J.4e(c.6b(D))},4e:6(a){O(K b=0;b<a.L;b++)I(a[b]!==N)O(K c=a[b],d=c.P+c.L,h=b+1;h<a.L&&a[b]!==N;h++){K g=a[h];I(g!==N)I(g.P>d)1N;Y I(g.P==c.P&&g.L>c.L)a[b]=N;Y I(g.P>=c.P&&g.P<d)a[h]=N}H a},4d:6(a){K b=[],c=2u(J.V("2i-1s"));v(a,6(d,h){b.U(h+c)});H b},3U:6(a){K b=J.V("1M",[]);I(1j b!="2m"&&b.U==N)b=[b];a:{a=a.1q();K c=3W 0;O(c=c=1Q.6c(c||0,0);c<b.L;c++)I(b[c]==a){b=c;1N a}b=-1}H b!=-1},2r:6(a,b,c){a=["1s","6i"+b,"P"+a,"6r"+(b%2==0?1:2).1q()];J.3U(b)&&a.U("67");b==0&&a.U("1N");H\'<T 1g="\'+a.1K(" ")+\'">\'+c+"</T>"},3Q:6(a,b){K c="",d=a.1e("\\n").L,h=2u(J.V("2i-1s")),g=J.V("2z-1s-2t");I(g==R)g=(h+d-1).1q().L;Y I(3R(g)==R)g=0;O(K i=0;i<d;i++){K k=b?b[i]:h+i,j;I(k==0)j=e.13.1W;Y{j=g;O(K l=k.1q();l.L<j;)l="0"+l;j=l}a=j;c+=J.2r(i,k,a)}H c},49:6(a,b){a=x(a);K c=a.1e("\\n");J.V("2z-1s-2t");K d=2u(J.V("2i-1s"));a="";O(K h=J.V("1D"),g=0;g<c.L;g++){K i=c[g],k=/^(&2s;|\\s)+/.X(i),j=N,l=b?b[g]:d+g;I(k!=N){j=k[0].1q();i=i.1o(j.L);j=j.Q(" ",e.13.1W)}i=x(i);I(i.L==0)i=e.13.1W;a+=J.2r(g,l,(j!=N?\'<17 1g="\'+h+\' 5N">\'+j+"</17>":"")+i)}H a},4f:6(a){H a?"<4a>"+a+"</4a>":""},4b:6(a,b){6 c(l){H(l=l?l.1V||g:g)?l+" ":""}O(K d=0,h="",g=J.V("1D",""),i=0;i<b.L;i++){K k=b[i],j;I(!(k===N||k.L===0)){j=c(k);h+=u(a.1o(d,k.P-d),j+"48")+u(k.1T,j+k.23);d=k.P+k.L+(k.75||0)}}h+=u(a.1o(d),c()+"48");H h},1H:6(a){K b="",c=["20"],d;I(J.V("2k")==R)J.1n.16=J.1n.1u=11;1l="20";J.V("2l")==R&&c.U("47");I((1u=J.V("1u"))==11)c.U("6S");c.U(J.V("1g-27"));c.U(J.V("1D"));a=a.Q(/^[ ]*[\\n]+|[\\n]*[ ]*$/g,"").Q(/\\r/g," ");b=J.V("43-22");I(J.V("42-45")==R)a=n(a,b);Y{O(K h="",g=0;g<b;g++)h+=" ";a=a.Q(/\\t/g,h)}a=a;a:{b=a=a;h=/<2R\\s*\\/?>|&1y;2R\\s*\\/?&1G;/2T;I(e.13.46==R)b=b.Q(h,"\\n");I(e.13.44==R)b=b.Q(h,"");b=b.1e("\\n");h=/^\\s*/;g=4Q;O(K i=0;i<b.L&&g>0;i++){K k=b[i];I(x(k).L!=0){k=h.X(k);I(k==N){a=a;1N a}g=1Q.4q(k[0].L,g)}}I(g>0)O(i=0;i<b.L;i++)b[i]=b[i].1o(g);a=b.1K("\\n")}I(1u)d=J.4d(a);b=J.4c(J.2J,a);b=J.4b(a,b);b=J.49(b,d);I(J.V("41-40"))b=E(b);1j 2H!="1d"&&2H.3S&&2H.3S.1C(/5s/)&&c.U("5t");H b=\'<T 1c="\'+t(J.1c)+\'" 1g="\'+c.1K(" ")+\'">\'+(J.V("16")?e.16.1H(J):"")+\'<3Z 5z="0" 5H="0" 5J="0">\'+J.4f(J.V("1t"))+"<3T><3P>"+(1u?\'<2d 1g="1u">\'+J.3Q(a)+"</2d>":"")+\'<2d 1g="17"><T 1g="3O">\'+b+"</T></2d></3P></3T></3Z></T>"},2F:6(a){I(a===N)a="";J.17=a;K b=J.3Y("T");b.3X=J.1H(a);J.V("16")&&w(p(b,".16"),"5c",e.16.2b);J.V("3V-17")&&w(p(b,".17"),"56",f);H b},2Q:6(a){J.1c=""+1Q.5d(1Q.5n()*5k).1q();e.1Y.2A[t(J.1c)]=J;J.1n=C(e.2v,a||{});I(J.V("2k")==R)J.1n.16=J.1n.1u=11},5j:6(a){a=a.Q(/^\\s+|\\s+$/g,"").Q(/\\s+/g,"|");H"\\\\b(?:"+a+")\\\\b"},5f:6(a){J.28={18:{1I:a.18,23:"1k"},1b:{1I:a.1b,23:"1k"},17:1f M("(?<18>"+a.18.1m+")(?<17>.*?)(?<1b>"+a.1b.1m+")","5o")}}};H e}();1j 2e!="1d"&&(2e.1v=1v);',62,441,'||||||function|||||||||||||||||||||||||||||||||||||return|if|this|var|length|XRegExp|null|for|index|replace|true||div|push|getParam|call|exec|else|prototype||false|lastIndex|config|arguments|RegExp|toolbar|code|left|captureNames|slice|right|id|undefined|split|new|class|addToken|indexOf|typeof|script|className|source|params|substr|apply|toString|String|line|title|gutter|SyntaxHighlighter|_xregexp|strings|lt|html|test|OUTSIDE_CLASS|match|brush|document|target|gt|getHtml|regex|global|join|style|highlight|break|concat|window|Math|isRegExp|throw|value|brushes|brushName|space|alert|vars|http|syntaxhighlighter|expandSource|size|css|case|font|Fa|name|htmlScript|dA|can|handler|gm|td|exports|color|in|href|first|discoveredBrushes|light|collapse|object|cache|getButtonHtml|trigger|pattern|getLineHtml|nbsp|numbers|parseInt|defaults|com|items|www|pad|highlighters|execute|focus|func|all|getDiv|parentNode|navigator|INSIDE_CLASS|regexList|hasFlag|Match|useScriptTags|hasNamedCapture|text|help|init|br|input|gi|Error|values|span|list|250|height|width|screen|top|500|tagName|findElements|getElementsByTagName|aboutDialog|_blank|appendChild|charAt|Array|copyAsGlobal|setFlag|highlighter_|string|attachEvent|nodeName|floor|backref|output|the|TypeError|sticky|Za|iterate|freezeTokens|scope|type|textarea|alexgorbatchev|version|margin|2010|005896|gs|regexLib|body|center|align|noBrush|require|childNodes|DTD|xhtml1|head|org|w3|url|preventDefault|container|tr|getLineNumbersHtml|isNaN|userAgent|tbody|isLineHighlighted|quick|void|innerHTML|create|table|links|auto|smart|tab|stripBrs|tabs|bloggerMode|collapsed|plain|getCodeLinesHtml|caption|getMatchesHtml|findMatches|figureOutLineNumbers|removeNestedMatches|getTitleHtml|brushNotHtmlScript|substring|createElement|Highlighter|load|HtmlScript|Brush|pre|expand|multiline|min|Can|ignoreCase|find|blur|extended|toLowerCase|aliases|addEventListener|innerText|textContent|wasn|select|createTextNode|removeChild|option|same|frame|xmlns|dtd|twice|1999|equiv|meta|htmlscript|transitional|1E3|expected|PUBLIC|DOCTYPE|on|W3C|XHTML|TR|EN|Transitional||configured|srcElement|Object|after|run|dblclick|matchChain|valueOf|constructor|default|switch|click|round|execAt|forHtmlScript|token|gimy|functions|getKeywords|1E6|escape|within|random|sgi|another|finally|supply|MSIE|ie|toUpperCase|catch|returnValue|definition|event|border|imsx|constructing|one|Infinity|from|when|Content|cellpadding|flags|cellspacing|try|xhtml|Type|spaces|2930402|hosted_button_id|lastIndexOf|donate|active|development|keep|to|xclick|_s|Xml|please|like|you|paypal|cgi|cmd|webscr|bin|highlighted|scrollbars|aspScriptTags|phpScriptTags|sort|max|scriptScriptTags|toolbar_item|_|command|command_|number|getElementById|doubleQuotedString|singleLinePerlComments|singleLineCComments|multiLineCComments|singleQuotedString|multiLineDoubleQuotedString|xmlComments|alt|multiLineSingleQuotedString|If|https|1em|000|fff|background|5em|xx|bottom|75em|Gorbatchev|large|serif|CDATA|continue|utf|charset|content|About|family|sans|Helvetica|Arial|Geneva|3em|nogutter|Copyright|syntax|close|write|2004|Alex|open|JavaScript|highlighter|July|02|replaceChild|offset|83'.split('|'),0,{}))
-;
-/**
- * SyntaxHighlighter
- * http://alexgorbatchev.com/SyntaxHighlighter
- *
- * SyntaxHighlighter is donationware. If you are using it, please donate.
- * http://alexgorbatchev.com/SyntaxHighlighter/donate.html
- *
- * @version
- * 3.0.83 (July 02 2010)
- * 
- * @copyright
- * Copyright (C) 2004-2010 Alex Gorbatchev.
- *
- * @license
- * Dual licensed under the MIT and GPL licenses.
- */
-eval(function(p,a,c,k,e,d){e=function(c){return(c<a?'':e(parseInt(c/a)))+((c=c%a)>35?String.fromCharCode(c+29):c.toString(36))};if(!''.replace(/^/,String)){while(c--){d[e(c)]=k[c]||e(c)}k=[function(e){return d[e]}];e=function(){return'\\w+'};c=1};while(c--){if(k[c]){p=p.replace(new RegExp('\\b'+e(c)+'\\b','g'),k[c])}}return p}('(2(){1 h=5;h.I=2(){2 n(c,a){4(1 d=0;d<c.9;d++)i[c[d]]=a}2 o(c){1 a=r.H("J"),d=3;a.K=c;a.M="L/t";a.G="t";a.u=a.v=2(){6(!d&&(!8.7||8.7=="F"||8.7=="z")){d=q;e[c]=q;a:{4(1 p y e)6(e[p]==3)B a;j&&5.C(k)}a.u=a.v=x;a.D.O(a)}};r.N.R(a)}1 f=Q,l=h.P(),i={},e={},j=3,k=x,b;5.T=2(c){k=c;j=q};4(b=0;b<f.9;b++){1 m=f[b].w?f[b]:f[b].S(/\\s+/),g=m.w();n(m,g)}4(b=0;b<l.9;b++)6(g=i[l[b].E.A]){e[g]=3;o(g)}}})();',56,56,'|var|function|false|for|SyntaxHighlighter|if|readyState|this|length|||||||||||||||||true|document||javascript|onload|onreadystatechange|pop|null|in|complete|brush|break|highlight|parentNode|params|loaded|language|createElement|autoloader|script|src|text|type|body|removeChild|findElements|arguments|appendChild|split|all'.split('|'),0,{}))
-;
-/**
- * SyntaxHighlighter
- * http://alexgorbatchev.com/SyntaxHighlighter
- *
- * SyntaxHighlighter is donationware. If you are using it, please donate.
- * http://alexgorbatchev.com/SyntaxHighlighter/donate.html
- *
- * @version
- * 3.0.83 (July 02 2010)
- * 
- * @copyright
- * Copyright (C) 2004-2010 Alex Gorbatchev.
- *
- * @license
- * Dual licensed under the MIT and GPL licenses.
- */
-;(function()
-{
-	// CommonJS
-	typeof(require) != 'undefined' ? SyntaxHighlighter = require('shCore').SyntaxHighlighter : null;
+Siesta.CurrentLocale = Siesta.CurrentLocale || {
 
-	function Brush()
-	{
-		var keywords =	'break case catch continue ' +
-						'default delete do else false  ' +
-						'for function if in instanceof ' +
-						'new null return super switch ' +
-						'this throw true try typeof var while with'
-						;
-
-		var r = SyntaxHighlighter.regexLib;
-		
-		this.regexList = [
-			{ regex: r.multiLineDoubleQuotedString,					css: 'string' },			// double quoted strings
-			{ regex: r.multiLineSingleQuotedString,					css: 'string' },			// single quoted strings
-			{ regex: r.singleLineCComments,							css: 'comments' },			// one line comments
-			{ regex: r.multiLineCComments,							css: 'comments' },			// multiline comments
-			{ regex: /\s*#.*/gm,									css: 'preprocessor' },		// preprocessor tags like #region and #endregion
-			{ regex: new RegExp(this.getKeywords(keywords), 'gm'),	css: 'keyword' }			// keywords
-			];
-	
-		this.forHtmlScript(r.scriptScriptTags);
-	};
-
-	Brush.prototype	= new SyntaxHighlighter.Highlighter();
-	Brush.aliases	= ['js', 'jscript', 'javascript'];
-
-	SyntaxHighlighter.brushes.JScript = Brush;
-
-	// CommonJS
-	typeof(exports) != 'undefined' ? exports.Brush = Brush : null;
-})();
-;
-Ext.define('ExtX.Reference.Slot', {
-    override : 'Ext.Component',
-
-    slot            : null,
-    __COLLECTOR__   : null,
-
-    onRemoved : function() {
-        if (this.__COLLECTOR__) {
-            delete this.__COLLECTOR__.slots[this.slot]
-            delete this.__COLLECTOR__
-        }
+    "Siesta.Harness" : {
+        preloadHasFailed            : 'Preload of {url} has failed',
+        preloadHasFailedForTest     : 'Preload of {url} has failed for test {test}',
+        staticDeprecationWarning    : 'You are calling static method `{methodName}` of the harness class {harnessClass}. Such usage is deprecated now, please switch to creation of the harness class instance: `var harness = new {harnessClass}()`',
+        resourceFailedToLoad        : 'Loading of a {nodeName} resource failed'
+    },
     
-        this.callOverridden(arguments)
+    "Siesta.Harness.Browser.UI.AboutWindow" : {
+
+        upgradeText : 'Upgrade to Siesta Standard',
+        closeText   : 'Close',
+        titleText   : 'ABOUT SIESTA (v. {VERSION})',
+
+        bodyText    : '<img height="35" src="http://www.bryntum.com/bryntum-logo.png"/>\
+             <p>Siesta is a JavaScript unit and functional test tool made by <a target="_blank" href="http://www.bryntum.com">Bryntum</a>. You can test any web page or JavaScript code, including Ext JS, jQuery or NodeJS. \
+             Siesta comes in two versions: <strong>Lite</strong> and <strong>Standard</strong>. With Lite, you can launch your tests in the browser UI. \
+             With the Standard version, you can also automate your tests and use the automation scripts together with tools like PhantomJS or Selenium WebDriver. </p>\
+             Siesta would not be possible without these awesome products & libraries: <br>\
+                     <ul style="padding:0 0 0 30px">\
+                       <li><a href="http://sencha.com/extjs">Ext JS</a></li> \
+                       <li><a href="http://jquery.com">jQuery</a></li> \
+                       <li><a href="http://http://alexgorbatchev.com/SyntaxHighlighter/">SyntaxHighlighter</a></li> \
+                       <li><a href="http://joose.it/">Joose</a></li> \
+                       <li><a href="https://github.com/gotwarlost/istanbul">Istanbul</a></li> \
+                    </ul>'
+    },
+
+    "Siesta.Harness.Browser.UI.AssertionGrid" : {
+        initializingText    : 'Initializing test...'
+    },
+
+    "Siesta.Harness.Browser.UI.CoverageReport" : {
+        closeText               : 'Close',
+        showText                : 'Show: ',
+        lowText                 : 'Low',
+        mediumText              : 'Med',
+        highText                : 'High',
+        statementsText          : 'Statements',
+        branchesText            : 'Branches',
+        functionsText           : 'Functions',
+        linesText               : 'Lines',
+        loadingText             : "Loading coverage data...",
+        loadingErrorText        : 'Loading error',
+        loadingErrorMessageText : 'Could not load the report data from this url: ',
+        globalNamespaceText     : '[Global namespace]'
+    },
+
+    "Siesta.Harness.Browser.UI.DomContainer" : {
+        title                   : 'DOM Panel',
+        viewDocsText            : 'View documentation for ',
+        docsUrlText             : 'http://docs.sencha.com/{0}/apidocs/#!/api/{1}'
+    },
+
+    "Siesta.Harness.Browser.UI.ResultPanel" : {
+        rerunText               : 'Run test',
+        toggleDomVisibleText    : 'Toggle DOM visible',
+        viewSourceText          : 'View source',
+        showFailedOnlyText      : 'Show failed only',
+        componentInspectorText  : 'Toggle Ext Component Inspector',
+        eventRecorderText       : 'Event Recorder',
+        closeText               : 'Close'
+    },
+
+    "Siesta.Harness.Browser.UI.TestGrid" : {
+        title                   : 'Test list',
+        nameText                : 'Name',
+        filterTestsText         : 'Filter tests',
+        expandCollapseAllText   : 'Expand / Collapse all',
+        runCheckedText          : 'Run checked',
+        runFailedText           : 'Run failed',
+        runAllText              : 'Run all',
+        showCoverageReportText  : 'Show coverage report',
+        passText                : 'Pass',
+        failText                : 'Fail',
+        optionsText             : 'Options...',
+        todoPassedText          : 'todo assertion(s) passed',
+        todoFailedText          : 'todo assertion(s) failed',
+        viewDomText             : 'View DOM',
+        transparentExText       : 'Transparent exceptions',
+        cachePreloadsText       : 'Cache preloads',
+        autoLaunchText          : 'Auto launch',
+        speedRunText            : 'Speed run',
+        breakOnFailText         : 'Break on fail',
+        debuggerOnFailText      : 'Debugger on fail',
+        aboutText               : 'About Siesta',
+        documentationText       : 'Siesta Documentation',
+        siestaDocsUrl           : 'http://bryntum.com/docs/siesta',
+        filterFieldTooltip      : 'Supported formats for tests filtering:\n1) TERM1 TERM2 - both "TERM1" and "TERM2" should present in the test url\n' +
+            '2) TERM1 TERM2 | TERM3 TERM4 | ... - both "TERM1" and "TERM2" should present in the test url, OR both TERM3 and TERM4, etc, can be ' +
+            'repeated indefinitely\n' +
+            '3) GROUP_TERM > TEST_TERM - filters only withing the specified `group`',
+        landscape               : 'Landscape'
+    },
+
+    "Siesta.Harness.Browser.UI.VersionUpdateButton" : {
+
+        newUpdateText           : 'New Update Available...',
+        updateWindowTitleText   : 'New version available for download! Current version: ',
+        cancelText              : 'Cancel',
+        changelogLoadFailedText : 'Bummer! Failed to fetch changelog.',
+        downloadText            : 'Download ',
+        liteText                : ' (Lite)',
+        standardText            : ' (Standard)',
+        loadingChangelogText    : 'Loading changelog...'
+    },
+
+    "Siesta.Harness.Browser.UI.Viewport" : {
+        apiLinkText       : 'API Documentation',
+        apiLinkUrl        : 'http://bryntum.com/docs/siesta',
+        uncheckOthersText : 'Uncheck others (and check this)',
+        uncheckAllText    : 'Uncheck all',
+        checkAllText      : 'Check all',
+        runThisText       : 'Run this',
+        expandAll           : 'Expand all',
+        collapseAll         : 'Collapse all',
+        filterToCurrentGroup    : 'Filter to current group',
+        filterToFailed          : 'Filter to failed',
+        httpWarningTitle  : 'You must use a web server',
+        httpWarningDesc   : 'You must run Siesta in a web server context, and not using the file:/// protocol',
+        viewSource        : 'View source'
     },
 
 
-    beforeDestroy : function () {
-        if (this.__COLLECTOR__) {
-            delete this.__COLLECTOR__.slots[this.slot]
-            delete this.__COLLECTOR__
-        }
+    "Siesta.Harness.Browser" : {
+        codeCoverageWarningText : "Can not enable code coverage - did you forget to include the `siesta-coverage-all.js` on the harness page?",
+        noJasmine               : "No `jasmine` object found on spec runner page",
+        noJasmineSiestaReporter : "Can't find SiestaReporter in Jasmine. \nDid you add the `siesta/bin/jasmine-siesta-reporter.js` file to your spec runner page?"
+    },
+
+    "Siesta.Result.Assertion" : {
+        todoText        : 'TODO: ',
+        passText        : 'ok',
+        failText        : 'fail'
+    },
+
+    "Siesta.Role.ConsoleReporter" : {
+        passText            : 'PASS',
+        failText            : 'FAIL',
+        warnText            : 'WARN',
+        errorText           : 'ERROR',
+        missingFileText     : 'Test file [{URL}] not found.',
+        allTestsPassedText  : 'All tests passed',
+        failuresFoundText   : 'There are failures'
+    },
+
+    "Siesta.Test.Action.Drag" : {
+        byOrToMissingText   : 'Either "to" or "by" configuration option is required for "drag" step',
+        byAndToDefinedText  : 'Exactly one of "to" or "by" configuration options is required for "drag" step, not both'
+    },
+
+    "Siesta.Test.Action.Eval" : {
+        invalidMethodNameText : "Invalid method name: ",
+        wrongFormatText       : "Wrong format of the action string: ",
+        parseErrorText        : "Can't parse arguments: "
+    },
+
+    "Siesta.Test.Action.Wait" : {
+        missingMethodText     : 'Could not find a waitFor method named '
+    },
+
+    "Siesta.Test.BDD.Expectation" : {
+        expectText                  : 'Expect',
+        needNotText                 : 'Need not',
+        needText                    : 'Need',
+        needMatchingText            : 'Need matching',
+        needNotMatchingText         : 'Need not matching',
+        needStringNotContainingText : 'Need string not containing',
+        needStringContainingText    : 'Need string containing',
+        needArrayNotContainingText  : 'Need array not containing',
+        needArrayContainingText     : 'Need array containing',
+        needGreaterEqualThanText    : 'Need value greater or equal than',
+        needGreaterThanText         : 'Need value greater than',
+        needLessThanText            : 'Need value less than',
+        needLessEqualThanText       : 'Need value less or equal than',
+        needValueNotCloseToText     : 'Need value not close to',
+        needValueCloseToText        : 'Need value close to',
+        toBeText                    : 'to be',
+        toBeDefinedText             : 'to be defined',
+        toBeUndefinedText           : 'to be undefined',
+        toBeEqualToText             : 'to be equal to',
+        toBeTruthyText              : 'to be truthy',
+        toBeFalsyText               : 'to be falsy',
+        toMatchText                 : 'to match',
+        toContainText               : 'to contain',
+        toBeLessThanText            : 'to be less than',
+        toBeGreaterThanText         : 'to be greater than',
+        toBeCloseToText             : 'to be close to',
+        toThrowText                 : 'to throw exception',
+        thresholdIsText             : 'Threshold is ',
+        exactMatchText              : 'Exact match text',
+        thrownExceptionText         : 'Thrown exception',
+        noExceptionThrownText       : 'No exception thrown',
+        wrongSpy                    : 'Incorrect spy instance',
+        toHaveBeenCalledDescTpl     : 'Expect method {methodName} to have been called {need} times',
+        actualNbrOfCalls            : 'Actual number of calls',
+        expectedNbrOfCalls          : 'Expected number of calls',
+        toHaveBeenCalledWithDescTpl : 'Expect method {methodName} to have been called at least once with the specified arguments'
+    },
+
+    "Siesta.Test.ExtJS.Ajax"        : {
+        ajaxIsLoading               : 'An Ajax call is currently loading',
+        allAjaxRequestsToComplete   : 'all ajax requests to complete',
+        ajaxRequest                 : 'ajax request',
+        toComplete                  : 'to complete'
+    },
+
+    "Siesta.Test.ExtJS.Component"   : {
+        badInputText                : 'Expected an Ext.Component, got',
+        toBeVisible                 : 'to be visible',
+        toNotBeVisible              : 'to not be visible',
+        component                   : 'component',
+        Component                   : 'Component',
+        componentQuery              : 'componentQuery',
+        compositeQuery              : 'composite query',
+        toReturnEmptyArray          : 'to return an empty array',
+        toReturnEmpty               : 'to return empty',
+        toReturnAVisibleComponent   : 'to return a visible component',
+        toReturnHiddenCmp           : 'to return a hidden/missing component',
+        invalidDestroysOkInput      : 'No components provided, or component query returned empty result',
+        exception                   : 'Exception',
+        exceptionAnnotation         : 'Exception thrown while calling "destroy" method of',
+        destroyFailed               : 'was not destroyed (probably destroy was canceled in the `beforedestroy` listener)',
+        destroyPassed               : 'All passed components were destroyed ok'
+    },
+
+    "Siesta.Test.ExtJS.DataView"    : {
+        view                        : 'view',
+        toRender                    : 'to render'
+    },
+
+    "Siesta.Test.ExtJS.Element"     : {
+        top                         : 'top',
+        left                        : 'left',
+        bottom                      : 'bottom',
+        right                       : 'right'
+    },
+
+    "Siesta.Test.ExtJS.Grid"     : {
+        waitForRowsVisible          : 'rows to show for panel with id',
+        waitForCellEmpty            : 'cell to be empty'
+    },
+
+    "Siesta.Test.ExtJS.Observable" : {
+        hasListenerInvalid           : '1st argument for `t.hasListener` should be an observable instance',
+        hasListenerPass              : 'Observable has listener for {eventName}',
+        hasListenerFail              : 'Provided observable has no listeners for event',
+
+        isFiredWithSignatureNotFired : 'event was not fired during the test"',
+        observableFired              : 'Observable fired',
+        correctSignature             : 'with correct signature',
+        incorrectSignature           : 'with incorrect signature'
+    },
+
+    "Siesta.Test.ExtJS.Store"        : {
+        storesToLoad                 : 'stores to load',
+        failedToLoadStore            : 'Failed to load the store',
+        URL                          : 'URL'
+    },
+
+    "Siesta.Test.Action"             : {
+        missingTestAction            : 'Action [{0}] requires `{1}` method in your test class'
+    },
+
+    "Siesta.Test.BDD"                : {
+        codeBodyMissing              : 'Code body is not provided for',
+        codeBodyOf                   : 'Code body of',
+        missingFirstArg              : 'does not declare a test instance as 1st argument',
+        iitFound                     : 't.iit should only be used during debugging',
+        noObject                     : 'No object to spy on'
+    },
+
+    "Siesta.Test.BDD.Spy"                : {
+        spyingNotOnFunction          : 'Trying to create a spy over a non-function property'
+    },
     
-        this.callOverridden(arguments)
+    "Siesta.Test.Browser"            : {
+        popupsDisabled                  : 'Failed to open the popup for url: {url}. Enable the popups in the browser settings.',
+        noDomElementFound            : 'No DOM element found for CSS selector',
+        noActionTargetFound          : 'No action target found for',
+        waitForEvent                 : 'observable to fire its',
+        event                        : 'event',
+        wrongFormat                  : 'Wrong format for expected number of events',
+        unrecognizedSignature        : 'Unrecognized signature for `firesOk`',
+        observableFired              : 'Observable fired',
+        observableFiredOk            : 'Observable fired expected number of',
+        actualNbrEvents              : 'Actual number of events',
+        expectedNbrEvents            : 'Expected number of events',
+        events                       : 'events',
+        noElementFound               : 'Could not find any element at',
+        targetElementOfAction        : 'Target element of action',
+        targetElementOfSomeAction    : 'Target element of some action',
+        isNotVisible                 : 'is not visible or not reachable',
+        text                         : 'text',
+        toBePresent                  : 'to be present',
+        toNotBePresent               : 'to not be present',
+        target                       : 'target',
+        toAppear                     : 'to appear',
+        targetMoved                  : 'Moving target detected, retargeting initiated',
+        alertMethodNotCalled         : 'Expected a call to alert()',
+        focusLostWarning             : 'Focus has left the test window {url}',
+        focusLostWarningLauncher     : 'Focus has left the test window {url}, it will be restarted. This behavior is controled with the --restart-on-blur option.'
+    },
+
+    "Siesta.Test.Date"               :  {
+        isEqualTo                    : 'is equal to',
+        Got                          : 'Got'
+    },
+
+    "Siesta.Test.Element"            : {
+        elementContent               : 'element content',
+        toAppear                     : 'to appear',
+        toDisappear                  : 'to disappear',
+        toAppearAt                   : 'to appear at',
+        monkeyException              : 'Monkey testing action did not complete properly - probably an exception was thrown',
+        monkeyNoExceptions           : 'No exceptions thrown during monkey test',
+        monkeyActionLog              : 'Monkey action log',
+        elementHasClass              : 'Element has the CSS class',
+        elementHasNoClass            : 'Element has no CSS class',
+        elementClasses               : 'Classes of element',
+        needClass                    : 'Need CSS class',
+
+        hasStyleDescTpl              : 'Element has correct {value} for CSS style {property}',
+        elementStyles                : 'Styles of element',
+        needStyle                    : 'Need style',
+
+        hasNotStyleDescTpl           : 'Element does not have: {value} for CSS style {property}',
+        hasTheStyle                  : 'Element has the style',
+
+        element                      : 'element',
+        toBeTopEl                    : 'to be the top element at its position',
+        toNotBeTopEl                 : 'to not be the top element at its position',
+
+        selector                     : 'selector',
+        selectors                    : 'selectors',
+        noCssSelector                : 'A CSS selector must be supplied',
+
+        waitForSelectorsBadInput     : 'An array of CSS selectors must be supplied',
+
+        Position                     : 'Position',
+        noElementAtPosition          : 'No element found at the specified position',
+        elementIsAtDescTpl           : 'DOM element or its child is at [ {x}, {y} ] coordinates',
+        topElement                   : 'Top element',
+        elementIsAtPassTpl           : 'DOM element is at [ {x}, {y} ] coordinates',
+        allowChildrenDesc            : 'Need exactly this or its child',
+        allowChildrenAnnotation      : 'Passed element is not the top-most one and not the child of one',
+        shouldBe                     : 'Should be',
+        noChildrenFailAnnotation     : 'Passed element is not the top-most one',
+
+        topLeft                      : '(t-l)',
+        bottomLeft                   : '(b-l)',
+        topRight                     : '(t-r)',
+        bottomRight                  : '(b-r)',
+
+        elementIsNotTopElementPassTpl: 'Element is not the top element on the screen',
+        selectorIsAtPassTpl          : 'Found element matching CSS selector {selector} at [ {xy} ]',
+        elementMatching              : 'Element matching',
+        selectorIsAtFailAnnotation   : 'Passed selector does not match any selector at',
+        selectorExistsFailTpl        : 'No element matching the passed selector found',
+        selectorExistsPassTpl        : 'Found DOM element(s) matching CSS selector {selector}',
+
+        selectorNotExistsFailTpl     : 'Elements found matching the passed selector',
+        selectorNotExistsPassTpl     : 'Did not find any DOM element(s) matching CSS selector {selector}',
+
+        toChangeForElement           : 'to change for element',
+
+        selectorCountIsPassTpl       : 'Found exactly {count} elements matching {selector}',
+        selectorCountIsFailTpl       : 'Found {got} elements matching the selector {selector}, expected {need}',
+        isInViewPassTpl              : 'Passed element is within the visible viewport',
+
+        toAppearInTheViewport        : 'to appear in the viewport',
+
+        elementIsEmptyPassTpl        : 'Passed element is empty',
+        elementIsNotEmptyPassTpl     : 'Passed element is not empty',
+        elementToBeEmpty             : 'element to be empty',
+        elementToNotBeEmpty          : 'element to not be empty'
+    },
+
+    "Siesta.Test.ExtJS"              : {
+        bundleUrlNotFound                   : 'Cannot find Ext JS bundle url',
+        assertNoGlobalExtOverridesInvalid   : 'Was not able to find the Ext JS bundle URL in the `assertNoGlobalExtOverrides` assertion',
+        assertNoGlobalExtOverridesPassTpl   : 'No global Ext overrides found',
+        assertNoGlobalExtOverridesGotDesc   : 'Number of overrides found',
+        foundOverridesFor                   : 'Found overrides for',
+        animationsToFinalize                : 'animations to finalize',
+        extOverridesInvalid                 : 'Was not able to find the ExtJS bundle URL in the `assertMaxNumberOfGlobalExtOverrides` assertion)',
+        foundLessOrEqualThan                : 'Found less or equal than',
+        nbrOverridesFound                   : 'Number of overrides found',
+        globalOverrides                     : 'Ext JS global overrides'
+    },
+
+    "Siesta.Test.ExtJSCore"          : {
+        waitedForRequires           : 'Waiting for required classes took too long - \nCheck the `Net` tab in Firebug and the `loaderPath` config',
+        waitedForExt                 : 'Waiting for Ext.onReady took too long - probably some dependency could not be loaded. \nCheck the `Net` tab in Firebug and the `loaderPath` config',
+        waitedForApp                 : 'Waiting for MVC application launch took too long - no MVC application on test page? \nYou may need to disable the `waitForAppReady` config option',
+        noComponentMatch             : 'Your component query: "{component}" returned no components',
+        multipleComponentMatch       : 'Your component query: "{component}" returned more than 1 component',
+        noComponentFound             : 'No component found for CQ',
+        knownBugIn                   : 'Known bug in',
+        Class                        : 'Class',
+        wasLoaded                    : 'was loaded',
+        wasNotLoaded                 : 'was not loaded',
+        invalidCompositeQuery        : 'Invalid composite query selector',
+        ComponentQuery               : 'ComponentQuery',
+        CompositeQuery               : 'CompositeQuery',
+        matchedNoCmp                 : 'matched no Ext.Component',
+        messageBoxVisible            : 'Message box is visible',
+        messageBoxHidden             : 'Message box is hidden'
+    },
+
+    "Siesta.Test.Function"           : {
+        Need                         : 'need',
+        atLeast                      : 'at least',
+        exactly                      : 'exactly',
+        methodCalledExactly          : 'method was called exactly {n} times',
+        exceptionEvalutingClass      : 'Exception [{e}] caught while evaluating the class name'
+    },
+
+    "Siesta.Test.More"               : {
+        isGreaterPassTpl             : '`{value1}` is greater than `{value2}`',
+        isLessPassTpl                : '`{value1}` is less than `{value2}`',
+        isGreaterEqualPassTpl        : '`{value1}` is greater or equal to`{value2}`',
+        isLessEqualPassTpl           : '`{value1}` is less or equal to`{value2}`',
+        isApproxToPassTpl            : '`{value1}` is approximately equal to `{value2}`',
+
+        needGreaterThan              : 'Need greater than',
+        needGreaterEqualTo           : 'Need greater or equal to',
+        needLessThan                 : 'Need less than',
+        needLessEqualTo              : 'Need less or equal to',
+
+        exactMatch                   : 'Exact match',
+        withinThreshold              : 'Match within treshhold',
+        needApprox                   : 'Need approx',
+        thresholdIs                  : 'Threshold is',
+
+        stringMatchesRe              : '`{string}` matches regexp {regex}',
+        stringNotMatchesRe           : '`{string}` does not match regexp {regex}',
+        needStringMatching           : 'Need string matching',
+        needStringNotMatching        : 'Need string not matching',
+        needStringContaining         : 'Need string containing',
+        needStringNotContaining      : 'Need string not containing',
+        stringHasSubstring           : '`{string}` has a substring: `{regex}`',
+        stringHasNoSubstring         : '`{string}` does not have a substring: `{regex}`',
+
+        throwsOkInvalid              : 'throws_ok accepts a function as 1st argument',
+        didntThrow                   : 'Function did not throw an exception',
+        exMatchesRe                  : 'Function throws exception matching to {expected}',
+        exceptionStringifiesTo       : 'Exception stringifies to',
+        exContainsSubstring          : 'Function throws exception containing a substring: {expected}',
+
+        fnDoesntThrow                : 'Function does not throw any exceptions',
+        fnThrew                      : 'Function threw an exception',
+
+        isInstanceOfPass             : 'Object is an instance of the specified class',
+        needInstanceOf               : 'Need instance of',
+        isAString                    : '{value} is a string',
+        aStringValue                 : 'AStringValue',
+        isAnObject                   : '{value} is an object',
+        anObject                     : 'An object value',
+        isAnArray                    : '{value} is an array',
+        anArrayValue                 : 'An array value',
+        isANumber                    : '{value} is a number',
+        aNumberValue                 : 'a number value',
+        isABoolean                   : '{value} is a boolean',
+        aBooleanValue                : 'a number value',
+        isADate                      : '{value} is a date',
+        aDateValue                   : 'a date value',
+        isARe                        : '{value} is a regular expression',
+        aReValue                     : 'a regular expression',
+        isAFunction                  : '{value} is a function',
+        aFunctionValue               : 'a function',
+        isDeeplyPassTpl              : '{obj1} is deeply equal to {obj2}',
+        isDeeplyStrictPassTpl        : '{obj1} is strictly deeply equal to {obj2}',
+        globalCheckNotSupported      : 'Testing leakage of global variables is not supported on this platform',
+        globalVariables              : 'Global Variables',
+        noGlobalsFound               : 'No unexpected global variables found',
+        globalFound                  : 'Unexpected global found',
+        globalName                   : 'Global name',
+        value                        : 'value',
+
+        conditionToBeFulfilled       : 'condition to be fulfilled',
+        pageToLoad                   : 'page to load',
+        ms                           : 'ms',
+        waitingFor                   : 'Waiting for',
+        waitedTooLong                : 'Waited too long for',
+        conditionNotFulfilled        : 'Condition was not fullfilled during',
+        waitingAborted               : 'Waiting aborted',
+        Waited                       : 'Waited',
+        checkerException             : 'checker threw an exception',
+        Exception                    : 'Exception',
+        msFor                        : 'ms for',
+        forcedWaitFinalization       : 'Forced finalization of waiting for',
+        chainStepNotCompleted        : 'The step in `t.chain()` call did not complete within required timeframe, chain can not proceed',
+        stepNumber                   : 'Step number',
+        oneBased                     : '(1-based)',
+        atLine                       : 'At line',
+        chainStepEx                  : 'Chain step threw an exception',
+        stepFn                       : 'Step function',
+        notUsingNext                 : 'does not use the provided "next" function anywhere',
+        calledMoreThanOnce           : 'The `next` callback of {num} step (1-based) of `t.chain()` call at line {line} is called more than once.',
+        tooManyDifferences           : 'Showing {num} of {total} differences'
+    },
+
+
+    "Siesta.Test.SenchaTouch"               : {
+        STSetupFailed                       : 'Waiting for Ext.setup took too long - some dependency could not be loaded? Check the `Net` tab in Firebug',
+        invalidSwipeDir                     : 'Invalid swipe direction',
+        moveFingerByInvalidInput            : 'Trying to call moveFingerBy without relative distances',
+        scrollUntilFailed                   : 'scrollUntil failed to achieve its mission',
+        scrollUntilElementVisibleInvalid    : 'scrollUntilElementVisible: target or scrollable not provided',
+        scrollerReachPos                    : 'scroller to reach position'
+    },
+
+    "Siesta.Test"                           : {
+        noCodeProvidedToTest                : 'No code provided to test',
+        addingAssertionsAfterDone           : 'Adding assertions after the test has finished',
+        testFailedAndAborted                : 'Assertion failed, test execution aborted',
+        atLine                              : 'at line',
+        of                                  : 'of',
+        character                           : 'character',
+        isTruthy                            : '`{value}` is a "truthy" value',
+        needTruthy                          : 'Need "truthy" value',
+        isFalsy                             : '`{value}` is a "falsy" value',
+        needFalsy                           : 'Need "falsy" value',
+        isEqualTo                           : '`{got}` is equal to `{expected}`',
+        isNotEqualTo                        : '`{got}` is not equal to `{expected}`',
+        needNot                             : 'Need not',
+        isStrictlyEqual                     : '`{got}` is strictly equal to `{expected}`',
+        needStrictly                        : 'Need strictly',
+        isStrictlyNotEqual                  : '`{got}` is strictly not equal to `{expected}`',
+        needStrictlyNot                     : 'Need strictly not',
+        alreadyWaiting                      : 'Already waiting with title',
+        noOngoingWait                       : 'There is no ongoing `wait` action with title',
+        noMatchingEndAsync                  : 'No matching `endAsync` call within',
+        endAsyncMisuse                      : 'Calls to endAsync without argument should only be performed if you have single beginAsync statement',
+        codeBodyMissingForSubTest           : 'Code body is not provided for sub test',
+        codeBodyMissingTestArg              : 'Code body of sub test [{name}] does not declare a test instance as 1st argument',
+        Subtest                             : 'Subtest',
+        Test                                : 'Test',
+        failedToFinishWithin                : 'failed to finish within',
+        threwException                      : 'threw an exception',
+        testAlreadyStarted                  : 'Test has already been started',
+        setupTookTooLong                    : '`setup` method took too long to complete',
+        errorBeforeTestStarted              : 'Error happened before the test started',
+        testStillRunning                    : 'Your test is still considered to be running, if this is unexpected please see console for more information',
+        testNotFinalized                    : 'Your test [{url}] has not finalized, most likely since a timer (setTimeout) is still active. ' +
+                                              'If this is the expected behavior, try setting "overrideSetTimeout : false" on your Harness configuration.',
+        missingDoneCall                     : 'Test has completed, but there was no `t.done()` call. Add it at the bottom, or use `t.beginAsync()` for asynchronous code',
+        allTestsPassed                      : 'All tests passed',
+        
+        'Snoozed until'                     : 'Snoozed until',
+        testTearDownTimeout                 : "Test's tear down process has timeout out"
+    },
+
+    "Siesta.Recorder.UI.Editor.Code"           : {
+        invalidSyntax                       : 'Invalid syntax'
+    },
+
+    "Siesta.Recorder.UI.Editor.DragTarget"     : {
+        targetLabel                         : 'Target',
+        toLabel                             : 'To',
+        byLabel                             : 'By',
+        cancelButtonText                    : 'Cancel',
+        saveButtonText                      : 'Save',
+        
+        dragVariantTitle                    : 'Edit `drag` action',
+        moveCursorVariantTitle              : 'Edit `moveCursor` action'
+    },
+
+    "Siesta.Recorder.UI.RecorderPanel"      : {
+        actionColumnHeader                  : 'Action',
+        offsetColumnHeader                  : 'Offset',
+        queryMatchesNothing                 : 'Query matches no DOM elements or components',
+        queryMatchesMultiple                : 'Query matches multiple components',
+        noVisibleElsFound                   : 'No visible elements found for target',
+        noTestDetected                      : 'No test detected',
+        noTestStarted                       : 'You need to run a test first, or provide a Page URL',
+        recordTooltip                       : 'Record',
+        stopTooltip                         : 'Stop',
+        playTooltip                         : 'Play',
+        clearTooltip                        : 'Clear all',
+        codeWindowTitle                     : 'Code',
+        addNewTooltip                       : 'Add a new step',
+        removeAllPromptTitle                : 'Remove all?',
+        removeAllPromptMessage              : 'Do you want to clear the recorded events?',
+        Error                               : 'Error',
+        showSource                          : 'Show source',
+        showSourceInNewWindow               : 'Show source in new window',
+        newRecording                        : 'New recording...',
+        pageUrl                             : 'Page URL'
+    },
+
+    "Siesta.Recorder.UI.TargetColumn"       : {
+        headerText                          : 'Target / Value',
+        by                                  : 'by',
+        to                                  : 'to',
+        coordinateTargetWarning             : 'Siesta was unable to find a stable selector for this target. Using coordinates as locator is not recommended.'
     }
-})
+};
 
-
-Ext.define('ExtX.Reference.Slot2', {
-
-    override : 'Ext.Container',
-
-    slots       : null,
-
-    onAdd : function () {
-    
-        this.cascade(function (comp) {
-            if (comp.slot && !comp.__COLLECTOR__) {
-        
-                var parentWithSlots = comp.__COLLECTOR__ = comp.up('{slots}')
-            
-                if (parentWithSlots) parentWithSlots.slots[ comp.slot ] = comp
-            }
-        })
-    },
-
-    initComponent : function () {
-        if (this.slots) this.slots = {}
-    
-        this.callOverridden()
-    }
-})
 ;
-(function () {
-    var config = {
-        idProperty : 'id',
-
-        fields : [
-            'id',
-            'url',
-
-            'title',
-
-            { name : 'passCount', type : 'int', defaultValue : 0 },
-            { name : 'failCount', type : 'int', defaultValue : 0 },
-            { name : 'todoPassCount', type : 'int', defaultValue : 0 },
-            { name : 'todoFailCount', type : 'int', defaultValue : 0 },
-
-            { name : 'time', type : 'int', defaultValue : 0 },
-
-            { name : 'checked', defaultValue : false },
-
-            { name : 'folderStatus', defaultValue : 'yellow' },
-
-            // will be set to true for all tests, once the users clicks "run"
-            'isStarting',
-            // will be set to true, right before the scope preload begin
-            'isStarted',
-            // will be set to true, after preload ends and tests launch
-            { name : 'isRunning', type : 'boolean', defaultValue : false },
-            { name : 'isMissing', type : 'boolean', defaultValue : false },
-            { name : 'isFailed', type : 'boolean', defaultValue : false },
-
-            // composite objects
-            'assertionsStore',
-            'test',
-            'descriptor'
-        ]
-    };
+// Localization helper
+Siesta.Resource = (function () {
     
-    var isSenchaTouch = Ext.getVersion && Ext.getVersion('touch')
-
-    Ext.define(
-        'Siesta.Harness.Browser.Model.TestFile',
+    var cacheByNamespace    = {}
+    
+    var Resource    = Class({
+        does    : Siesta.Util.Role.CanFormatStrings,
         
-        Ext.apply({
-            extend      : 'Ext.data.Model',
-            
-            //init        : function () {
-                //this.internalId = this.getId() || this.internalId
-                //debugger;
-            //},
-
-            computeFolderStatus : function () {
-                if (!this.childNodes.length) return 'yellow'
-    
-                var isWorking = false
-                var hasFailed = false
-                var allGreen = true
-    
-                Joose.A.each(this.childNodes, function (childNode) {
-    
-                    if (childNode.isLeaf()) {
-                        var test = childNode.get('test')
-    
-                        if (test && test.isFailed()) {
-                            allGreen = false
-                            hasFailed = true
-    
-                            // stop iteration
-                            return false
-                        }
-    
-                        if (!test && childNode.get('isStarting'))    isWorking = true
-                        if (test && !test.isFinished())     isWorking = true
-                        if (test && !test.isPassed())       allGreen = false
-                        if (!test)                          allGreen = false
-    
-                    } else {
-                        var status = childNode.computeFolderStatus()
-    
-                        if (status == 'red') {
-                            allGreen = false
-                            hasFailed = true
-    
-                            // stop iteration
-                            return false
-                        }
-    
-                        if (status == 'working') {
-                            isWorking = true
-    
-                            // stop iteration
-                            return false
-                        }
-    
-                        if (status == 'yellow')         allGreen = false
-                    }
-                })
-    
-                if (isWorking)  return 'working'
-                if (hasFailed)  return 'red'
-                if (allGreen)   return 'green'
-    
-                return 'yellow'
-            },
-    
-    
-            updateFolderStatus : function () {
-                this.set('folderStatus', this.computeFolderStatus())
-    
-                var parentNode = this.parentNode
-    
-                if (parentNode && !parentNode.isRoot()) parentNode.updateFolderStatus()
-            }
-        }, isSenchaTouch ? { config : config } : config)//,
-        // eof Ext.apply
+        has     : {
+            dict        : null
+        },
         
-        //function () {
-        //    if (!isSenchaTouch) {
-        //        Ext.data.NodeInterface.decorate(this);
-        //
-        //        this.override({
-        //            expand : function () {
-        //                Ext.suspendLayouts();
-        //                this.callParent(arguments);
-        //                Ext.resumeLayouts();
-        //            }
-        //        });
-        //    }
-        //}
-    )
-})();
-;
-(function () {
-    var config = {
-        idProperty  : 'id',
+        methods : {
+            'get' : function (key, data) {
+                var text = this.dict[ key ];
         
-        proxy       : { type : 'memory' },
-
-        fields      : [
-            'id',
-            { name : 'folderStatus', defaultValue : 'yellow' },
-            // the Siesta.Result instance itself
-            { name : 'result' }
-        ]
-    };
-    
-    var isSenchaTouch = Ext.getVersion && Ext.getVersion('touch')
-
-    Ext.define(
-        'Siesta.Harness.Browser.Model.Assertion', 
+                if (text) return this.formatString(text, data);
         
-        Ext.apply({
-            extend : 'Ext.data.Model',
-            
-            getResult : function () {
-                return this.data.result
-            },
-            
-            
-            isAssertion : function () {
-                return this.data.result instanceof Siesta.Result.Assertion
-            },
-            
-            
-            isDiagnostic : function () {
-                return this.data.result instanceof Siesta.Result.Diagnostic
-            },
-            
-            
-            isSummary : function () {
-                return this.data.result instanceof Siesta.Result.Summary
-            },
-            
-            
-            ensureVisible : function () {
-                var parent      = this.parentNode
-                
-                while (parent && !parent.isRoot()) {
-                    parent.expand()
-                    
-                    parent      = parent.parentNode
+                if (window.console && console.error) {
+                    window.top.console.error('TEXT_NOT_DEFINED: ' + key);
                 }
-            },
-            
-            
-            isWaitingAssertion : function () {
-                var result      = this.data.result
-                
-                return this.isAssertion() && result.isWaiting && !result.completed
-            },
-            
-            
-            updateFolderStatus : function () {
-                if (!this.isLeaf()) this.set('folderStatus', this.computeFolderStatus())
-    
-                var parentNode = this.parentNode
-    
-                if (parentNode && !parentNode.isRoot()) parentNode.updateFolderStatus()
-            },
-            
-            
-            triggerUIUpdate: function(){
-                // This isn't ideal, however none of the underlying fields have changed
-                // but we still need to update the UI
-                this.callJoined('afterEdit', []);
-            },
-
-            
-            computeFolderStatus : function () {
-                if (!this.isLeaf() && this.getResult().isWorking()) return 'working'
-                
-                if (!this.childNodes.length) return 'yellow'
-                
-                var isWorking   = false
-                var hasFailed   = false
-                var allGreen    = true
-    
-                Joose.A.each(this.childNodes, function (childNode) {
-                    var result  = childNode.getResult()
-    
-                    if (childNode.isLeaf()) {
-                        if (childNode.isWaitingAssertion()) 
-                            isWorking           = true
-                        
-                        if (childNode.isAssertion()) {
-                            if (!result.isPassed()) {
-                                allGreen        = false
-                                hasFailed       = true
-                                
-                                // stop iteration
-                                return false
-                            }
-                        }
-    
-                    } else {
-                        var status = childNode.computeFolderStatus()
-    
-                        if (status == 'red') {
-                            allGreen            = false
-                            hasFailed           = true
-    
-                            // stop iteration
-                            return false
-                        }
-                        
-                        if (result.isWorking() || status == 'working') {
-                            isWorking           = true
-    
-                            // stop iteration
-                            return false
-                        }
-    
-                        if (status == 'yellow')
-                            allGreen            = false
-                    }
-                })
-    
-                if (isWorking)  return 'working'
-                if (hasFailed)  return 'red'
-                if (allGreen)   return 'green'
-    
-                return 'yellow'
+        
+                return 'TEXT_NOT_DEFINED: ' + key;
             }
-            
-        }, isSenchaTouch ? { config : config } : config)
-    );
-})();
-;
-Ext.define("Sch.data.mixin.FilterableTreeStore", {
-
-    isFilteredFlag                      : false,
-    isHiddenFlag                        : false,
-
-    // ref to the last filter applied
-    lastTreeFilter                      : null,
-    lastTreeHiding                      : null,
-
-    /**
-     * @cfg {Boolean} allowExpandCollapseWhileFiltered When enabled (by default), tree store allows user to expand/collapse nodes while it is
-     * filtered with the {@link #filterTreeBy} method. Please set it explicitly to `false` to restore the previous behavior,
-     * where collapse/expand operations were disabled.
-     */
-    allowExpandCollapseWhileFiltered    : true,
-
-    /**
-     * @cfg {Boolean} reApplyFilterOnDataChange When enabled (by default), tree store will update the filtering (both {@link #filterTreeBy}
-     * and {@link #hideNodesBy}) after new data is added to the tree or removed from it. Please set it explicitly to `false` to restore the previous behavior,
-     * where this feature did not exist.
-     */
-    reApplyFilterOnDataChange           : true,
-
-    suspendIncrementalFilterRefresh     : 0,
-
-    filterGeneration                    : 0,
-    currentFilterGeneration             : null,
-
-    dataChangeListeners                 : null,
-    monitoringDataChange                : false,
-
-    onClassMixedIn : function (cls) {
-        cls.override(Sch.data.mixin.FilterableTreeStore.prototype.inheritables() || {});
-    },
-
-    // Events (private)
-    //    'filter-set',
-    //    'filter-clear',
-    //    'nodestore-datachange-start',
-    //    'nodestore-datachange-end'
-
-    /**
-     * Should be called in the constructor of the consuming class, to activate the filtering functionality.
-     */
-    initTreeFiltering : function () {
-        this.treeFilter = new Ext.util.Filter({
-            filterFn    : this.isNodeFilteredIn,
-            scope       : this
-        });
-
-        this.dataChangeListeners    = {
-            nodeappend  : this.onNeedToUpdateFilter,
-            nodeinsert  : this.onNeedToUpdateFilter,
-
-            scope       : this
-        };
-    },
-
-    startDataChangeMonitoring : function () {
-        if (this.monitoringDataChange) return;
-
-        this.monitoringDataChange   = true;
-
-        this.on(this.dataChangeListeners);
-    },
-
-
-    stopDataChangeMonitoring : function () {
-        if (!this.monitoringDataChange) return;
-
-        this.monitoringDataChange   = false;
-
-        this.un(this.dataChangeListeners);
-    },
-
-
-    onNeedToUpdateFilter : function () {
-        if (this.reApplyFilterOnDataChange && !this.suspendIncrementalFilterRefresh) this.reApplyFilter();
-    },
-
-
-    /**
-     * Clears the current filter (if any).
-     *
-     * See also {@link Sch.data.mixin.FilterableTreeStore} for additional information.
-     */
-    clearTreeFilter : function () {
-        if (!this.isTreeFiltered()) return;
-
-        this.currentFilterGeneration = null;
-        this.isFilteredFlag     = false;
-        this.lastTreeFilter     = null;
-
-        if (!this.isTreeFiltered(true)) this.stopDataChangeMonitoring();
-
-        this.refreshNodeStoreContent();
-
-        this.fireEvent('filter-clear', this);
-    },
-
-
-    reApplyFilter : function () {
-        // bypass the nodeStore content refresh if store has both hiding and filtering
-        if (this.isHiddenFlag) this.hideNodesBy.apply(this, this.lastTreeHiding.concat(this.isFilteredFlag));
-
-        if (this.isFilteredFlag) this.filterTreeBy(this.lastTreeFilter);
-    },
-
-
-    refreshNodeStoreContent : function () {
-        var me      = this,
-            filters = me.getFilters();
-
-        if (filters.indexOf(me.treeFilter) < 0) {
-            me.addFilter(me.treeFilter);
-        } else {
-            this.getFilters().fireEvent('endupdate', this.getFilters());
         }
-    },
-
-
-    getIndexInTotalDataset : function (record) {
-        var root            = this.getRootNode(),
-            index           = -1;
-
-        var rootVisible     = this.rootVisible;
-
-        if (!rootVisible && record == root) return -1;
-
-        var isFiltered      = this.isTreeFiltered();
-        var currentFilterGeneration = this.currentFilterGeneration;
-
-        var collectNodes    = function (node) {
-            if (isFiltered && node.__filterGen != currentFilterGeneration || node.hidden)
-            // stop scanning if record we are looking for is hidden
-                if (node == record) return false;
-
-            if (rootVisible || node != root) index++;
-
-            // stop scanning if we found the record
-            if (node == record) return false;
-
-            if (!node.data.leaf && node.isExpanded()) {
-                var childNodes  = node.childNodes,
-                    length      = childNodes.length;
-
-                for (var k = 0; k < length; k++)
-                    if (collectNodes(childNodes[ k ]) === false) return false;
-            }
-        };
-
-        collectNodes(root);
-
-        return index;
-    },
-
-    /**
-     * Returns true if this store is currently filtered
-     *
-     * @return {Boolean}
-     */
-    isTreeFiltered : function (orHasHiddenNodes) {
-        return this.isFilteredFlag || orHasHiddenNodes && this.isHiddenFlag;
-    },
-
-    markFilteredNodes : function (top, params) {
-        var me                  = this;
-        var filterGen           = this.currentFilterGeneration;
-        var visibleNodes        = {};
-
-        var root                = this.getRootNode(),
-            rootVisible         = this.rootVisible;
-
-        var includeParentNodesInResults = function (node) {
-            var parent  = node.parentNode;
-
-            while (parent && !visibleNodes[ parent.internalId ]) {
-                visibleNodes[ parent.internalId ] = true;
-
-                parent = parent.parentNode;
-            }
-        };
-
-        var filter                  = params.filter;
-        var scope                   = params.scope || this;
-        var shallowScan             = params.shallow;
-        var checkParents            = params.checkParents || shallowScan;
-        var fullMatchingParents     = params.fullMatchingParents;
-        var onlyParents             = params.onlyParents || fullMatchingParents;
-
-        if (onlyParents && checkParents) throw new Error("Can't combine `onlyParents` and `checkParents` options");
-
-        if (rootVisible) visibleNodes[ root.internalId ] = true;
-
-        var collectNodes    = function (node) {
-            if (node.hidden) return;
-
-            var nodeMatches, childNodes, length, k;
-
-            // `collectNodes` should not be called for leafs at all
-            if (node.data.leaf) {
-                if (filter.call(scope, node, visibleNodes)) {
-                    visibleNodes[ node.internalId ] = true;
-
-                    includeParentNodesInResults(node);
-                }
-            } else {
-                if (onlyParents) {
-                    nodeMatches     = filter.call(scope, node);
-
-                    childNodes      = node.childNodes;
-                    length          = childNodes.length;
-
-                    if (nodeMatches) {
-                        visibleNodes[ node.internalId ] = true;
-
-                        includeParentNodesInResults(node);
-
-                        // if "fullMatchingParents" option enabled we gather all matched parent's sub-tree
-                        if (fullMatchingParents) {
-                            node.cascadeBy(function (currentNode) {
-                                visibleNodes[ currentNode.internalId ] = true;
-                            });
-
-                            return;
-                        }
-                    }
-
-                    // at this point nodeMatches and fullMatchingParents can't be both true
-                    for (k = 0; k < length; k++)
-                        if (nodeMatches && childNodes[ k ].data.leaf)
-                            visibleNodes[ childNodes[ k ].internalId ] = true;
-                        else if (!childNodes[ k ].data.leaf)
-                            collectNodes(childNodes[ k ]);
-
-                } else {
-                    // mark matching nodes to be kept in results
-                    if (checkParents) {
-                        nodeMatches = filter.call(scope, node, visibleNodes);
-
-                        if (nodeMatches) {
-                            visibleNodes[ node.internalId ] = true;
-
-                            includeParentNodesInResults(node);
-                        }
-                    }
-
-                    // recurse if
-                    // - we don't check parents
-                    // - shallow scan is not enabled
-                    // - shallow scan is enabled and parent node matches the filter or it does not, but its and invisible root, so we don't care
-                    if (!checkParents || !shallowScan || shallowScan && (nodeMatches || node == root && !rootVisible)) {
-                        childNodes      = node.childNodes;
-                        length          = childNodes.length;
-
-                        for (k = 0; k < length; k++) collectNodes(childNodes[ k ]);
-                    }
-                }
-            }
-        };
-
-        collectNodes(top);
-
-        // additional filtering of the result set
-        // removes parent nodes which do not match filter themselves and have no matching children
-
-
-        root.cascadeBy(function (node) {
-            if (visibleNodes[ node.internalId ]) {
-                node.__filterGen = filterGen;
-
-                if (me.allowExpandCollapseWhileFiltered && !node.data.leaf) node.expand();
-            }
-        });
-
-    },
-
-
-    /**
-     * This method filters the tree store. It accepts an object with the following properties:
-     *
-     * - `filter` - a function to check if a node should be included in the result. It will be called for each **leaf** node in the tree and will receive the current node as the first argument.
-     * It should return `true` if the node should remain visible, `false` otherwise. The result will also contain all parents nodes of all matching leafs. Results will not include
-     * parent nodes, which do not have at least one matching child.
-     * To call this method for parent nodes too, pass an additional parameter - `checkParents` (see below).
-     * - `scope` - a scope to call the filter with (optional)
-     * - `checkParents` - when set to `true` will also call the `filter` function for each parent node. If the function returns `false` for some parent node,
-     * it could still be included in the filtered result if some of its children match the `filter` (see also "shallow" option below). If the function returns `true` for a parent node, it will be
-     * included in the filtering results even if it does not have any matching child nodes.
-     * - `shallow` - implies `checkParents`. When set to `true`, it will stop checking child nodes if the `filter` function return `false` for a parent node. The whole sub-tree, starting
-     * from a non-matching parent, will be excluded from the result in such case.
-     * - `onlyParents` - alternative to `checkParents`. When set to `true` it will only call the provided `filter` function for parent tasks. If
-     * the filter returns `true`, the parent and all its direct child leaf nodes will be included in the results. If the `filter` returns `false`, a parent node still can
-     * be included in the results (w/o direct children leafs), if some of its child nodes matches the filter.
-     * - `fullMatchingParents` - implies `onlyParents`. In this mode, if a parent node matches the filter, then not only its direct children
-     * will be included in the results, but the whole sub-tree, starting from the matching node.
-     *
-     * Repeated calls to this method will clear previous filters.
-     *
-     * This function can be also called with 2 arguments, which should be the `filter` function and `scope` in such case.
-     *
-     * For example:
-
-     treeStore.filterTreeBy({
-        filter          : function (node) { return node.get('name').match(/some regexp/) },
-        checkParents    : true
+    
     })
+    
 
-     // or, if you don't need to set any options:
-     treeStore.filterTreeBy(function (node) { return node.get('name').match(/some regexp/) })
+    return function (namespace, key, data) {
+        var dictionary  = Siesta.CurrentLocale[ namespace ];
 
-     *
-     * See also {@link Sch.data.mixin.FilterableTreeStore} for additional information.
-     *
-     * @param {Object} params
-     */
-    filterTreeBy : function (params, scope) {
-        this.currentFilterGeneration = this.filterGeneration++;
-
-        var filter;
-
-        if (arguments.length == 1 && Ext.isObject(arguments[ 0 ])) {
-            scope       = params.scope;
-            filter      = params.filter;
-        } else {
-            filter      = params;
-            params      = { filter : filter, scope : scope };
+        if (!dictionary) {
+            throw 'Missing dictionary for namespace: ' + namespace;
+        }
+        
+        var resource    = cacheByNamespace[ namespace ]
+        
+        if (!resource) {
+            resource    = cacheByNamespace[ namespace ] = new Resource({ dict : dictionary, serializeFormatingPlaceholders : false })
         }
 
-        this.fireEvent('nodestore-datachange-start', this);
+        if (key) return resource.get(key, data)
 
-        params                      = params || {};
-
-        this.markFilteredNodes(this.getRootNode(), params);
-
-        this.startDataChangeMonitoring();
-
-        this.isFilteredFlag     = true;
-        this.lastTreeFilter     = params;
-
-        this.refreshNodeStoreContent();
+        return resource
+    }
+})();
+;
+Class('Siesta.Recorder.Target', {
+    
+    has : {
+        targets             : Joose.I.Array,
+        activeTarget        : null
+    },
+    
+    
+    methods : {
         
-        this.fireEvent('nodestore-datachange-end', this);
-
-        this.fireEvent('filter-set', this);
-    },
-
-
-    isNodeFilteredIn : function (node) {
-        var isFiltered              = this.isTreeFiltered();
-        var currentFilterGeneration = this.currentFilterGeneration;
-
-        return this.loading || !Boolean(isFiltered && node.__filterGen != currentFilterGeneration || node.hidden);
-    },
-
-
-    hasNativeFilters : function () {
-        var me      = this,
-            filters = me.getFilters(),
-            count   = filters.getCount();
-
-        return (count && count > 1) || filters.indexOf(me.treeFilter) < 0;
-    },
-
-
-    /**
-     * Hide nodes from the visual presentation of tree store (they still remain in the store).
-     *
-     * See also {@link Sch.data.mixin.FilterableTreeStore} for additional information.
-     *
-     * @param {Function} filter - A filtering function. Will be called for each node in the tree store and receive
-     * the current node as the 1st argument. Should return `true` to **hide** the node
-     * and `false`, to **keep it visible**.
-     * @param {Object} scope (optional).
-     */
-    hideNodesBy : function (filter, scope, skipNodeStoreRefresh) {
-        var me      = this;
-
-        if (me.isFiltered() && me.hasNativeFilters()) throw new Error("Can't hide nodes of the filtered tree store");
-
-        scope       = scope || me;
-
-        me.getRootNode().cascadeBy(function (node) {
-            node.hidden = Boolean(filter.call(scope, node, me));
-        });
-
-        me.startDataChangeMonitoring();
-
-        me.isHiddenFlag     = true;
-        me.lastTreeHiding   = [ filter, scope ];
-
-        if (!skipNodeStoreRefresh) me.refreshNodeStoreContent();
-    },
-
-
-    /**
-     * Shows all nodes that was previously hidden with {@link #hideNodesBy}
-     *
-     * See also {@link Sch.data.mixin.FilterableTreeStore} for additional information.
-     */
-    showAllNodes : function (skipNodeStoreRefresh) {
-        this.getRootNode().cascadeBy(function (node) {
-            node.hidden     = false;
-        });
-
-        this.isHiddenFlag       = false;
-        this.lastTreeHiding     = null;
-
-        if (!this.isTreeFiltered(true)) this.stopDataChangeMonitoring();
-
-        if (!skipNodeStoreRefresh) this.refreshNodeStoreContent();
-    },
-
-
-    inheritables : function () {
-        return {
-            // @OVERRIDE
-            onNodeExpand: function (parent, records, suppressEvent) {
-                if (this.isTreeFiltered(true) && parent == this.getRoot()) {
-                    this.callParent(arguments);
-                    // the expand of the root node - most probably its the data loading
-                    this.reApplyFilter();
-                } else
-                    return this.callParent(arguments);
-            },
-
-            // @OVERRIDE
-            onNodeCollapse: function (parent, records, suppressEvent, callback, scope) {
-                var me                      = this;
-                var data                    = me.data;
-                var prevContains            = data.contains;
-
-                var isFiltered              = me.isTreeFiltered();
-                var currentFilterGeneration = me.currentFilterGeneration;
-
-                // the default implementation of `onNodeCollapse` only checks if the 1st record from collapsed nodes
-                // exists in the node store. Meanwhile, that 1st node can be hidden, so we need to check all of them
-                // thats what we do in the `for` loop below
-                // then, if we found a node, we want to do actual removing of nodes and we override the original code from NodeStore
-                // by always returning `false` from our `data.contains` override
-                data.contains           = function () {
-                    var node, sibling, lastNodeIndexPlus;
-
-                    var collapseIndex   = me.indexOf(parent) + 1;
-                    var found           = false;
-
-                    for (var i = 0; i < records.length; i++)
-                        if (
-                            !(records[ i ].hidden || isFiltered && records[ i ].__filterGen != currentFilterGeneration) &&
-                            prevContains.call(this, records[ i ])
-                        ) {
-                            // this is our override for internal part of `onNodeCollapse` method
-
-                            // Calculate the index *one beyond* the last node we are going to remove
-                            // Need to loop up the tree to find the nearest view sibling, since it could
-                            // exist at some level above the current node.
-                            node = parent;
-                            while (node.parentNode) {
-                                sibling = node;
-                                do {
-                                    sibling = sibling.nextSibling;
-                                } while (sibling && (sibling.hidden || isFiltered && sibling.__filterGen != currentFilterGeneration));
-
-                                if (sibling) {
-                                    found = true;
-                                    lastNodeIndexPlus = me.indexOf(sibling);
-                                    break;
-                                } else {
-                                    node = node.parentNode;
-                                }
-                            }
-                            if (!found) {
-                                lastNodeIndexPlus = me.getCount();
-                            }
-
-                            // Remove the whole collapsed node set.
-                            me.removeAt(collapseIndex, lastNodeIndexPlus - collapseIndex);
-
-                            break;
-                        }
-
-                    // always return `false`, so original NodeStore code won't execute
-                    return false;
-                };
-
-                this.callParent(arguments);
-
-                data.contains           = prevContains;
-            },
-
-            // @OVERRIDE
-            handleNodeExpand : function (parent, records, toAdd) {
-                var me                      = this;
-                var visibleRecords          = [];
-                var isFiltered              = me.isTreeFiltered();
-                var currentFilterGeneration = me.currentFilterGeneration;
-
-                for (var i = 0; i < records.length; i++) {
-                    var record          = records[ i ];
-
-                    if (
-                        !(isFiltered && record.__filterGen != currentFilterGeneration || record.hidden)
-                    ) {
-                        visibleRecords[ visibleRecords.length ] = record;
-                    }
+        initialize : function () {
+            if (!this.targets) this.targets = []
+            
+            var firstTarget     = this.targets[ 0 ]
+            
+            if (firstTarget && !this.activeTarget) this.activeTarget = firstTarget.type
+        },
+        
+        
+        clear : function () {
+            this.targets = []
+        },
+        
+        
+        getTargets : function () {
+            var target      = this.getTarget()
+            
+            return target && target.targets || null
+        },
+        
+        
+        // `getActiveTarget`
+        getTarget : function () {
+            return this.getTargetByType(this.activeTarget)
+        },
+        
+        
+        clearOffset : function () {
+            this.setOffset(null)
+        },
+    
+    
+        setOffset : function (value) {
+            var target                  = this.getTarget()
+            
+            if (target) 
+                if (value) 
+                    target.offset   = value
+                else
+                    delete target.offset
+        },
+    
+    
+        getOffset : function () {
+            var target                  = this.getTarget()
+            
+            if (target) return target.offset
+        },
+        
+        
+        getTargetByType : function (type) {
+            var targetByType
+            
+            Joose.A.each(this.targets, function (target) {
+                if (target.type == type) { 
+                    targetByType = target
+                    return false
                 }
-
-                return this.callParent([ parent, visibleRecords, toAdd ]);
-            },
-
-            // @OVERRIDE
-            onNodeInsert: function(parent, node, index) {
-                var me = this,
-                    refNode,
-                    sibling,
-                    storeReader,
-                    nodeProxy,
-                    nodeReader,
-                    reader,
-                    data = node.raw || node.data,
-                    dataRoot,
-                    isVisible,
-                    childType;
-
-                if (me.filterFn) {
-                    isVisible = me.filterFn(node);
-                    node.set('visible', isVisible);
-
-                    // If a node which passes the filter is added to a parent node
-                    if (isVisible) {
-                        parent.set('visible', me.filterFn(parent));
-                    }
-                }
-
-                // Register node by its IDs
-                me.registerNode(node, true);
-
-                me.beginUpdate();
-
-                // Only react to a node append if it is to a node which is expanded.
-                if (me.isVisible(node)) {
-                    if (index === 0 || !node.previousSibling) {
-                        refNode = parent;
-                    } else {
-                        // Find the previous visible sibling (filtering may have knocked out intervening nodes)
-                        for (sibling = node.previousSibling; sibling && !sibling.get('visible'); sibling = sibling.previousSibling);
-                        if (!sibling) {
-                            refNode = parent;
-                        } else {
-                            while (sibling.isExpanded() && sibling.lastChild) {
-                                sibling = sibling.lastChild;
-                            }
-                            refNode = sibling;
-                        }
-                    }
-
-                    // The reaction to collection add joins the node to this Store
-                    me.insert(me.indexOf(refNode) + 1, node);
-                    if (!node.isLeaf() && node.isExpanded()) {
-                        if (node.isLoaded()) {
-                            // Take a shortcut
-                            me.onNodeExpand(node, node.childNodes);
-                        } else if (!me.fillCount) {
-                            // If the node has been marked as expanded, it means the children
-                            // should be provided as part of the raw data. If we're filling the nodes,
-                            // the children may not have been loaded yet, so only do this if we're
-                            // not in the middle of populating the nodes.
-                            node.set('expanded', false);
-                            node.expand();
-                        }
-                    }
-                }
-
-                // Set sync flag if the record needs syncing.
-                else {
-                    me.needsSync = me.needsSync || node.phantom || node.dirty;
-                }
-
-                if (!node.isLeaf() && !node.isLoaded() && !me.lazyFill) {
-                    // With heterogeneous nodes, different levels may require differently configured readers to extract children.
-                    // For example a "Disk" node type may configure its proxy reader with root: 'folders', while a "Folder" node type
-                    // might configure its proxy reader with root: 'files'. Or the root property could be a configured-in accessor.
-                    storeReader = me.getProxy().getReader();
-                    nodeProxy = node.getProxy();
-                    nodeReader = nodeProxy ? nodeProxy.getReader() : null;
-
-                    // If the node's reader was configured with a special root (property name which defines the children array) use that.
-                    reader = nodeReader && nodeReader.initialConfig.rootProperty ? nodeReader : storeReader;
-
-                    dataRoot = reader.getRoot(data);
-                    if (dataRoot) {
-                        childType = node.childType;
-                        me.fillNode(node, reader.extractData(dataRoot, childType ? {
-                            model: childType
-                        } : undefined));
-                    }
-                }
-                me.endUpdate();
-            },
-
-            isFiltered : function () {
-                return this.callParent(arguments) || this.isTreeFiltered();
+            })
+            
+            return targetByType
+        },
+        
+        
+        setUserTarget : function (value, offset) {
+            var userTarget          = this.getTargetByType('user')
+            
+            if (!userTarget) {
+                var target          = { type : 'user', target : value }
+                
+                if (offset) target.offset   = offset
+                
+                this.targets.unshift(target)
+            } else {
+                userTarget.target   = value
+                
+                if (offset)
+                    userTarget.offset   = offset
+                else
+                    delete userTarget.offset
             }
-        };
-    }
-
-});
-;
-Ext.define('Siesta.Harness.Browser.Model.FilterableTreeStore', {
-    extend          : 'Ext.data.TreeStore',
-
-    mixins          : [
-        'Sch.data.mixin.FilterableTreeStore'
-    ],
-
-    constructor     : function () {
-        this.callParent(arguments)
-        
-        this.initTreeFiltering()
-    },
-
-    forEach : function(fn, scope) {
-        this.getRootNode().cascadeBy(fn, scope);
-    }
-});
-Ext.define('Siesta.Harness.Browser.Model.AssertionTreeStore', {
-    extend          : 'Ext.data.TreeStore',
-
-    model   : 'Siesta.Harness.Browser.Model.Assertion',
-
-    mixins          : [
-        'Sch.data.mixin.FilterableTreeStore'
-    ],
-
-    constructor     : function () {
-        this.callParent(arguments)
-        
-        this.initTreeFiltering()
-    },
-    
-    
-    removeAll : function () {
-        var newRoot = this.setRootNode({
-            id              : '__ROOT__',
-            expanded        : true,
-            loaded          : true
-        })
-    },
-    
-    
-    add : function (record) {
-        this.getRootNode().appendChild(record)
-    }
-});
-Ext.define('Siesta.Harness.Browser.UI.VersionField', {
-    
-    extend  : 'Ext.form.field.Spinner',
-    alias   : 'widget.versionfield',
-
-    width   : 90,
-    
-    // versions : read from harness?
-    versions : [
-        '4.0.2a',
-        '4.0.7',
-        '4.1.0',
-        '4.1.1',
-        '4.1.2',
-        '4.1.3',
-        '4.1.4'
-    ],
-    
-
-    onSpinUp: function() {
-        var me = this;
-        var index = Ext.Array.indexOf(me.versions, me.getValue());
-        if (index < me.versions.length - 1) {
-            me.setValue(me.versions[index+1]);
-        }
-    },
-
-    onSpinDown: function() {
-        var val, me = this;
-        var index = Ext.Array.indexOf(me.versions, me.getValue());
-        if (index > 0) {
-            me.setValue(me.versions[index-1]);
-        }
-    }
-});
-;
-// !XXX when adding new methods to this mixing need to also update the 
-// `setupLockableTree` method in the Sch.mixin.Lockable
-Ext.define("Sch.mixin.FilterableTreeView", {
-    
-    filterableTreeStore             : null,
-    treeStoreFilteringListeners     : null,
-    
-    
-    initTreeFiltering : function () {
-        this.treeStoreFilteringListeners = {
-            'nodestore-datachange-start'        : this.onFilterChangeStart,
-            'nodestore-datachange-end'          : this.onFilterChangeEnd,
             
-            'filter-clear'                      : this.onFilterCleared,
-            'filter-set'                        : this.onFilterSet,
-            'forcedrefresh'                     : this.onForcedRefresh,
+            this.activeTarget       = 'user'
+        },
+        
+        
+        // returns `true` if targeting the coordinates on the screen or <body> (which is the same thing)
+        isTooGeneric : function () {
+            var targets     = this.targets
             
-            scope                               : this
+            if (!targets || targets.length === 0) return true
+            
+            if (targets.length === 1 && targets[ 0 ].type == 'xy') return true
+            
+            if (targets.length === 2) {
+                var xy      = this.getTargetByType('xy')
+                var css     = this.getTargetByType('css')
+                
+                if (xy && css && css.target == 'body') return true
+            }
+            
+            return false
         }
-        
-        var doInit  = function () {
-            var treeStore       = this.up('tablepanel').store;
-
-            this.bindFilterableTreeStore(treeStore)
-        };
-        
-        if (this.rendered)
-            doInit.call(this);
-        else
-            this.on('beforerender', doInit, this, { single : true });
-    },
-    
-    
-    bindFilterableTreeStore : function (store) {
-        if (this.filterableTreeStore) this.mun(this.filterableTreeStore, this.treeStoreFilteringListeners)
-        
-        this.filterableTreeStore        = store
-        
-        if (store) this.mon(store, this.treeStoreFilteringListeners)
-    },
-    
-    
-    onForcedRefresh : function () {
-        this.focusRow       = function () {}
-        
-        this.refresh()
-        
-        delete this.focusRow
-    },
-    
-    
-    onFilterChangeStart : function () {
-        Ext.suspendLayouts();
-    },
-    
-    
-    onFilterChangeEnd : function () {
-        Ext.resumeLayouts(true);
-    },
-    
-    
-    onFilterCleared : function () {
-    },
-    
-    
-    onFilterSet : function () {
     }
 });;
-Ext.define('Siesta.Harness.Browser.UI.FilterableTreeView', {
-    extend          : 'Ext.tree.View',
-    alias           : 'widget.filterabletreeview',
+!function () {
     
-    mixins          : [
-        'Sch.mixin.FilterableTreeView'
-    ],
+var ID      = 1
+
+Class('Siesta.Recorder.Event', {
     
-    
-    constructor     : function () {
-        this.callParent(arguments)
+    has : {
+        id                  : function () { return ID++ },
+
+        type                : null,
+
+        timestamp           : null,
+
+        // Alt, ctrl, meta, shift keys
+        options             : null,
         
-        this.initTreeFiltering()
+        x                   : null,
+        y                   : null,
+        
+        target              : null,
+        
+        charCode            : null,
+        keyCode             : null,
+        
+        button              : null
     },
     
     
-    bindStore : function (store, initial, propName) {
-        if (store instanceof Ext.data.TreeStore) {
-            this.bindFilterableTreeStore(store)
+    methods : {
+    },
+    
+    
+    my : {
+        has : {
+            ID              : 1,
+            HOST            : null
+        },
+        
+        methods : {
             
-            this.callParent([ store.nodeStore || store, initial, propName ])
+            fromDomEvent : function (e) {
+                var options     = {}
+
+                ;[ 'altKey', 'ctrlKey', 'metaKey', 'shiftKey' ].forEach(function (id) {
+                    if (e[ id ]) options[ id ] = true;
+                });
+                
+                var config          = {
+                    type            : e.type,
+                    target          : e.target,
+                    timestamp       : e.timeStamp,
+                    
+                    options         : options
+                }
+                
+                if (e.type.match(/^key/)) {
+                    config.charCode = e.charCode || e.keyCode;
+                    config.keyCode  = e.keyCode;
+                } else {
+                    config.x        = e.pageX;
+                    config.y        = e.pageY;
+    
+                    config.button   = e.button;
+                }
+                
+                return new this.HOST(config)
+            }
+        }
+    }
+
+});
+
+}();;
+!function () {
+    
+var ID      = 1
+
+Class('Siesta.Recorder.Action', {
+    
+    has : {
+        id                  : function () { return ID++ },
+        action              : null,
+        
+        value               : null,
+        
+        /*
+            Possible type of targets:
+            - 'xy'      XY coordinates
+            - 'css'     css selector
+            - 'cq'      component query
+            - 'csq'     composite query
+            - 'user'    user-provided text
+        */
+        target              : null,
+        
+        toTarget            : null,
+        by                  : null,
+        waitForPageLoad     : false,
+        options             : null,
+        
+        sourceEvent         : null
+    },
+    
+    
+    methods : {
+        
+        initialize : function () {
+            var target      = this.target
+
+            if (target && !(target instanceof Siesta.Recorder.Target)) {
+                this.target = new Siesta.Recorder.Target({ targets : target })
+            }
+            
+            var toTarget    = this.toTarget
+            
+            if (toTarget && !(toTarget instanceof Siesta.Recorder.Target)) 
+                this.toTarget = new Siesta.Recorder.Target({ targets : toTarget })
+        },
+        
+        
+        setAction : function (newAction) {
+            this.action     = newAction
+
+            if (!this.hasTarget()) {
+                this.target && this.target.clear()
+                this.toTarget && this.toTarget.clear()
+            }
+        },
+        
+        
+        hasTarget : function () {
+            return this.isMouseAction()
+        },
+        
+        
+        getTarget : function (asInstance) {
+            var target      = this.target
+            
+            return asInstance ? target : target && this.target.getTarget()
+        },
+        
+        
+        isMouseAction : function () {
+            return (this.action || '').toLowerCase() in {
+                click           : 1,
+                contextmenu     : 1,
+                dblclick        : 1,
+                drag            : 1,
+                mousedown       : 1,
+                mouseup         : 1,
+                movecursorto    : 1
+            }
+        },
+        
+        
+        resetValues : function () {
+            this.target         = null
+            this.value          = null
+            this.toTarget       = null
+            this.by             = null
+            this.options        = null
+            this.sourceEvent    = null
+        },
+        
+        
+        parseOffset : function (offsetString) {
+            var values  = offsetString.split(',');
+    
+            if (values.length < 2) return;
+    
+            if (!values[ 0 ].match('%')) {
+                values[ 0 ] = parseInt(values[ 0 ], 10);
+    
+                if (isNaN(values[ 0 ])) return;
+            }
+    
+            if (!values[ 1 ].match('%')) {
+                values[ 1 ] = parseInt(values[ 1 ], 10);
+    
+                if (isNaN(values[ 1 ])) return;
+            }
+    
+            return values;
+        },
+        
+        
+        clearTargetOffset : function () {
+            this.setTargetOffset(null)
+        },
+    
+    
+        setTargetOffset : function (value) {
+            var target  = this.target
+            
+            if (target) target.setOffset(value)
+        },
+    
+    
+        getTargetOffset : function () {
+            var target  = this.target
+            
+            if (target) return target.getOffset()
+        },
+        
+        
+        objectToSource : function (obj) {
+            var me = this;
+            var result = '';
+            var prependComma;
+            var convertFn = function (key, value) {
+                value = value || obj[key];
+
+                if (value instanceof Array) {
+                    return key + ' : [' + value.join(', ') + ']';
+                } else if (typeof value === 'object') {
+                    return key + ' : ' + me.objectToSource(value);
+                } else {
+                    return key + ' : ' + (typeof (value) === 'string' ? '"' + value + '"' : value);
+                }
+            };
+
+            // Use brief action description, do this manually to make sure action + target is
+            // the first item in the object descriptor
+            if (obj.target) {
+                result = convertFn(obj.action, obj.target);
+                prependComma = true;
+
+                delete obj.target;
+                delete obj.action;
+            }
+
+            var keys = Object.keys(obj);
+
+            if (keys.length > 0) {
+                result = result + (prependComma ? ', ' : '') + keys.map(function(key) { return convertFn(key); }).join(', ');
+            }
+
+            return '{ ' + result + ' }';
+        },
+
+
+        asCode : function () {
+            var step        = this.asStep()
+
+            if (!step) return null
+
+            return typeof step == 'function' ? step : this.objectToSource(step)
+        },
+        
+        
+        asStep : function (test) {
+
+            var actionName      = this.action
+
+            if (!actionName) return null
+            
+            var step            = { action : this.action };
+            var target          = this.getTarget()
+            var value           = this.value
+            var hasTarget       = this.hasTarget()
+
+            if (hasTarget) {
+                if (!target) {
+                    // If target is required but not filled in, just leave it blank
+                    step.target = '';
+                } else if (target.type == 'cq') {
+                    var splitPos = target.target.indexOf('->');
+                    step.target     = splitPos > 0 ? target.target.split('->').splice(1, 0, '>>').join() : '>>' + target.target
+                } else {
+                    step.target     = target.target
+                }
+
+                if (target && target.offset)
+                    step.offset = target.offset.slice()
+            }
+    
+    //        if (!actionName.match('waitFor') && target && typeof target !== "string" && !target.length) {
+    //            throw 'Invalid target for ' + actionName + ' actionRecord: ' + target;
+    //        }
+    //
+            if (this.options && !Joose.O.isEmpty(this.options)) {
+                step.options    = this.options;
+            }
+    
+            if (actionName.match(/^waitFor/)) {
+                switch (actionName) {
+                    case 'waitForFn':
+                        // After this statement, t will be available in the evaled function below just as a regular local variable
+                        if (test) var t   = test;
+                        return { waitFor : eval("(function() {\n        " + value.replace(/\n/g, "\n        ") + "\n    })") };
+    
+                    case 'waitForMs':
+                        var val = parseInt(value, 10);
+    
+                        return { waitForMs : val };
+    
+                    default:
+                        var obj = {};
+
+                        obj[actionName] = value || [];
+
+                        return obj;
+                }
+            } else {
+                switch (actionName) {
+                    case 'click':
+                    case 'dblclick':
+                    case 'contextmenu':
+                    case 'mousedown':
+                    case 'mouseup':
+                    case 'moveCursorTo':
+                        break;
+
+                    case 'screenshot':
+                        step = { screenshot : value };
+                        break;
+
+                    case 'moveCursorBy':
+                        var by = this.value.split(',');
+                        by[0] = parseInt(by[0], 10);
+                        by[1] = parseInt(by[1], 10);
+
+                        step = { action : 'moveCursor', by : by};
+                        break;
+
+                    case 'type':
+                        step.text   = value;
+                        delete step.target;
+    
+                        break;
+    
+                    case 'drag':
+                        var toTarget    = this.toTarget
+                        
+                        if (toTarget && !toTarget.isTooGeneric()) {
+                            step.to                             = toTarget.target;
+                            if (toTarget.offset) step.toOffset  = toTarget.offset;
+                            
+                            break;
+                        }
+                        
+                        step.by = this.by;
+    
+                        break;
+    
+                    case 'fn':
+                        // After this statement, t will be available in the evaled function below just as a regular local variable
+                        if (test) var t   = test;
+    
+                        return eval("(function(next) {\n        " + value.replace(/\n/g, "\n        ") + "\n        next();\n    })");
+    
+                    default:
+                        var step = {};
+                        step[actionName] = value;
+                        return step;
+                }
+            }
+    
+            return this.waitForPageLoad ? { waitForPageLoad : [], trigger : step } : step;
+        }
+        
+    }
+});
+
+}();;
+Ext.define('Siesta.Recorder.UI.Model.Action', {
+    extend      : 'Ext.data.TreeModel',
+    
+    fields      : Object.keys ? Object.keys(Siesta.Recorder.Action.meta.getAttributes().properties) : [],
+    
+    actionClass : Siesta.Recorder.Action,
+    $action     : null,
+
+
+    constructor : function (data) {
+        if (!data.children && !('leaf' in data) && !data.root) data.leaf = true;
+
+        // surprisingly the change in "data" variable will be reflected in "arguments"
+        this.callParent([data]);
+
+        if (data && !data.root) {
+            var action = data;
+            if (!(action instanceof this.actionClass)) {
+                action        = new this.actionClass(action)
+            }
+
+            //Siesta.Recorder.Action.meta.getAttributes().each(function(attr){ data[attr.name] = action[attr.name]; });
+            this.$action = action;
+
+            Ext.applyIf(action, this.data);
+            this.data = action;
+        }
+
+    }
+//    ,
+    
+    
+//    setTargetByType : function (targetType, target) {
+//        return this.$action.setTargetByType()
+//    },
+
+
+//    resetValues : function () {
+//        this.$action.resetValues()
+//        
+//        this.afterEdit([ 'targets', 'value', '__offset__' ])
+//    },
+//
+//    
+//    clearTargetOffset : function () {
+//        this.$action.clearTargetOffset()
+//        
+//        this.afterEdit([ 'targets' ])
+//    },
+//    
+//    
+//    setTargetOffset : function (value) {
+//        this.$action.setTargetOffset(value)
+//        
+//        this.afterEdit([ '__offset__' ])
+//    }
+    
+    
+}, function () {
+    var prototype   = this.prototype
+
+    //var attributeNames  = [];
+    //Siesta.Recorder.Action.meta.getAttributes().each(function(attr){ attributeNames.push(attr.name)});
+    //
+    //if (this.addFields) {
+    //    this.addFields(attributeNames);
+    //} else {
+    //    var fields      = prototype.fields
+    //    fields.addAll(attributeNames);
+    //}
+
+    Joose.A.each([ 
+        'getTargetOffset', 'isMouseAction', 'parseOffset', 'getTarget', 'getTargets', 'hasTarget', 'asStep', 'asCode'
+    ], function (methodName) {
+        prototype[ methodName ] = function () {
+            return this.$action[ methodName ].apply(this.$action, arguments)
+        }
+    })
+    
+    Joose.O.each({
+        clearTargetOffset       : [ 'target' ],
+        setTargetOffset         : [ 'target' ],
+        resetValues             : [ 'target', 'value' ],
+        setAction               : [ 'action', 'target' ]
+    }, function (fields, methodName) {
+        prototype[ methodName ] = function () {
+            var res     = this.$action[ methodName ].apply(this.$action, arguments)
+
+            // TODO not needed since we do refreshNode
+            //this.afterEdit(fields)
+
+            return res
+        }
+    })
+});
+;
+Ext.define('Siesta.Recorder.UI.Store.Action', {
+    extend : 'Ext.data.TreeStore',
+    alias  : 'store.actionstore',
+    model  : 'Siesta.Recorder.UI.Model.Action',
+    alias  : 'store.actionstore',
+    proxy  : 'memory',
+    root   : {
+        expanded : true
+    },
+
+    tabSize : 4,
+
+    generateCode : function (name) {
+        var root = this.getRootNode();
+        var code = '';
+
+        if (root.childNodes.length > 0) {
+            if (root.firstChild.isLeaf()) {
+                // Make a simple chain
+                code = this.generateChain(root);
+            } else {
+                // Group assertions into "it" statements
+                code = root.childNodes.map(this.generateCodeForNode, this).join('\n\n');
+            }
+        }
+
+        return 'describe("' + name + '", function(t) {\n' + code + '\n});'
+    },
+
+    generateCodeForNode : function (node) {
+
+        if (node.isLeaf()) {
+            return this.getIndent(node.data.depth + 1) + node.asCode();
+        }
+
+        if (node.get('action') === 'group') {
+            return this.generateIt(node);
+        }
+    },
+
+    generateIt : function (node) {
+        var indent = this.getIndent(node.data.depth);
+        var itPre  = indent + 't.it("' + (node.get('value') || 'should...') + '", function(t) {\n';
+        var itPost = '\n' + indent + '});';
+
+        return itPre + this.generateChain(node) + itPost;
+    },
+
+    generateChain : function (node) {
+        var me        = this;
+        var indent    = this.getIndent(node.data.depth + 1);
+        var chainPre  = indent + 't.chain(\n';
+        var chainPost = '\n' + indent + ');';
+
+        var codeForSteps = node.childNodes.map(function (step) {
+            return me.generateCodeForNode(step);
+        }).join(',\n\n');
+
+        return chainPre + codeForSteps + chainPost;
+    },
+
+    getIndent : function (tabs) {
+        return new Array((this.tabSize * tabs) + 1).join(' ');
+    }
+});
+;
+Ext.define('Siesta.Recorder.UI.Editor.ActionName', {
+    extend          : 'Ext.form.field.ComboBox',
+    alias           : 'widget.typeeditor',
+    
+    displayField    : 'id',
+    valueField      : 'id',
+    queryMode       : 'local',
+    matchFieldWidth : false,
+    forceSelection  : true,
+    typeAhead       : true,
+    selectOnFocus   : true,
+
+    store : {
+        fields : [ 'id', 'type' ]
+    },
+
+    // TODO move to test class autogenerate these (either during Siesta build or at Siesta runtime - via JsDuck?)
+    // Not all commands can be edited either (like waitForStoresToLoad etc).
+    actions         : [
+        { id : 'group', type : 'group' },
+        { id : 'click', type : 'mouseinput' },
+        { id : 'dblclick', type : 'mouseinput' },
+        { id : 'contextmenu', type : 'mouseinput' },
+
+        { id : 'drag', type : 'mouseinput' },
+        { id : 'fn', type : 'fn' },
+        { id : 'moveCursorTo', type : 'mouseinput' },
+        { id : 'moveCursorBy', type : 'mouseinput' },
+        { id : 'mousedown', type : 'mouseinput' },
+        { id : 'mouseup', type : 'mouseinput' },
+        { id : 'type', type : 'keyinput' },
+        { id : 'screenshot', type : 'screenshot' },
+        { id : 'setUrl', type : 'navigate' }
+    ],
+
+    applyChanges : function (actionRecord) {
+        var value = this.getValue();
+
+        actionRecord.setAction(value)
+        actionRecord.set('leaf', value !== 'group');
+    },
+    
+
+    populate : function (test) {
+        var waitActions = [];
+
+        for (var o in test) {
+            if (o.match(/waitFor.+/) && typeof test[ o ] === 'function') {
+                waitActions.push({ id : o, type : 'wait' });
+            }
+        }
+
+        var actions = this.actions.concat(waitActions).sort(function(a, b) { return a.id < b.id ? -1 : 1; });
+
+        this.store.loadData(actions);
+    }
+
+});
+;
+Ext.define('Siesta.Recorder.UI.Editor.Array', {
+    extend          : 'Ext.form.field.Text',
+    alias           : 'widget.arrayeditor',
+
+    getValue : function () {
+
+        var value = this.callParent(arguments);
+
+        if (typeof value === 'string' && value.match(/\d*,\d*/)) {
+            value = value.split(',');
+            value[0] = parseInt(value[0], 10);
+            value[1] = parseInt(value[1], 10);
+        }
+
+        return value;
+    }
+});
+;
+Ext.define('Siesta.Recorder.UI.Editor.Target', {
+    extend          : 'Ext.form.field.ComboBox',
+    alias           : 'widget.targeteditor',
+
+    enableKeyEvents : true,
+    queryMode       : 'local',
+    valueField      : 'type',
+    displayField    : 'value',
+    cls             : 'siesta-targeteditor',
+    
+    targetProperty  : 'target',
+
+    store : {
+        proxy   : 'memory',
+        fields  : [ 'type', 'value', 'target' ]
+    },
+
+    getTarget : function () {
+        var value       = this.getValue();
+        
+        if (value && /^!!(.+)/.exec(value)) {
+            var record      = this.store.findRecord('type', value)
+
+            // TODO also return 'offset'?
+            return record ? record.get('target') : null
+        }
+        
+        return value ? {
+            type        : 'user',
+            target      : value
+        } : null
+    },
+
+    
+    setValue : function (value) {
+        // This method is called with an array of a single record
+        if (value instanceof Siesta.Recorder.Target) {
+            if (value.getTarget())
+                this.callParent([ '!!' + value.getTarget().type ]);
+            else
+                this.callParent([ '' ])
         } else
             this.callParent(arguments)
+    },
+    
+    
+    getEditorValue : function (record) {
+        return record.data[ this.targetProperty ]
+    },
+    
+    
+    applyChanges : function (actionRecord) {
+
+        var value       = this.getValue()
+        var match
+        
+        var target      = actionRecord.data[ this.targetProperty ]
+
+        // Typing 100,200 should mean a coordinate
+        if (typeof value === 'string' && value.match(/\d*,\d*/)) {
+            value = value.split(',');
+            value[0] = parseInt(value[0], 10);
+            value[1] = parseInt(value[1], 10);
+        }
+
+        if (value && !target) {
+            target      = actionRecord.data[ this.targetProperty ] = new Siesta.Recorder.Target({
+                targets     : [ { type : 'user', target : value } ]
+            })
+        }
+
+        if (target) {
+            if (value && (match = /^!!(.+)/.exec(value)))
+                target.activeTarget = match[ 1 ]
+            else {
+                target.setUserTarget(value)
+            }
+
+            // TODO
+            //actionRecord.afterEdit(this.targetProperty)
+        }
+    },
+
+    
+    populate : function (target) {
+        var storeData   = [];
+
+        target && target.targets.forEach(function (target) {
+            var type     = target.type
+            value        = target.target;
+
+            if (type === 'cq' ) {
+                var splitPos = target.target.indexOf('->');
+                value = splitPos > 0 ? target.target.split('->').splice(1, 0, '>>').join() : '>>' + target.target
+            }
+
+            storeData.push({
+                // we add the "!!" before the type, so that "setValue(value)" can distinguish between the value as 
+                // arbitrary string (user input) and value as type name (which should change only the "activeTarget")
+                type    : '!!' + type, 
+                value   : value,
+                target  : target
+            });
+        });
+
+        this.store.loadData(storeData);
     }
-})
+});
 ;
-Ext.define('Siesta.Harness.Browser.UI.TreeFilterField', {
-    extend : 'Ext.form.field.Text',
-    alias  : 'widget.treefilter',
+Ext.define('Siesta.Recorder.UI.Editor.DragTarget', {
+    extend          : 'Ext.form.field.Picker',
+    alias           : 'widget.drageditor',
 
-    filterGroups : false,
-    cls          : 'filterfield',
+    editable        : false,
+    hideTrigger     : true,
+    minWidth        : 300,
+    sourceEditor    : null,
+    targetEditor    : null,
+    record          : null,
+    onTargetChange  : null,
 
-    store : null,
+    listeners       : {
+        focus : function (fld, e, opts) {
+            fld.expand();
+        }
+    },
 
-    filterField : 'text',
-
-    hasAndCheck     : null,
-    andChecker      : null,
-    andCheckerScope : null,
-
-    triggerLeafCls  : 'fa-file-o',
-    triggerGroupCls : 'fa-folder-o',
-    tipText         : null,
-
-    constructor : function (config) {
+    
+    cancelEdit : function () {
         var me = this;
+        
+        me.fireEvent('blur');
+        me.collapse();
+    },
 
-        Ext.apply(config, {
-            triggers : {
-                clear : {
-                    cls     : 'fa-close',
-                    handler : function () {
-                        me.store.clearTreeFilter()
-                        me.reset()
-                    }
-                },
+    
+    applyValues : function () {
+        var me          = this,
+            form        = me.picker,
+            values      = form.getForm().getValues()
+            
+        var rec         = me.up('tablepanel').editing.activeRecord;
+            
+        this.sourceEditor.applyChanges(rec)
+        this.targetEditor.applyChanges(rec)
+        
+        var by          = values.by;
+        
+        rec.set('by', (by && rec.parseOffset(by)) || by)
 
-                leafOrGroup : {
-                    cls     : me.triggerLeafCls,
-                    handler : function () {
-                        me.setFilterGroups(!me.getFilterGroups())
-                    }
+        me.fireEvent('blur');
+        me.collapse();
+    },
+    
+    
+    applyChanges : function () {
+    },
+
+    
+    collapseIf : function (e) {
+        if (!e.getTarget('.x-layer')) return this.callParent(arguments)
+    },
+    
+    
+    mimicBlur : function (e) {
+        if (!e.getTarget('.x-layer')) return this.callParent(arguments)
+    },
+    
+    
+    createPicker : function () {
+        var R               = Siesta.Resource('Siesta.Recorder.UI.Editor.DragTarget');
+        var me              = this;
+        
+        var targetListeners = {
+            select  : this.onTargetChange,
+            keyup   : this.onTargetChange,
+            focus   : this.onTargetChange,
+            buffer  : 50,
+            scope   : this
+        };
+
+        return new Ext.form.Panel({
+            floating    : true,
+            bodyPadding : 5,
+            title       : R.get('dragVariantTitle'),
+            items       : [
+                this.sourceEditor = new Siesta.Recorder.UI.Editor.Target({
+                    fieldLabel  : R.get('targetLabel') + ':',
+                    anchor      : '100%',
+                    name        : 'target',
+                    labelWidth  : 60,
+                    listeners   : targetListeners
+                }),
+                this.targetEditor = new Siesta.Recorder.UI.Editor.Target({
+                    targetProperty   : 'toTarget',
+                    
+                    fieldLabel  : R.get('toLabel') + ':',
+                    name        : 'toTarget',
+                    anchor      : '100%',
+                    labelWidth  : 60,
+
+                    listeners   : targetListeners
+                }),
+                {
+                    xtype       : 'textfield',
+                    name        : 'by',
+                    fieldLabel  : R.get('byLabel') + ':',
+                    labelWidth  : 60,
+                    width       : 200
+                }
+            ],
+            listeners: {
+                afterrender: function (panel, opts) {
+                    var rec     = me.record;
+
+                    me.sourceEditor.populate(rec.get('target'))
+                    me.targetEditor.populate(rec.get('toTarget'))
+
+                    panel.getForm().setValues(rec.data);
                 }
             },
-
-            listeners : {
-                change     : {
-                    fn         : this.onFilterChange,
-                    buffer     : 400,
-                    scope      : this
+            buttons : [
+                {
+                    name    : 'cancel',
+                    text    : R.get('cancelButtonText'),
+                    handler : function (btn, e, opts) {
+                        me.cancelEdit();
+                    }
                 },
+                '->',
+                {
+                    name    : 'save',
+                    text    : R.get('saveButtonText'),
+                    handler : function (btn, e, opts) {
+                        me.applyValues();
+                    }
+                }
+            ]
+        });
+    }
 
-                specialkey : this.onFilterSpecialKey,
-                scope      : this
-            }
-        })
+});;
+Ext.define('Siesta.Recorder.UI.ActionIconColumn', {
+    extend       : 'Ext.grid.Column',
+    alias        : 'widget.recorderactioniconcolumn',
+    dataIndex    : 'action',
+    width        : 28,
+    sortable     : false,
+    menuDisabled : true,
+    align        : 'center',
+    tdCls        : 'siesta-recorderpanel-action-icon-column',
+
+    constructor : function () {
+        this.scope  = this;
 
         this.callParent(arguments);
     },
 
+    renderer : function (value, meta, record) {
+        if (value && record.get('leaf')) {
+            var cls = this.getCssByActionType(value);
 
-    afterRender : function () {
-        this.callParent(arguments)
-
-        this.tipText && this.inputEl.set({ title : this.tipText })
-
-        if (this.filterGroups) {
-            this.triggerEl.item(1).addCls(this.triggerGroupCls)
-            this.triggerEl.item(1).removeCls(this.triggerLeafCls)
+            return '<span class="action-icon fa ' + cls + '"></span>';
         }
     },
 
+    getCssByActionType : function (type) {
+        if (type.match('^wait')) return 'fa-clock-o';
+        if (type.match('^move')) return 'fa-arrows';
+        if (type === 'type' || type === 'setValue') return 'fa-keyboard-o';
+        if (type === 'screenshot') return 'fa-camera';
+        if (type === 'fn') return 'fa-code';
 
-    onFilterSpecialKey : function (field, e, t) {
-        if (e.keyCode === e.ESC) {
-            this.store.clearTreeFilter()
-            field.reset();
+        return 'fa-mouse-pointer';
+    }
+});
+;
+Ext.define('Siesta.Recorder.UI.ActionColumn', {
+    extend       : 'Ext.tree.Column',
+    alias        : 'widget.recorderactioncolumn',
+    dataIndex    : 'action',
+    width        : 100,
+    sortable     : false,
+    menuDisabled : true,
+    tdCls        : 'siesta-recorderpanel-typecolumn',
+    editor       : 'typeeditor',
+
+    constructor : function () {
+        var R       = Siesta.Resource('Siesta.Recorder.UI.RecorderPanel');
+        this.text   = R.get('actionColumnHeader');
+
+        this.callParent(arguments);
+    },
+
+    renderer : function(value, meta, record) {
+        meta.tdCls = ' action-level-' + (record.parentNode.data.root ? '0' : '1');
+
+        return value;
+    }
+});
+;
+Ext.define('Siesta.Recorder.UI.TargetColumn', {
+    extend       : 'Ext.grid.Column',
+    alias        : 'widget.targetcolumn',
+
+    header       : Siesta.Resource('Siesta.Recorder.UI.TargetColumn', 'headerText'),
+    dataIndex    : 'target',
+    flex         : 1,
+    sortable     : false,
+    menuDisabled : true,
+    field        : {},
+    tdCls        : 'eventview-targetcolumn',
+
+    // API for highlighting typed target text, supplied by owner/creator
+    highlightTarget : null,
+
+
+    renderer : function (value, meta, record) {
+        // we are not interested in the default value which is a "target" field value
+        value               = ''
+
+        var actionName      = (record.data.action || '').toLowerCase()
+
+        if (record.hasTarget()) {
+            var target      = record.getTarget()
+
+            if (target) {
+                var R           = Siesta.Resource('Siesta.Recorder.UI.TargetColumn');
+
+                value               = target.target
+
+                if (target && target.type == 'cq') value = '>>' + value
+
+                if (actionName === 'drag') {
+
+                    var toTarget    = record.data.toTarget
+                    var by          = record.data.by
+
+                    if (toTarget && toTarget.targets.length && (!toTarget.isTooGeneric() || !by))
+                        value       += ' ' + R.get('to') + ': ' + toTarget.getTarget().target;
+                    else if (by)
+                        value       += ' ' + R.get('by') + ': [' + by + ']';
+                }
+
+                meta.tdCls = 'eventview-target-' + target.type
+
+                if (target.type === 'xy') {
+                    meta.tdAttr = "title='" + R.get('coordinateTargetWarning') + "'";
+                }
+            }
+        } else {
+            value           = record.get('value')
         }
+
+        meta.tdAttr = 'title="' + Ext.String.htmlEncode(value) + '"';
+
+        return value;
+    },
+
+    setTargetEditor : function (actionRecord) {
+        var newField = this.getTargetEditor(actionRecord);
+
+        // Not all actions have target editors
+        if (!newField) {
+            return false;
+        }
+
+        this.setEditor(newField);
     },
 
 
-    setFilterGroups : function (value) {
-        if (value != this.filterGroups) {
-            this.filterGroups = value
+    getTargetEditor : function (record) {
+        var me          = this;
+        var action      = record.get('action');
+        var editor;
 
-            if (this.rendered) {
-                var el = this.triggerEl.item(1)
+        if (action.match(/^waitFor/)) {
+            if (action === 'waitForAnimations') return null;
 
-                if (value) {
-                    el.addCls(this.triggerGroupCls)
-                    el.removeCls(this.triggerLeafCls)
+            if (action === 'waitForFn') {
+                editor =  new Siesta.Recorder.UI.Editor.Code();
+            } else {
+                this.dataIndex = 'value';
+
+                if (action === 'waitForMs') {
+                    editor = new Ext.form.field.Number()
                 } else {
-                    el.removeCls(this.triggerGroupCls)
-                    el.addCls(this.triggerLeafCls)
+                    // Default waitFor editor will just be a text field
+                    editor = new Ext.form.field.Text();
                 }
             }
+        } else if (action === 'drag') {
+            this.dataIndex = 'target';
 
-            this.refreshFilter()
-
-            this.fireEvent('filter-group-change', this)
-        }
-    },
-
-
-    getFilterGroups : function () {
-        return this.filterGroups
-    },
-
-
-    refreshFilter : function () {
-        this.onFilterChange(this, this.getValue())
-    },
-    
-    
-    // split term by | first, then by whitespace
-    splitTermByPipe : function (term) {
-        var parts           = term.split(/\s*\|\s*/);
-        var regexps         = []
-
-        for (var i = 0; i < parts.length; i++) {
-            // ignore empty
-            if (parts[ i ]) {
-                regexps.push(
-                    Ext.Array.map(parts[ i ].split(/\s+/), function (token) {
-                        return new RegExp(Ext.String.escapeRegex(token), 'i')
-                    })
-                )
-            }
-        }
-        
-        return regexps
-    },
-    
-    
-    matchAnyOfRegExps : function (string, regexps) {
-        for (var p = 0; p < regexps.length; p++) {
-            var groupMatch  = true
-            var len         = regexps[ p ].length
-
-            // blazing fast "for" loop! :)
-            for (var i = 0; i < len; i++)
-                if (!regexps[ p ][ i ].test(string)) {
-                    groupMatch = false
-                    break
+            editor = new Siesta.Recorder.UI.Editor.DragTarget({
+                onTargetChange : function () {
+                    me.onTargetChange.apply(me, arguments);
                 }
+            });
+        } else if (action === 'fn') {
+            this.dataIndex = 'value';
 
-            if (groupMatch) return true
+            editor = new Siesta.Recorder.UI.Editor.Code();
+        } else if (action === 'type' || action === 'moveCursorBy' || action === 'screenshot' || action === 'setUrl') {
+            this.dataIndex = 'value';
+
+            editor =  new Ext.form.field.Text();
+        }else if (action === 'setWindowSize') {
+            this.dataIndex = 'value';
+
+            editor =  new Siesta.Recorder.UI.Editor.Array();
         }
-        
-        return false
+        else {
+            // Assume it's a target action
+            this.dataIndex = 'target';
+
+            editor = new Siesta.Recorder.UI.Editor.Target({
+                listeners : {
+                    select : this.onTargetChange,
+                    keyup  : this.onTargetChange,
+                    focus  : this.onTargetChange,
+                    buffer : 50,
+                    scope  : this
+                }
+            });
+            editor.populate(record.data.target);
+        }
+
+        // Give editor access to the record
+        editor.record = record;
+
+        return editor;
     },
 
 
-    onFilterChange : function (field, filterValue) {
-        if (filterValue || this.hasAndCheck && this.hasAndCheck()) {
-            var fieldName       = this.filterField
+    onTargetChange : function (field) {
+        var target      = field.getTarget();
 
-            var parts, groupFilter
-            var filterGroups    = this.filterGroups
-            
-            if (!filterGroups) {
-                parts           = filterValue.split(/\s*\>\s*/)
-                groupFilter     = parts.length > 1 ? parts[ 0 ] : ''
-                filterValue     = parts.length > 1 ? parts[ 1 ] : parts[ 0 ]
+        if (!target) return;
+
+        var textTarget  = target.target
+
+        if (target.type == 'cq') textTarget = '>>' + textTarget
+
+        if (this.highlightTarget) {
+            var result      = this.highlightTarget(textTarget, target.offset);
+
+            if (result.success) {
+                field.clearInvalid()
+            } else {
+                field.markInvalid(result.message);
             }
+        }
+    }
+});
+;
+Ext.define('Siesta.Recorder.UI.RecorderPanel', {
+    extend : 'Ext.tree.Panel',
 
-            parts               = filterValue.split(/\s*\|\s*/);
-            
-            var testFilterRegexps   = this.splitTermByPipe(filterValue)
-            var groupFilterRegexps  = groupFilter ? this.splitTermByPipe(groupFilter) : null
-            
-            var andChecker          = this.andChecker
-            var andCheckerScope     = this.andCheckerScope || this
-            
-            var me                  = this
+    alias : 'widget.recorderpanel',
 
-            this.store.filterTreeBy({
-                filter               : function (node) {
-                    if (andChecker && !andChecker.call(andCheckerScope, node)) return false
+    requires : [
+        'Ext.grid.plugin.CellEditing'
+    ],
 
-                    if (!filterGroups && groupFilter) {
-                        var currentNode     = node
-                        var isInGroup       = false
+    buttonAlign : 'left',
+    border      : false,
+    cls         : 'siesta-recorderpanel',
+    selModel    : {
+        mode : 'MULTI'
+    },
 
-                        while (currentNode && currentNode.parentNode) {
-                            var parent      = currentNode.parentNode
+    store : {
+        type : 'actionstore'
+    },
 
-                            if (me.matchAnyOfRegExps(parent.get(fieldName), groupFilterRegexps)) {
-                                isInGroup   = true
-                                break
+    rootVisible : false,
+
+    viewConfig : {
+        markDirty  : false,
+        stripeRows : false,
+        allowCopy  : true,
+        plugins    : {
+            ptype : 'treeviewdragdrop'
+        }
+    },
+
+
+    newActionDefaults : {
+        action : 'click'
+    },
+    lines             : false,
+    test              : null,
+    recorder          : null,
+    harness           : null,
+    domContainer      : null,
+    recorderConfig    : null,
+    editing           : null,
+    enableColumnMove  : false,
+    bufferedRenderer  : false,
+    recorderClass     : 'Siesta.Recorder.ExtJS',
+
+    enableContextMenu : true,
+    showToolbars      : true,
+    enableEditing     : true,
+    playbackOnly      : false,
+
+    /**
+     * @event startrecord
+     * Fires when a recording is started
+     * @param {Siesta.Recorder.UI.RecorderPanel} this
+     * @param {Siesta.Test} test The test instance to which the recorder is attached
+     */
+    /**
+     * @event stoprecord
+     * Fires when a recording is stopped
+     * @param {Siesta.Recorder.UI.RecorderPanel} this
+     */
+    /**
+     * @event play
+     * Fires when a recording is being played back
+     * @param {Siesta.Recorder.UI.RecorderPanel} this
+     */
+
+    initComponent : function () {
+        var me             = this;
+        var R              = Siesta.Resource('Siesta.Recorder.UI.RecorderPanel');
+        var recorderConfig = this.recorderConfig || {};
+
+        if (this.enableEditing) {
+            me.plugins = me.plugins ? [].concat(me.plugins) : [];
+
+            me.editing = me.editing || new Ext.grid.plugin.CellEditing({
+                clicksToEdit : 1
+            });
+
+            me.editing.on({
+                beforeedit   : me.onBeforeEdit,
+                validateedit : me.onValidateEdit,
+                edit         : me.afterEdit,
+                canceledit   : me.afterEdit,
+                scope        : me
+            });
+
+            this.relayEvents(me.editing, ['beforeedit', 'afteredit', 'validateedit'])
+
+            me.plugins.push(me.editing);
+
+            this.on('hide', function () {
+                if (this.editing) {
+                    this.editing.completeEdit();
+                }
+            });
+
+            this.on({
+                afteredit    : this.onAfterEdit,
+                validateedit : this.onAfterEdit,
+                canceledit   : this.onAfterEdit,
+                scope        : this,
+                buffer       : 200
+            });
+        }
+
+        Ext.applyIf(me, {
+
+            columns : [
+                {
+                    xtype : 'recorderactioniconcolumn'
+                },
+                {
+                    xtype : 'recorderactioncolumn'
+                },
+                {
+                    xtype           : 'targetcolumn',
+                    highlightTarget : this.highlightTarget.bind(this)
+                }
+            ].concat(
+                recorderConfig.recordOffsets !== false ? {
+                    header       : R.get('offsetColumnHeader'),
+                    dataIndex    : '__offset__',
+                    width        : 60,
+                    sortable     : false,
+                    menuDisabled : true,
+                    tdCls        : 'siesta-recorderpanel-offsetcolumn',
+                    renderer     : function (value, meta, record) {
+                        var target = record.getTarget()
+
+                        if (target && target.offset) {
+                            return target.offset + '<div class="siesta-recorderpanel-clearoffset fa fa-close"></div>'
+                        }
+                    },
+                    editor       : 'textfield'
+                } : []
+            ).concat({
+                    xtype        : 'actioncolumn',
+                    width        : 55,
+                    align        : 'center',
+                    sortable     : false,
+                    menuDisabled : true,
+                    tdCls        : 'siesta-recorderpanel-actioncolumn',
+
+                    items : [
+                        {
+                            iconCls : 'step-icon fa fa-close icon-delete-row',
+                            tooltip : 'Delete this action',
+                            handler : this.onDeleteStepClick,
+                            scope   : this
+                        },
+                        {
+                            iconCls : 'step-icon fa fa-play icon-play-row',
+                            tooltip : 'Play this action',
+                            handler : this.onPlaySingleStepClick,
+                            scope   : this
+                        },
+                        {
+                            iconCls : 'step-icon fa fa-forward icon-play-from-row',
+                            tooltip : 'Play from this action',
+                            handler : this.onPlayFromStepClick,
+                            scope   : this
+                        }]
+                })
+        });
+
+        if (this.showToolbars) {
+            me.createToolbars();
+        }
+
+        if (!this.playbackOnly) {
+            var recorder = me.recorder = me.recorder || new Siesta.Recorder.ExtJS(
+                this.recorderConfig || {}
+            );
+
+            recorder.on("actionadd", this.onActionAdded, this)
+            recorder.on("actionremove", this.onActionRemoved, this)
+            recorder.on("actionupdate", this.onActionUpdated, this)
+            recorder.on("clear", this.onRecorderClear, this)
+
+            recorder.on("start", this.onRecorderStart, this)
+            recorder.on("stop", this.onRecorderStop, this)
+        }
+
+        me.callParent();
+
+        this.mon(Ext.getBody(), 'mousedown', this.onBodyMouseDown, this, { delegate : '.target-inspector-label' })
+
+        if (this.enableContextMenu) {
+            this.contextMenu = new Siesta.Recorder.UI.ContextMenu({
+                panel : this
+            });
+        }
+    },
+
+    onAfterEdit : function () {
+        if (!this.editing.editing) {
+            this.hideHighlighter();
+        }
+    },
+
+    onBodyMouseDown : function (e, t) {
+        var focusedEl = document.activeElement;
+
+        if (Ext.fly(focusedEl).up('.siesta-targeteditor')) {
+            e.stopEvent();
+            e.preventDefault();
+            focusedEl.value = Ext.htmlDecode(t.innerHTML);
+        }
+    },
+
+
+    onRecorderStart : function () {
+
+        this.fireEvent('startrecord', this, this.test);
+
+        this.addCls('recorder-recording');
+    },
+
+
+    onRecorderStop : function () {
+
+        this.fireEvent('stoprecord', this);
+
+        this.removeCls('recorder-recording');
+    },
+
+
+    hideHighlighter : function () {
+        if (this.test && this.domContainer) {
+            this.domContainer.clearHighlight();
+        }
+    },
+
+
+    highlightTarget : function (target, offset) {
+        if (!target) {
+            // Pass no target => simply hide highlighter
+            this.hideHighlighter();
+            return;
+        }
+
+        var test = this.test;
+
+        if (!test) {
+            this.hideHighlighter();
+            return { success : true }
+        }
+
+        var R = Siesta.Resource('Siesta.Recorder.UI.RecorderPanel');
+        var resolved, el
+
+        try {
+            resolved = this.test.normalizeElement(target, true, true, true);
+
+            el = resolved.el
+        } catch (e) {
+            // sizzle may break on various characters in the query (=, $, etc)
+        } finally {
+            if (!el) {
+                return { success : false, warning : R.get('queryMatchesNothing') }
+            }
+        }
+
+        var warning = resolved.matchingMultiple ? R.get('queryMatchesMultiple') : ''
+
+        if (test.isElementVisible(el) && this.domContainer) {
+            var pointToVisualize = Ext.isArray(target) ? target : (offset || ['50%', '50%']);
+
+            this.domContainer.highlightTarget(el, '<span class="target-inspector-label">' + target + '</span>', pointToVisualize);
+        } else {
+            // If target was provided but no element could be located, return false so
+            // caller can get a hint there is potential trouble
+            warning = warning || R.get('noVisibleElsFound')
+        }
+
+        return {
+            success : !warning,
+            message : warning
+        };
+    },
+
+
+    createToolbars : function () {
+        var me = this;
+        var R  = Siesta.Resource('Siesta.Recorder.UI.RecorderPanel');
+
+        me.dockedItems = [
+            {
+                xtype   : 'toolbar',
+                padding : '3 5',
+                cls     : 'siesta-toolbar recorder-toolbar',
+                dock    : 'top',
+                height  : 45,
+                style   : 'border-color:transparent',
+                items   : [
+                    {
+                        xtype      : 'textfield',
+                        itemId     : 'recording-name',
+                        fieldLabel : 'Name',
+                        height     : 30,
+                        width      : 200,
+                        labelWidth : 50,
+                        value      : R.get('newRecording')
+                    },
+                    {
+                        xtype           : 'textfield',
+                        itemId          : 'pageUrl',
+                        height          : 30,
+                        flex            : 1,
+                        labelWidth      : 70,
+                        fieldLabel      : R.get('pageUrl'),
+                        enableKeyEvents : true,
+                        listeners       : {
+                            keyup : function (field, e) {
+                                if (e.getKey() == e.ENTER) {
+                                    this.onPageUrlFieldEnterKey();
+                                }
+                            },
+                            scope : this
+                        }
+                    }
+                ]
+            },
+            {
+                xtype    : 'toolbar',
+                cls      : 'siesta-toolbar',
+                style    : 'border-color:transparent',
+                dock     : 'top',
+                height   : 45,
+                defaults : {
+                    scale       : 'medium',
+                    tooltipType : 'title',
+                    scope       : me
+                },
+                items    : [
+                    {
+                        iconCls  : 'fa fa-circle icon-record',
+                        action   : 'recorder-start',
+                        cls      : 'recorder-tool',
+                        whenIdle : true,
+                        tooltip  : R.get('recordTooltip'),
+                        handler  : me.onRecordClick
+                    },
+                    {
+                        iconCls : 'fa fa-square',
+                        cls     : 'recorder-tool',
+                        action  : 'recorder-stop',
+                        handler : me.stop,
+                        tooltip : R.get('stopTooltip')
+                    },
+                    {
+                        iconCls : 'fa fa-play',
+                        action  : 'recorder-play',
+                        cls     : 'recorder-tool',
+                        handler : me.onPlayClick,
+                        tooltip : R.get('playTooltip')
+                    },
+                    {
+                        iconCls : 'fa fa-close',
+                        action  : 'recorder-remove-all',
+                        cls     : 'recorder-tool icon-clear',
+                        handler : function () {
+                            var me = this;
+
+                            if (me.store.getCount() === 0) return;
+
+                            Ext.Msg.confirm(R.get('removeAllPromptTitle'), R.get('removeAllPromptMessage'), function (btn) {
+                                if (btn == 'yes') {
+                                    // process text value and close...
+                                    me.clear();
+                                }
+                            });
+                        },
+                        tooltip : R.get('clearTooltip')
+                    },
+                    {
+                        iconCls     : 'fa fa-plus',
+                        action      : 'recorder-add-step',
+                        tooltip     : R.get('addNewTooltip'),
+                        cls         : 'recorder-tool',
+                        tooltipType : 'title',
+                        scope       : me,
+                        handler     : function () {
+                            var store    = me.store;
+                            var selected = me.getSelectionModel().selected.first();
+                            var model    = new store.model(Ext.apply({}, this.newActionDefaults));
+
+                            if (selected && selected.isVisible()) {
+                                selected.parentNode.insertChild(selected.get('index') + 1, model);
+                            } else {
+                                store.getRootNode().appendChild(model);
                             }
 
-                            currentNode     = parent
+                            me.editing.startEdit(model, 1);
+                        }
+                    },
+                    '->',
+                    {
+                        xtype   : 'splitbutton',
+                        text    : 'Show source',
+                        cls     : 'recorder-tool',
+                        action  : 'recorder-generate-code',
+                        handler : this.onGenerateCodeClick,
+                        scope   : this,
+                        menu    : {
+                            items : [
+                                {
+                                    text    : R.get('showSourceInNewWindow'),
+                                    scope   : this,
+                                    handler : function () {
+                                        var win           = window.open(null);
+                                        var body          = win.document.body;
+                                        var recordingName = this.getRecordingName();
+                                        var code          = this.store.generateCode(recordingName);
+
+                                        body.innerHTML = '<pre>' + code + '</pre>';
+                                    }
+                                }
+                            ]
+                        }
+                    },
+
+                    me.closeButton
+                ]
+            }];
+
+        me.bbar = {
+            xtype  : 'component',
+            cls    : 'cheatsheet',
+            height : 70,
+            html   : '<table><tr><td class="cheatsheet-type">CSS Query:</td><td class="cheatsheet-sample"> .x-btn</td></tr>' +
+            '<tr><td class="cheatsheet-type">Component Query:</td><td class="cheatsheet-sample"> &gt;&gt;toolbar button</td></tr>' +
+            '<tr><td class="cheatsheet-type">Composite Query:</td><td class="cheatsheet-sample"> toolbar =&gt; .x-btn</td></tr></table>'
+        };
+    },
+
+    // Attach to a test (and optionally a specific iframe, only used for testing)
+    attachTo : function (test, iframe) {
+        var me       = this;
+        var doClear  = me.test && me.test.url !== test.url;
+        var recorder = this.recorder
+
+        this.setTest(test);
+
+        var recWindow = (iframe && iframe.contentWindow) || (test.scopeProvider && test.scopeProvider.scope);
+
+        if (recWindow) {
+            me.recorder.attach(recWindow);
+        }
+
+        if (doClear) me.clear();
+    },
+
+    onPageUrlFieldEnterKey : function () {
+        var descriptor = this.getRecorderTestDescriptor();
+
+        if (descriptor && (descriptor.hostPageUrl || descriptor.pageUrl)) {
+            this.harness.startSingle(descriptor);
+
+            this.harness.on('teststart', function (event, test) {
+
+                if (test.url === descriptor.url) {
+
+                    // To ensure test is visible
+                    this.fireEvent('play', this, test, 0);
+                }
+
+            }, this, { single : true });
+        }
+    },
+
+    onRecordClick : function () {
+        var test = this.test;
+
+        if (!this.test) return;
+
+        var R          = Siesta.Resource('Siesta.Recorder.UI.RecorderPanel');
+        var descriptor = this.getRecorderTestDescriptor();
+
+        if (descriptor) {
+
+            if (this.isRecording()) {
+                this.stop();
+            } else {
+                var harness = this.harness;
+                var pageUrl = this.down('#pageUrl').getValue();
+
+                // Grab a new test reference from harness in case test was rerun while recorder was open
+                test = harness.getTestByURL(test.url);
+
+                this.setTest(test);
+
+                var scopeProvider = harness.getTestByURL(test.url).scopeProvider;
+
+                // If we're recording a new URL, or the test has no window (already was cleaned up) -
+                // first launch the test to load the URL into the test iframe
+                if (!scopeProvider || pageUrl && scopeProvider.sourceURL !== pageUrl) {
+                    harness.on('teststart', function (event, test) {
+
+                        if (test.url === descriptor.url) {
+                            this.attachTo(test);
+                            this.recorder.start();
                         }
 
-                        if (!isInGroup) return false
-                    }
+                    }, this, { single : true });
 
-                    var title   = node.get(fieldName)
-                    
-                    if (me.matchAnyOfRegExps(title, testFilterRegexps)) return true
+                    harness.startSingle(descriptor);
+                } else if (test && test.global) {
+                    this.attachTo(test);
+                    this.recorder.start();
+                }
+            }
 
-                    // if there's no name filtering testFilterRegexps - return true (show all elements)
-                    return !testFilterRegexps.length
-                },
-                fullMatchingParents : filterGroups
-            })
         } else {
-            this.store.clearTreeFilter()
+            Ext.Msg.alert('Error', R.get('noTestStarted'))
         }
-    }
-})
-;
-Ext.define('Siesta.Harness.Browser.UI.CanFillAssertionsStore', {
-
-    processNewResult : function (assertionStore, test, result, parentResult) {
-        var data            = {
-            id                  : result.id,
-            
-            result              : result,
-            
-            loaded              : true,
-            leaf                : !(result instanceof Siesta.Result.SubTest),
-            expanded            : (result instanceof Siesta.Result.SubTest) && result.test.specType != 'it'
-        };
-        
-        var alreadyInTheStore   = assertionStore.getNodeById(result.id)
-
-        if (alreadyInTheStore) {
-
-            alreadyInTheStore.triggerUIUpdate()
-        } else {
-            Ext.suspendLayouts()
-            
-            alreadyInTheStore   = (assertionStore.getNodeById(parentResult.id) || assertionStore.getRootNode()).appendChild(data);
-            
-            Ext.resumeLayouts()
-        }
-
-        if (result.isPassed && !result.isPassed() || result.isWarning) alreadyInTheStore.ensureVisible()
-        
-        alreadyInTheStore.updateFolderStatus()
     },
-    
 
-    // is bubbling and thus triggered for all tests (including sub-tests) 
-    processEveryTestEnd : function (assertionStore, test) {
-        var testResultNode  = assertionStore.getNodeById(test.getResults().id)
-        
-        // can be missing for "root" tests
-        testResultNode && testResultNode.updateFolderStatus()
+
+    onPlayClick : function () {
+        var me         = this;
+        var descriptor = this.getRecorderTestDescriptor();
+
+        if (descriptor) {
+            me.stop();
+
+            var testStartListener = function (ev, runningTestInstance) {
+                if (runningTestInstance.url === descriptor.url) {
+                    me.fireEvent('play', this, runningTestInstance);
+
+                    runningTestInstance.on('beforetestfinalizeearly', testFinalizeListener, null, { single : true });
+                }
+            };
+
+            var testFinalizeListener = function (ev, test2) {
+                // important, need to update our reference to the test
+                me.setTest(test2);
+
+                // Run test first, and before it ends - fire off the recorded steps
+                test2.chain(me.generateSteps());
+            };
+
+            var harness = me.harness;
+
+            harness.on('teststart', testStartListener, null, { single : true });
+
+            if (this.store.getCount() > 0) {
+                this.scrollRecordIntoView( this.store.getAt(0));
+            }
+
+            harness.startSingle(descriptor);
+        }
+    },
+
+
+    stop : function () {
+        this.recorder.stop();
+    },
+
+
+    clear : function () {
+        this.recorder.clear();
+    },
+
+
+    onRecorderClear : function () {
+        this.store.getRootNode().removeAll();
+    },
+
+
+    getRecorderTestDescriptor : function () {
+        var harness     = this.harness;
+        var pageUrl     = this.down('#pageUrl').getValue();
+        var test        = this.test;
+        var descriptor  = test && harness.getScriptDescriptor(test.url);
+        var testHostUrl = descriptor && harness.getDescriptorConfig(descriptor, 'pageUrl');
+
+        // If user changes target page URL - use an empty virtual test descriptor
+        return pageUrl && testHostUrl !== pageUrl ? {
+            url      : '/',
+            testCode : 'StartTest(function(t) {})',
+            pageUrl  : pageUrl
+        } : (test ? descriptor : null);
+    },
+
+
+    setTest : function (test) {
+        var harness = this.harness;
+        var field   = this.down('#pageUrl');
+
+        if (this.test) {
+            this.test.un('beforechainstep', this.onBeforeActionExecute, this);
+        }
+        this.test = test;
+
+        if (test) {
+            test.on('beforechainstep', this.onBeforeActionExecute, this);
+        }
+        if (field && test.scopeProvider) {
+            field.setValue(test.scopeProvider.sourceURL || '');
+        }
+    },
+
+
+    generateSteps : function (events) {
+        var me    = this;
+        var t     = me.test;
+
+        return (events || this.store.getRange()).map(function (action, index) {
+            if (action.isLeaf()) {
+                var step = action.asStep(t);
+                // wait for targets when playing entire test,
+                // and
+                // when playing actions manually from a certain step, wait for all steps but the first one
+                if (action.getTarget()) step.waitForTarget = !events || index > 0;
+
+                return [
+                    function(next) {
+                        index = events ? me.store.indexOf(action) : index;
+                        t.fireEvent('beforechainstep', t, index, step);
+                        next();
+                    },
+                    step
+                ]
+            } else {
+               return me.generateSteps(action.childNodes);
+            }
+        }).concat(function(next) {
+            me.fireEvent('stop', t);
+            next();
+        });
+    },
+
+    onBeforeActionExecute : function(event, test, index, step) {
+        var count = this.store.getCount();
+
+        this.getSelectionModel().select(index);
+
+        if (index < count - 2) {
+            this.scrollRecordIntoView( this.store.getAt(index + 2));
+        }
+    },
+
+    onActionAdded : function (event, action) {
+        var root         = this.store.getRootNode();
+        var targetParent = (root.lastChild && root.lastChild.parentNode) || root;
+
+        var newRecord = targetParent.appendChild(action);
+
+        this.scrollRecordIntoView(newRecord)
+    },
+
+
+    onActionRemoved : function (event, action) {
+        this.store.getNodeById(action.id).remove();
+    },
+
+
+    onActionUpdated : function (event, action) {
+        var model = this.store.getNodeById(action.id);
+        model.callJoined('afterEdit', [['target', 'action', '__offset__']])
+    },
+
+    getActions : function (asJooseInstances) {
+        var actionModels = this.store.getRange()
+
+        return asJooseInstances ? Ext.Array.pluck(actionModels, 'data') : actionModels
+    },
+
+
+    onDestroy : function () {
+        if (this.recorder) {
+            this.recorder.stop();
+        }
+
+        this.callParent(arguments);
+    },
+
+    scrollRecordIntoView : function (record) {
+        if (this.view.rendered) {
+            this.ensureVisible(record, { animate : { duration : 100 } });
+        }
+    },
+
+
+    onBeforeEdit : function (cellEditing, editingContext) {
+
+        var column = editingContext.column;
+        var editor;
+
+        if (column.xtype === "targetcolumn") {
+            cellEditing.completeEdit();
+
+            column.setTargetEditor(editingContext.record);
+
+            editingContext.value = editingContext.record.get(column.dataIndex);
+        } else {
+            editor = editingContext.column.getEditor();
+
+            if (editor.xtype === 'typeeditor') {
+                // Can't populate until we have a test bound
+                editor.populate(this.test);
+            }
+        }
+
+        if (editingContext.column.dataIndex === 'target' && this.domContainer) {
+            this.domContainer.startInspection(false);
+        }
+
+        // Offset only relevant for mouseinput actions
+        return editingContext.field !== '__offset__' || editingContext.record.isMouseAction();
+    },
+
+
+    afterEdit : function (plug, e) {
+
+        if (e.field === 'action') {
+            var store = e.column.field.store;
+            store.clearFilter();
+
+            if (store.getById(e.value).get('type') !== store.getById(e.originalValue).get('type')) {
+                e.record.resetValues();
+            }
+        }
+    },
+
+
+    onValidateEdit : function (plug, e) {
+        var value = e.value;
+
+        if (e.field === 'action' && !value) return false;
+
+        if (e.field === '__offset__') {
+            e.cancel = true;
+
+            if (value) {
+                var parsed = e.record.parseOffset(value);
+
+                if (parsed) {
+                    e.record.setTargetOffset(parsed);
+                }
+            } else {
+                e.record.clearTargetOffset();
+            }
+        } else if (e.column.getEditor().applyChanges) {
+            e.cancel = true;
+
+            e.column.getEditor().applyChanges(e.record);
+        }
+
+        // Trigger manual refresh of node when 'set' operation is more complex
+        if (e.cancel) {
+            this.afterEdit(plug, e);
+            this.getView().refreshNode(e.record);
+        }
+    },
+
+
+    afterRender : function () {
+        this.callParent(arguments);
+
+        var view = this.getView();
+
+        view.el.on({
+            mousedown : function (e, t) {
+                var record = view.getRecord(view.findItemByChild(t));
+
+                record.clearTargetOffset()
+                view.refreshNode(record);
+
+                e.stopEvent();
+            },
+            delegate  : '.siesta-recorderpanel-clearoffset'
+        })
+    },
+
+    isRecording : function () {
+        return this.recorder.active;
+    },
+
+    onGenerateCodeClick : function () {
+
+        var R = Siesta.Resource('Siesta.Recorder.UI.RecorderPanel');
+
+        var win = new Ext.Window({
+            title       : R.get('codeWindowTitle'),
+            layout      : 'fit',
+            itemId      : 'codeWindow',
+            height      : 400,
+            width       : 600,
+            autoScroll  : true,
+            autoShow    : true,
+            constrain   : true,
+            closeAction : 'destroy',
+            items       : {
+                xtype : 'jseditor',
+                mode  : 'text/javascript'
+            }
+        });
+
+        var field         = win.items.first();
+        var recordingName = this.getRecordingName();
+        var code          = this.store.generateCode(recordingName);
+
+        field.setValue(code);
+        field.editor.focus();
+    },
+
+    getRecordingName : function () {
+        return this.down('#recording-name').getValue();
+    },
+
+    onDeleteStepClick : function (grid, rowIndex, colIndex, item, e, record) {
+        this.editing && this.editing.completeEdit();
+
+        record.remove();
+    },
+
+    onPlaySingleStepClick : function (cmp, rowIndex) {
+        this.playSingle(rowIndex);
+    },
+
+    onPlayFromStepClick : function (cmp, rowIndex) {
+        this.playFromStep(rowIndex);
+    },
+
+    playSingle : function(index) {
+        if (this.test) {
+            var action = this.store.getAt(index);
+
+            this.fireEvent('play', this, this.test, index);
+            this.test.chain(this.generateSteps([action]));
+        }
+    },
+
+    playFromStep : function (startIndex) {
+        if (this.test) {
+            this.playRange(startIndex);
+        }
+    },
+
+    playRange : function (startIndex, endIndex) {
+        if (this.test) {
+            this.fireEvent('play', this, this.test, startIndex, endIndex);
+            this.test.chain(this.generateSteps(this.store.getRange(startIndex, endIndex)));
+        }
+    },
+
+    getRecorder : function () {
+        return this.recorder;
     }
-})
+});
 ;
 Ext.define('Siesta.Harness.Browser.UI.ComponentInspector', {
     extend : 'Ext.util.Observable',
@@ -41866,2697 +43096,6 @@ Ext.define('Siesta.Harness.Browser.UI.DomContainer', {
         this.inspector.highlightTarget(target, content, offset);
     }
 });;
-Ext.define('Siesta.Harness.Browser.UI.AssertionGrid', {
-    alias : 'widget.assertiongrid',
-    extend : 'Ext.tree.Panel',
-
-    mixins : [
-        'Siesta.Harness.Browser.UI.CanFillAssertionsStore'
-    ],
-
-//    requires            : [
-//        'Siesta.Harness.Browser.Model.AssertionTreeStore',
-//        'Siesta.Harness.Browser.UI.FilterableTreeView',
-//        'Siesta.Harness.Browser.UI.TreeColumn'
-//    ],
-
-    cls : 'siesta-assertion-grid',
-
-    enableColumnHide   : false,
-    enableColumnMove   : false,
-    enableColumnResize : false,
-    sortableColumns    : false,
-    useArrows          : true,
-    border             : false,
-    minWidth           : 100,
-    trackMouseOver     : false,
-    autoScrollToBottom : true,
-    hideHeaders        : true,
-    rowLines           : false,
-    isStandalone       : false,
-    rootVisible        : false,
-    collapseDirection  : 'left',
-    test               : null,
-    testListeners      : null,
-    viewType           : 'filterabletreeview',
-    lines              : false,
-    disableSelection   : true,
-    bufferedRenderer   : false,
-
-    initComponent : function () {
-        var me = this;
-
-        this.testListeners = []
-
-        if (!this.store) this.store = new Siesta.Harness.Browser.Model.AssertionTreeStore({
-
-            proxy : 'memory',
-
-            root : {
-                id       : '__ROOT__',
-                expanded : true,
-                loaded   : true
-            }
-        })
-
-        Ext.apply(this, {
-
-            columns : [
-                {
-                    xtype : 'assertiontreecolumn'
-                }
-            ],
-
-            viewConfig : {
-                enableTextSelection : true,
-                stripeRows          : false,
-                markDirty           : false,
-                // Animation is disabled until: http://www.sencha.com/forum/showthread.php?265901-4.2.0-Animation-breaks-the-order-of-nodes-in-the-tree-view&p=974172
-                // is resolved
-                animate             : false,
-                trackOver           : false,
-
-                // dummy store to be re-defined before showing each test
-                store               : new Ext.data.Store({ fields : [], data : [] }),
-
-                // this should be kept `false` - otherwise assertion grid goes crazy, see #477
-                deferInitialRefresh : false,
-
-                getRowClass : this.getRowClass
-            }
-        });
-
-        this.callParent(arguments);
-
-        this.getView().on('itemadd', this.onMyItemAdd, this);
-    },
-
-    onMyItemAdd : function (records) {
-
-        // Scroll to bottom when test is running
-        if (!this.test.isFinished() && this.autoScrollToBottom) {
-            this.ensureVisible(records[0]);
-        }
-    },
-
-    getRowClass : function (record, rowIndex, rowParams, store) {
-        var result = record.getResult()
-
-        var cls = ''
-
-        // TODO switch to "instanceof"
-        switch (result.meta.name) {
-            case 'Siesta.Result.Diagnostic':
-                return 'tr-diagnostic-row ' + (result.isWarning ? 'tr-warning-row' : '');
-
-            case 'Siesta.Result.Summary':
-                return 'tr-summary-row ' + (result.isFailed ? ' tr-summary-failure' : '');
-
-            case 'Siesta.Result.SubTest':
-                cls = 'tr-subtest-row tr-subtest-row-' + record.get('folderStatus')
-
-                if (result.test.specType == 'describe') cls += ' tr-subtest-row-describe'
-                if (result.test.specType == 'it') cls += ' tr-subtest-row-it'
-
-                return cls;
-
-            case 'Siesta.Result.Assertion':
-                cls += 'tr-assertion-row '
-
-                if (result.isWaitFor)
-                    cls += 'tr-waiting-row ' + (result.completed ? (result.passed ? 'tr-waiting-row-passed' : 'tr-assertion-row-failed tr-waiting-row-failed') : '')
-                else if (result.isException)
-                    cls += result.isTodo ? 'tr-exception-todo-row' : 'tr-exception-row'
-                else if (result.isTodo)
-                    cls += result.passed ? 'tr-todo-row-passed' : 'tr-todo-row-failed'
-                else
-                    cls += result.passed ? 'tr-assertion-row-passed' : 'tr-assertion-row-failed'
-
-                return cls
-            default:
-                throw "Unknown result class"
-        }
-    },
-
-
-    showTest : function (test, assertionsStore) {
-        if (this.test) {
-            Joose.A.each(this.testListeners, function (listener) {
-                listener.remove()
-            })
-
-            this.testListeners = []
-        }
-
-        this.test = test
-
-        this.testListeners = [].concat(
-            this.isStandalone ? [
-                test.on('testupdate', this.onTestUpdate, this),
-                test.on('testendbubbling', this.onEveryTestEnd, this),
-                test.on('assertiondiscard', this.onAssertionDiscarded, this)
-            ] : []
-        )
-
-        Ext.suspendLayouts()
-
-        if (assertionsStore && this.store !== assertionsStore)
-            this.reconfigure(assertionsStore)
-        else if (this.getStore().getRoot().childNodes.length > 0)
-            this.store.removeAll()
-
-        Ext.resumeLayouts()
-    },
-
-
-    onTestUpdate   : function (event, test, result, parentResult) {
-        this.processNewResult(this.store, test, result, parentResult)
-    },
-
-
-    // is bubbling and thus triggered for all tests (including sub-tests)
-    onEveryTestEnd : function (event, test) {
-        this.processEveryTestEnd(this.store, test)
-    },
-
-    onAssertionDiscarded : function(event, test, result) {
-        this.store.getNodeById(result.id).remove();
-    },
-
-    bindStore : function (treeStore, isInitial, prop) {
-        this.callParent(arguments)
-
-        this.store = treeStore;
-
-        if (treeStore && treeStore.nodeStore) {
-            this.getView().dataSource = treeStore.nodeStore
-            // passing the tree store instance to the underlying `filterabletreeview`
-            // the view will re-bind the tree store listeners
-            this.getView().bindStore(treeStore, isInitial, prop)
-        }
-    },
-
-
-    destroy : function () {
-        Joose.A.each(this.testListeners, function (listener) {
-            listener.remove()
-        })
-
-        this.testListeners = []
-
-        this.test = null
-
-        this.callParent(arguments)
-    },
-
-
-    setInitializing : function (initializing) {
-        if (initializing) {
-            this.getView().addCls('siesta-test-initializing');
-        } else {
-            this.getView().removeCls('siesta-test-initializing');
-        }
-    }
-
-})
-;
-Ext.define('Siesta.Harness.Browser.UI.AssertionTreeColumn', {
-
-    extend : 'Ext.tree.Column',
-    alias  : 'widget.assertiontreecolumn',
-
-    imgWithOffsetText : '<img src="{1}" class="{0}" style="left:{2}px" />',
-    tdCls             : 'tr-tree-column',
-    resultTpl         : null,
-    dataIndex         : 'folderStatus',
-    flex              : 1,
-    menuDisabled      : true,
-    sortable          : false,
-
-    descriptionTpl : '<span class="assertion-text">{text}</span>',
-
-    initComponent : function () {
-
-        this.descriptionTpl = this.descriptionTpl instanceof Ext.XTemplate ? this.descriptionTpl : new Ext.XTemplate(this.descriptionTpl);
-
-        Ext.apply(this, {
-            scope     : this
-        });
-
-        this.callParent(arguments);
-    },
-
-    renderer      : function (value, metaData, record, rowIndex, colIndex, store) {
-        var retVal = '';
-        var result = record.data.result;
-        var annotation = result.annotation;
-
-        if (result instanceof Siesta.Result.Summary) {
-            return record.data.result.description.join('<br>');
-        }
-
-        retVal = this.descriptionTpl.apply({
-            text : Ext.String.htmlEncode(result.isWarning ? 'WARN: ' + result.description : result.description)
-        });
-
-        if (annotation) {
-            retVal += '<pre title="' + annotation.replace(/"/g, "'") + '" style="margin-left:' + record.data.depth * 16 + 'px" class="tr-assert-row-annontation">' + Ext.String.htmlEncode(annotation) + '</pre>';
-        }
-
-        return retVal;
-    },
-
-    // HACK OVERRIDE
-    treeRenderer : function (value, metaData, record) {
-        var result = record.getResult()
-
-        if (result instanceof Siesta.Result.Assertion) {
-            if (result.isWaitFor)
-                record.data.iconCls = result.completed ? 'fa-clock-o' : 'fa-spinner fa-spin'
-            else if (result.isException)
-                record.data.iconCls = 'fa-flag';
-            else
-                record.data.iconCls = result.passed ? 'fa-check' : 'fa-bug'
-        } else if (result instanceof Siesta.Result.SubTest) {
-            if( record.get('folderStatus') === 'working') {
-                record.data.iconCls = 'fa-spinner fa-spin';
-            } else {
-                record.data.iconCls = '';
-            }
-        }
-
-        return this.callParent(arguments);
-    }
-});
-;
-Ext.define('Siesta.Harness.Browser.UI.TestNameColumn', {
-    extend       : 'Ext.tree.Column',
-    xtype        : 'testnamecolumn',
-    
-    sortable     : false,
-    dataIndex    : 'title',
-    menuDisabled : true,
-    flex         : 1,
-    tdCls        : 'test-name-cell',
-    
-    scope        : this,
-    filterGroups : null,
-    store        : null,
-
-    initComponent : function () {
-
-        var R = Siesta.Resource('Siesta.Harness.Browser.UI.TestGrid');
-
-        Ext.apply(this, {
-            items : [
-                {
-                    xtype        : 'treefilter',
-                    emptyText    : R.get('filterTestsText'),
-                    margins      : '0 0 0 10',
-                    itemId       : 'trigger',
-                    filterGroups : this.filterGroups,
-                    filterField  : 'title',
-                    store        : this.store,
-                    tipText      : R.get('filterFieldTooltip')
-                }
-            ]
-        });
-
-        this.callParent(arguments);
-    },
-
-    // HACK OVERRIDE
-    treeRenderer : function (value, metaData, testFile) {
-        var cls = '';
-        var folderIcon = '';
-
-        metaData.tdCls = 'test-name-cell-' + (testFile.data.leaf ? 'leaf' : 'parent');
-
-        if (testFile.isLeaf()) {
-
-            var test = testFile.get('test')
-
-            if (test) {
-
-                if (testFile.get('isFailed'))
-                    testFile.data.iconCls = 'siesta-test-failed fa-flag'
-
-                else if (testFile.get('isRunning') && !test.isFinished())
-                    testFile.data.iconCls = 'fa-flash siesta-running-not-finished'
-                else if (test.isFinished()) {
-
-                    if (test.isPassed())
-                        testFile.data.iconCls = 'fa-check siesta-test-passed'
-                    else
-                        testFile.data.iconCls = 'fa-bug siesta-test-failed'
-                } else
-                    testFile.data.iconCls = 'fa-hourglass-o siesta-test-starting'
-
-            } else {
-
-                if (testFile.get('isMissing'))
-                    testFile.data.iconCls = 'fa-close siesta-test-file-missing'
-                else if (testFile.get('isStarting'))
-                    testFile.data.iconCls = 'fa-hourglass-o siesta-test-starting'
-                else
-                    testFile.data.iconCls = 'fa-file-o siesta-test-file'
-            }
-        } else {
-            var status = testFile.get('folderStatus');
-
-            if (status == 'working') {
-                testFile.data.iconCls = ' fa-hourglass-o siesta-folder-running';
-            } else if (status == 'green') {
-                testFile.data.iconCls = ' fa-check siesta-folder-pass';
-            } else if (status == 'red') {
-                testFile.data.iconCls = ' fa-bug siesta-folder-fail';
-            } else {
-                testFile.data.iconCls = '';
-            }
-        }
-
-        return this.callParent(arguments);
-    },
-
-    renderer : function(v, m, r) {return v;}
-})
-;
-Ext.define('Siesta.Harness.Browser.UI.TestGridController', {
-    extend  : 'Ext.app.ViewController',
-    alias   : 'controller.testgrid',
-
-    control : {
-        '#tool-menu [option]' : { click : 'onMenuItemClick' },
-
-        '[actionName^=run]' : { click : 'onRunBtnClicked' },
-        '[actionName=show-coverage]' : { click : 'onShowCoverageReport' },
-
-        '#aboutSiesta' : {
-            click : 'onAboutSiesta'
-        }
-    },
-
-
-    // Toolbar actions
-    onShowCoverageReport : function () {
-        this.getView().fireEvent('showcoverageinfo', this);
-    },
-
-    onRunBtnClicked : function (btn) {
-        this.getView().fireEvent('buttonclick', this, btn, btn.actionName);
-    },
-    // EOF Toolbar actions
-
-
-
-    // Menu actions
-    onMenuItemClick : function (menuitem) {
-        this.getView().fireEvent('optionchange', this, menuitem.option, menuitem.checked);
-    },
-
-    onAboutSiesta : function () {
-        new Siesta.Harness.Browser.UI.AboutWindow().show();
-    }
-    // EOF Menu actions
-})
-;
-Ext.define('Siesta.Harness.Browser.UI.TestGrid', {
-    extend     : 'Ext.tree.Panel',
-    alias      : 'widget.testgrid',
-    controller : 'testgrid',
-    requires   : [
-        'Siesta.Harness.Browser.UI.FilterableTreeView'
-    ],
-
-    stateful    : true,
-    rootVisible : false,
-    header      : false,
-    rowLines    : false,
-    useArrows            : true,
-    border               : false,
-    cls                  : 'tr-testgrid',
-    iconCls              : 'tr-status-neutral-small',
-    width                : 340,
-    collapsible          : true,
-    expanded             : true,
-    viewType             : 'filterabletreeview',
-    enableColumnMove     : false,
-    
-    lines                : false,
-    filter               : null,
-    filterGroups         : false,
-    resultSummary        : null,
-    stateConfig          : null,
-    showSizeControls     : false,
-    
-    coverageReportButton : null,
-
-    viewConfig : {
-        enableTextSelection : true,
-        toggleOnDblClick    : false,
-        markDirty           : false,
-        trackOver           : false,
-        getRowClass         : function(record) {
-            if (record.get('descriptor').isSystemDescriptor) {
-                return 'siesta-system-descriptor';
-            }
-        },
-
-        // Avoid DOM updates when irrelevant
-        shouldUpdateCell    : function(record, column, changedFieldNames) {
-
-            if (column.dataIndex === 'passCount' &&
-                changedFieldNames &&
-                !(
-                Ext.Array.contains(changedFieldNames, 'passCount') ||
-                Ext.Array.contains(changedFieldNames, 'todoPassCount')
-                )
-            ) {
-                return 0;
-            }
-
-            if (column.dataIndex === 'failCount' &&
-                changedFieldNames &&
-                !(
-                Ext.Array.contains(changedFieldNames, 'failCount') ||
-                Ext.Array.contains(changedFieldNames, 'todoFailCount')
-                )
-            ) {
-                return 0;
-            }
-
-
-            return Ext.tree.View.prototype.shouldUpdateCell.apply(this, arguments);
-        }
-    },
-
-    initComponent : function () {
-        var me      = this;
-        var R       = Siesta.Resource('Siesta.Harness.Browser.UI.TestGrid');
-        var state   = this.stateConfig;
-
-        Ext.apply(this, {
-            title      : R.get('title'),
-
-            columns : {
-                // Hack, prevent Ext JS grid column to react to click/keys in filter field
-                createFocusableContainerKeyNav                : Ext.emptyFn,
-                // EOF Hack
-                items                        : [
-                    {
-                        xtype : 'testnamecolumn',
-                        store : this.store
-                    },
-                    {
-                        header       : R.get('passText'),
-                        width        : 50,
-                        sortable     : false,
-                        tdCls        : 'x-unselectable',
-                        menuDisabled : true,
-                        dataIndex    : 'passCount',
-                        align        : 'center',
-                        renderer     : this.passedColumnRenderer,
-                        scope        : this
-                    },
-                    {
-                        header       : R.get('failText'),
-                        width        : 50,
-                        sortable     : false,
-                        tdCls        : 'x-unselectable',
-                        menuDisabled : true,
-                        dataIndex    : 'failCount',
-                        align        : 'center',
-                        renderer     : this.failedColumnRenderer,
-                        scope        : this
-                    }
-                ]
-            },
-
-            bbar : {
-                xtype    : 'toolbar',
-                cls      : 'main-bbar siesta-toolbar',
-                border   : false,
-                height   : 45,
-                defaults : {
-                    scale       : 'large',
-                    width       : 30,
-                    tooltipType : 'title'
-                },
-
-                items : [
-                    {
-                        glyph      : 0xf04b,
-                        cls        : 'run-checked',
-                        text       : '<span class="subicon fa-check"></span>',
-                        tooltip    : R.get('runCheckedText'),
-                        actionName : 'run-checked'
-                    },
-                    {
-                        glyph      : 0xf04e,
-                        cls        : 'run-all',
-                        tooltip    : R.get('runAllText'),
-                        actionName : 'run-all'
-                    },
-                    {
-                        glyph      : 0xf04b,
-                        cls        : 'run-failed',
-                        text       : '<span class="subicon fa-bug"></span>',
-                        tooltip    : R.get('runFailedText'),
-                        actionName : 'run-failed'
-                    },
-                    {
-                        glyph      : 0xf02d,
-                        tooltip    : R.get('showCoverageReportText'),
-                        cls        : 'show-coverage',
-                        actionName : 'show-coverage',
-                        disabled   : true
-                    },
-                    {
-                        glyph   : 0xf013,
-                        tooltip : R.get('optionsText'),
-                        cls     : 'options',
-                        action  : 'options',
-                        menu    : {
-                            itemId : 'tool-menu',
-                            items  : [
-                                {
-                                    text    : R.get('transparentExText'),
-                                    option  : 'transparentEx',
-                                    checked : state.transparentEx
-                                },
-                                {
-                                    text    : R.get('cachePreloadsText'),
-                                    option  : 'cachePreload',
-                                    checked : state.cachePreload
-                                },
-                                {
-                                    text    : R.get('autoLaunchText'),
-                                    option  : 'autoRun',
-                                    checked : state.autoRun
-                                },
-                                {
-                                    text    : R.get('speedRunText'),
-                                    option  : 'speedRun',
-                                    checked : state.speedRun
-                                },
-                                {
-                                    text    : R.get('breakOnFailText'),
-                                    option  : 'breakOnFail',
-                                    checked : state.breakOnFail
-                                },
-                                {
-                                    text    : R.get('debuggerOnFailText'),
-                                    option  : 'debuggerOnFail',
-                                    checked : state.debuggerOnFail
-                                },
-                                { xtype : 'menuseparator' },
-                                {
-                                    text   : R.get('aboutText'),
-                                    itemId : 'aboutSiesta'
-                                },
-                                {
-                                    text       : R.get('documentationText'),
-                                    href       : R.get('siestaDocsUrl'),
-                                    hrefTarget : '_blank'
-                                }
-                            ]
-                        }
-                    },
-                    '->',
-                    {
-                        xtype  : 'component',
-                        cls    : 'summary-bar',
-                        border : false,
-                        width  : 55,
-                        itemId : 'result-summary',
-                        data   : {
-                            pass : 0,
-                            fail : 0
-                        },
-                        tpl    : '<div><span class="total-pass">{pass}</span><span class="icon fa-check"></span></div><div><span class="total-fail">{fail}</span><span class="icon fa-bug"></span></div>'
-                    }
-                ]
-            },
-
-            dockedItems : this.showSizeControls ? [
-                {
-                    xtype  : 'toolbar',
-                    cls    : 'size-toolbar',
-                    border : true,
-                    dock   : 'bottom',
-                    items  : [
-                        {
-                            xtype     : 'slider',
-                            itemId    : 'framesizeSlider',
-                            width     : 130,
-                            value     : 3,
-                            increment : 1,
-                            minValue  : 0,
-                            maxValue  : this.viewportSizes.length - 1,
-                            listeners : {
-                                change : this.onDimensionOrOrientationChange,
-                                scope  : this
-                            }
-                        },
-                        {
-                            xtype  : 'label',
-                            cls    : 'size-label',
-                            itemId : 'sizeLabel',
-                            width  : 65
-                        },
-                        {
-                            boxLabel  : R.get('landscape'),
-                            itemId    : 'orientationCheckbox',
-                            xtype     : 'checkbox',
-                            checked   : true,
-                            listeners : {
-                                change : this.onDimensionOrOrientationChange,
-                                scope  : this
-                            }
-                        }
-                    ]
-                }
-            ] : []
-        })
-
-        this.callParent(arguments);
-
-        var me = this
-
-        this.getView().on('beforerefresh', function () {
-            var trigger = me.down('#trigger')
-
-            if (me.filterGroups)    trigger.setFilterGroups(me.filterGroups)
-            if (me.filter)          trigger.setValue(me.filter)
-
-            // cancel refresh if there's a filter - in this case an additional refresh will be triggered by
-            // the filtering which will be already not canceled since this is 1 time listener
-            return !me.filter
-        }, null, { single : true })
-
-        this.on('afterrender', this.onMyViewReady, this);
-
-        this.coverageReportButton = this.down('[actionName=show-coverage]');
-    },
-
-    onHistoryChange : function(token) {
-        if (token) {
-            var testFile = this.store.getNodeById(token)
-
-            if (testFile) {
-                this.selectTestFile(testFile);
-            }
-        }
-    },
-
-    onDimensionOrOrientationChange : function (slider, val) {
-        var newSize = this.viewportSizes[this.framesizeSlider.getValue()];
-        var landscape = this.orientationCheckbox.getValue();
-
-        this.sizeLabel.setText(newSize.join('x'));
-        this.fireEvent('framesizechange', slider, newSize[0], newSize[1], landscape);
-    },
-
-
-    getFilterValue : function () {
-        return this.down('#trigger').getValue()
-    },
-
-
-    getFilterGroups : function () {
-        return this.down('#trigger').getFilterGroups()
-    },
-
-
-    passedColumnRenderer : function (value, meta, record) {
-
-        if (!record.isLeaf()) return ''
-
-        if (record.data.todoPassCount > 0) {
-            value += ' <span title="' + record.data.todoPassCount + ' ' + Siesta.Resource('Siesta.Harness.Browser.UI.TestGrid', 'todoPassedText') + '" class="tr-test-todo tr-test-todo-pass">+ ' + record.data.todoPassCount + '</span>';
-        }
-
-        return value;
-    },
-
-
-    failedColumnRenderer : function (value, meta, record) {
-
-        if (!record.isLeaf()) return ''
-
-        if (record.data.todoFailCount > 0) {
-            value += ' <span title="' + record.data.todoFailCount + ' ' + Siesta.Resource('Siesta.Harness.Browser.UI.TestGrid', 'todoFailedText') + '" class="tr-test-todo tr-test-todo-fail">+ ' + record.data.todoFailCount + '</span>';
-        }
-        return value;
-    },
-
-
-    afterRender : function () {
-
-        this.callParent(arguments);
-
-        this.summaryPassEl = this.el.down('.total-pass');
-        this.summaryFailEl = this.el.down('.total-fail');
-
-        if (this.showSizeControls) {
-
-            this.orientationCheckbox = this.down('#orientationCheckbox');
-            this.sizeLabel = this.down('#sizeLabel');
-            this.framesizeSlider = this.down('#framesizeSlider');
-
-            var size = this.viewportSizes[this.framesizeSlider.getValue()];
-            this.sizeLabel.setText(size.join('x'));
-        }
-    },
-
-    onMyViewReady : function() {
-        Ext.History.on('change', this.onHistoryChange, this);
-
-        var hash = window.location.hash;
-
-        if (hash) {
-            this.onHistoryChange(hash.substring(1));
-        }
-    },
-
-    updateStatus : function (pass, fail) {
-        this.summaryPassEl.update(String(pass));
-        this.summaryFailEl.update(String(fail));
-    },
-
-    enableCoverageButton : function () {
-        this.coverageReportButton.enable()
-    },
-
-    disableCoverageButton : function () {
-        this.coverageReportButton.disable()
-    },
-    
-    
-    setFilterValue : function (value) {
-        this.down('treefilter').setValue(value)
-    },
-
-    selectTestFile : function(testFile) {
-        if (testFile) {
-            testFile.bubble(function(parent) { parent.expand(); });
-
-            // Make sure test is not filtered out
-            if (this.store.getById(testFile.id) && this.store.indexOf(testFile) >= 0 ) {
-                if (!this.getCollapsed() && this.getView().getNodes().length > 0) {
-                    this.ensureVisible(testFile);
-                }
-                this.getSelectionModel().select(testFile)
-            }
-        }
-    }
-})
-;
-Ext.define('Siesta.Harness.Browser.UI.TestGridContextMenu', {
-    extend : 'Ext.menu.Menu',
-    xtype  : 'testgridcontextmenu',
-
-    items : [
-        {
-            itemId : 'uncheckOthers',
-            text   : Siesta.Resource('Siesta.Harness.Browser.UI.Viewport').get('uncheckOthersText')
-        },
-        {
-            itemId : 'uncheckAll',
-            text   : Siesta.Resource('Siesta.Harness.Browser.UI.Viewport').get('uncheckAllText')
-        },
-        {
-            itemId : 'checkAll',
-            text   : Siesta.Resource('Siesta.Harness.Browser.UI.Viewport').get('checkAllText')
-        },
-        {
-            itemId : 'runThis',
-            text   : Siesta.Resource('Siesta.Harness.Browser.UI.Viewport').get('runThisText')
-        },
-        {
-            itemId : 'viewSource',
-            text   : Siesta.Resource('Siesta.Harness.Browser.UI.Viewport').get('viewSource')
-        },
-        { xtype   : 'menuseparator' },
-        {
-            itemId : 'expandAll',
-            text   : Siesta.Resource('Siesta.Harness.Browser.UI.Viewport').get('expandAll')
-        },
-        {
-            itemId : 'collapseAll',
-            text   : Siesta.Resource('Siesta.Harness.Browser.UI.Viewport').get('collapseAll')
-        },
-        { xtype   : 'menuseparator' },
-        {
-            itemId : 'filterToCurrentGroup',
-            text   : Siesta.Resource('Siesta.Harness.Browser.UI.Viewport').get('filterToCurrentGroup')
-        },
-        {
-            itemId : 'filterToFailed',
-            text   : Siesta.Resource('Siesta.Harness.Browser.UI.Viewport').get('filterToFailed')
-        }
-    ]
-})
-;
-Ext.define('Siesta.Harness.Browser.UI.SourcePanel', {
-    extend   : 'Ext.Panel',
-    alias      : 'widget.sourcepanel',
-
-    __filled__ : false,
-
-    autoScroll : true,
-    cls        : 'test-source-ct',
-    layout     : 'absolute',
-    border     : false,
-    bodyBorder : false,
-
-    setSource  : function (source, linesToHighlight) {
-        var sourceCtEl = this.el;
-
-        if (!this.__filled__) {
-            this.__filled__ = true;
-
-            this.update(
-                Ext.String.format('<pre class="brush: javascript;">{0}</pre>', source)
-            );
-
-            // Disable the double click handling, which removes the code coloring
-            SyntaxHighlighter.defaults['quick-code'] = false;
-
-            SyntaxHighlighter.highlight(sourceCtEl);
-        }
-
-        sourceCtEl.select('.highlighted').removeCls('highlighted');
-
-        // Highlight rows
-        Ext.Array.each(linesToHighlight, function (line) {
-            sourceCtEl.select('.line.number' + line).addCls('highlighted');
-        });
-
-        if (linesToHighlight.length > 0) {
-            var el = sourceCtEl.down('.highlighted');
-            el && el.scrollIntoView(sourceCtEl);
-        }
-    },
-
-    clear : function () {
-        this.__filled__ = false;
-    }
-});
-;
-Ext.define('Siesta.Harness.Browser.UI.ResultPanel', {
-    extend : 'Ext.Panel',
-    alias  : 'widget.resultpanel',
-
-    requires : [
-        'Siesta.Harness.Browser.UI.AssertionGrid',
-        'Siesta.Harness.Browser.UI.DomContainer'
-    ],
-
-    slots : true,
-
-    test          : null,
-    testListeners : null,
-
-    maintainViewportSize : true,
-
-    viewDOM      : false,
-    border       : false,
-    canManageDOM : true,
-
-    harness : null,
-
-    isStandalone : false,
-    showToolbar  : true,
-    title        : 'Result panel',
-    header       : false,
-    minWidth     : 100,
-    layout       : 'border',
-
-    sourceButton       : null,
-    filterButton       : null,
-    inspectionButton   : null,
-    recorderPanel      : null,
-    recorderConfig     : null,
-    recorderPanelClass : 'Siesta.Recorder.UI.RecorderPanel',
-
-    domContainerRegion : 'east',
-
-    initComponent : function () {
-        var me = this;
-        var R  = Siesta.Resource('Siesta.Harness.Browser.UI.ResultPanel');
-
-        var domContainerRegion = this.domContainerRegion || 'east'
-
-        Ext.apply(this, {
-            cls   : 'tr-container',
-            tbar  : {
-                cls      : 'resultpanel-toolbar',
-                defaults : {
-                    tooltipType : 'title',
-                    scope       : this
-                },
-                items    : !this.showToolbar ? null : [
-                    {
-                        text    : R.get('rerunText'),
-                        cls     : 'rerun-button',
-                        glyph   : 0xf04b,
-                        scale   : 'medium',
-                        handler : this.onRunTestClick
-                    },
-                    {
-                        xtype  : 'label',
-                        cls    : 'resultpanel-testtitle',
-                        itemId : 'resultpanel-testtitle',
-                        margin : '0 0 0 10',
-                        height : 35,
-                        text   : ' ',
-                        flex   : 1
-                    },
-
-                    this.viewDomButton = new Ext.Button({
-                        tooltip      : R.get('toggleDomVisibleText'),
-                        cls          : 'testaction-button',
-                        action       : 'view-dom',
-                        scale        : 'medium',
-                        glyph        : 0xf26c,
-                        enableToggle : true,
-                        scope        : this,
-                        pressed      : this.viewDOM,
-                        handler      : function (btn) {
-                            this.setViewDOM(btn.pressed);
-                        }
-                    }),
-                    this.sourceButton = new Ext.Button({
-                        tooltip      : R.get('viewSourceText'),
-                        action       : 'view-source',
-                        cls          : 'testaction-button',
-                        glyph        : 0xf0f6,
-                        scale        : 'medium',
-                        tooltipType  : 'title',
-                        disabled     : true,
-                        enableToggle : true,
-                        scope        : this,
-
-                        handler : function (btn) {
-                            if (btn.pressed) {
-                                this.showSource();
-                            } else {
-                                this.hideSource()
-                            }
-                        }
-                    }),
-                    this.filterButton = new Ext.Button({
-                        tooltip      : R.get('showFailedOnlyText'),
-                        action       : 'show-failed-only',
-                        cls          : 'testaction-button',
-                        scale        : 'medium',
-                        glyph        : 0xf188,
-                        tooltipType  : 'title',
-                        scope        : this,
-                        enableToggle : true,
-                        handler      : this.onAssertionFilterClick
-                    }),
-                    this.inspectionButton = new Ext.Button({
-                        glyph        : 0xf002,
-                        cls          : 'testaction-button cmp-inspector',
-                        action       : 'toggle-cmp-inspector',
-                        scale        : 'medium',
-                        tooltip      : R.get('componentInspectorText'),
-                        tooltipType  : 'title',
-                        handler      : this.toggleComponentInspectionMode,
-                        scope        : this,
-                        enableToggle : true
-                    }),
-                    this.recorderButton = new Ext.Button({
-                        glyph        : 0xf03d,
-                        action       : 'toggle-recorder',
-                        cls          : 'testaction-button',
-                        scale        : 'medium',
-                        disabled     : !Siesta.Recorder || Ext.isIE9m,
-                        tooltip      : R.get('eventRecorderText'),
-                        handler      : this.onRecorderClick,
-                        margin       : '0 30 0 0',
-                        scope        : this,
-                        enableToggle : true
-                    }),
-                    {
-                        xtype : 'versionupdatebutton'
-                    },
-                    {
-                        xtype : 'component',
-                        id    : 'siesta-logo'
-                    }
-                ]
-            },
-            items : [
-                // a card container
-                {
-                    region     : 'center',
-                    slot       : 'cardContainer',
-                    xtype      : 'container',
-                    layout     : {
-                        type           : 'card',
-                        deferredRender : true
-                    },
-                    activeItem : 0,
-                    minWidth   : 100,
-
-                    items : [
-                        // grid with assertion
-                        {
-                            xtype : 'assertiongrid',
-                            slot  : 'grid',
-
-                            isStandalone : this.isStandalone,
-                            listeners    : {
-                                itemdblclick : this.onAssertionDoubleClick,
-                                scope        : this
-                            }
-
-                        },
-                        // eof grid with assertion
-                        {
-                            xtype : 'sourcepanel',
-                            slot  : 'source',
-                            listeners : {
-                                render : function(panel) {
-                                    var el = panel.getEl().appendChild({
-                                        cls : 'si-sourcepanel-close fa-close',
-                                        style : 'right:' + (Ext.getScrollbarSize().width + 5) + 'px'
-                                    });
-
-                                    el.on('click', this.hideSource, this);
-                                },
-                                scope : this
-                            }
-                        }
-                    ].concat(
-                        Ext.ClassManager.getByAlias('widget.coveragereport') ?
-                        {
-                            xtype   : 'coveragereport',
-                            slot    : 'coverageReport',
-                            harness : this.harness
-                        } : []
-                    )
-                },
-                {
-                    xtype       : 'domcontainer',
-                    region      : domContainerRegion,
-                    collapsible : true,
-
-                    split : { size : 7 },
-
-                    bodyStyle : 'text-align : center',
-
-                    slot     : 'domContainer',
-                    stateful : true,             // Turn off for recursive siesta demo
-
-                    id     : this.id + '-domContainer',
-                    width  : (domContainerRegion == 'east' || domContainerRegion == 'west') ? '50%' : null,
-                    height : (domContainerRegion == 'south' || domContainerRegion == 'north') ? '50%' : null,
-                    cls    : 'siesta-domcontainer',
-
-                    collapsed : !this.viewDOM
-                }
-            ]
-        })
-
-        this.callParent()
-
-        this.slots.domContainer.on({
-            expand   : this.onDomContainerExpand,
-            collapse : this.onDomContainerCollapse,
-
-            inspectionstart : function () {
-                this.inspectionButton.toggle(true);
-            },
-            inspectionstop  : function () {
-                this.inspectionButton.toggle(false);
-            },
-
-            scope : this
-        });
-
-
-    },
-
-
-    // This method makes sure that the min width of the card panel is respected when
-    // the width of this class changes (after resizing Test TreePanel).
-    ensureLayout : function () {
-        var availableWidth    = this.getWidth();
-        var cardPanel         = this.slots.cardContainer;
-        var domContainer      = this.slots.domContainer;
-        var domContainerWidth = domContainer.getWidth();
-        var minimumForCard    = cardPanel.minWidth + 20; // Some splitter space
-
-        if (availableWidth - domContainerWidth < minimumForCard) {
-            domContainer.setWidth(Math.max(0, availableWidth - minimumForCard));
-        }
-    },
-
-
-    showSource : function (lineNbr) {
-        var test = this.test
-
-        if (!this.test) return;
-
-        var sourceLines   = [];
-        var slots         = this.slots
-        var cardContainer = slots.cardContainer
-        var sourceCt      = slots.source;
-
-        // Do this first since rendering is deferred
-        cardContainer.layout.setActiveItem(sourceCt);
-
-        if (arguments.length === 0) {
-            // Highlight all failed rows
-            Ext.each(test.getFailedAssertions(), function (assertion) {
-                if (assertion.sourceLine != null) {
-                    sourceLines.push(assertion.sourceLine)
-                }
-            });
-        }
-        else {
-            // Highlight just a single row (user double clicked a failed row)
-            sourceLines = [lineNbr];
-        }
-
-        sourceCt.setSource(test.getSource(), sourceLines);
-    },
-
-
-    hideSource : function () {
-        var slots         = this.slots
-        var cardContainer = slots.cardContainer
-
-        if (cardContainer.layout.getActiveItem() === slots.source) {
-            this.sourceButton.setPressed(false);
-            cardContainer.layout.setActiveItem(slots.grid);
-        }
-    },
-
-
-    setViewDOM : function (value) {
-        var domContainer = this.slots.domContainer
-
-        if (value)
-            domContainer.expand(false)
-        else
-            domContainer.collapse(null, false)
-    },
-
-
-    onDomContainerCollapse : function () {
-        this.viewDOM = false;
-        this.viewDomButton.toggle(false);
-        this.fireEvent('viewdomchange', this, false);
-    },
-
-
-    onDomContainerExpand : function () {
-        this.viewDOM = true;
-        this.viewDomButton.toggle(true);
-        this.fireEvent('viewdomchange', this, true);
-    },
-
-
-    onRunTestClick : function () {
-        this.fireEvent('runbuttonclick', this);
-    },
-
-
-    showTest : function (test, assertionsStore) {
-        var recorder = this.slots.recorderPanel;
-
-        this.slots.source.clear();
-
-        this.filterButton && this.filterButton.toggle(false)
-        this.hideSource();
-
-        this.sourceButton && this.sourceButton.enable()
-
-        var url  = test.url;
-        var name = url === '/' ? recorder.getRecordingName() : url;
-
-        Ext.suspendLayouts();
-
-        this.slots.grid.showTest(test, assertionsStore)
-        this.slots.domContainer.showTest(test, assertionsStore)
-
-        if (recorder) {
-            if (!recorder.test || test.url !== recorder.test.url) {
-                recorder.stop();
-                recorder.attachTo(test);
-            }
-        }
-
-        this.setTestTitle(name);
-
-        Ext.resumeLayouts();
-
-        this.test = test;
-    },
-
-    setTestTitle : function (url) {
-        this.testTitle.setText(url);
-    },
-
-    onAssertionFilterClick : function (btn) {
-        var grid            = this.slots.grid;
-        var assertionsStore = grid.store;
-
-        // need this check for cases when users clicks on the button
-        // before running any test - in this case assertion grid will have an empty Ext.data.TreeStore instance
-        if (!assertionsStore.filterTreeBy) return
-
-        if (btn.pressed) {
-            grid.addCls('assertiongrid-filtered');
-            assertionsStore.filterTreeBy(function (resultRecord) {
-                var result = resultRecord.getResult()
-
-                // this covers the cases when "result" is a summary record, diagnostic record, etc
-                return result.passed === false && !result.isTodo
-            })
-        } else {
-            grid.removeCls('assertiongrid-filtered');
-            assertionsStore.clearTreeFilter()
-        }
-    },
-
-
-    alignIFrame : function () {
-        this.slots.domContainer.alignIFrame()
-    },
-
-
-    hideIFrame : function () {
-        this.slots.domContainer.hideIFrame()
-    },
-
-
-    setInitializing : function (initializing) {
-        this.slots.grid.setInitializing(initializing)
-    },
-
-
-    onAssertionDoubleClick : function (view, record) {
-        var result = record.getResult()
-
-        if ((result instanceof Siesta.Result.Assertion) && !result.isPassed(true)) {
-            this.showSource(result.sourceLine);
-        }
-    },
-
-
-    toggleComponentInspectionMode : function (btn) {
-        this.slots.domContainer.toggleInspectionMode(btn.pressed);
-    },
-
-
-    onRecorderClick : function () {
-        var cardContainer = this.slots.cardContainer
-
-        if (!this.recorderPanel) {
-            this.recorderPanel = Ext.create(this.recorderPanelClass, {
-                slot           : 'recorderPanel',
-                harness        : this.harness,
-                domContainer   : this.slots.domContainer,
-                recorderConfig : this.recorderConfig,
-                closeButton    : {
-                    text    : Siesta.Resource('Siesta.Harness.Browser.UI.ResultPanel', 'closeText'),
-                    cls     : 'recorder-tool',
-                    handler : function () {
-                        cardContainer.layout.setActiveItem(0);
-                    }
-                },
-                listeners      : {
-                    startrecord : function (pnl, test) {
-                        this.fireEvent('startrecord', pnl, test);
-
-                        this.showTest(test);
-                    },
-                    show        : function () {
-                        this.recorderButton.toggle(true);
-                    },
-                    play        : function (pnl, test) {
-                        this.showTest(test);
-                    },
-                    hide        : function () {
-                        this.recorderButton.toggle(false);
-                    },
-                    scope       : this
-                }
-            });
-            this.slots.cardContainer.add(this.recorderPanel);
-
-            this.relayEvents(this.recorderPanel, ['startrecord', 'play'], 'recorder');
-            if (this.test) {
-                this.slots.recorderPanel.attachTo(this.test);
-            }
-        }
-
-        if (cardContainer.layout.getActiveItem() === this.recorderPanel) {
-            cardContainer.layout.setActiveItem(this.slots.grid);
-        } else {
-            cardContainer.layout.setActiveItem(this.recorderPanel);
-        }
-    },
-
-    afterRender : function () {
-        this.callParent(arguments);
-
-        this.testTitle = this.down('#resultpanel-testtitle');
-
-        // To avoid the DOM container splitter getting stuck
-        this.child('bordersplitter').tracker.tolerance = 0;
-    }
-});
-;
-Ext.define('Siesta.Harness.Browser.UI.AboutWindow', {
-    extend      : 'Ext.Window',
-
-    id          : 'aboutwindow',
-    bodyPadding : 20,
-    modal       : true,
-    width       : 500,
-    height      : 380,
-    closeAction : 'destroy',
-    bodyStyle   : 'background: #fff',
-    autoScroll  : true,
-
-    initComponent : function() {
-
-        this.title = Siesta.Resource('Siesta.Harness.Browser.UI.AboutWindow', 'titleText').replace('{VERSION}', Siesta.meta.VERSION || '1.0.0');
-        this.html = Siesta.Resource('Siesta.Harness.Browser.UI.AboutWindow', 'bodyText');
-
-        this.buttons = {
-            padding : '10 13',
-            style   : 'background: transparent',
-
-            items   : [
-                {
-                    hidden  : !Siesta.Harness.Browser.Automation,
-                    text    : Siesta.Resource('Siesta.Harness.Browser.UI.AboutWindow', 'upgradeText'),
-                    handler : function () {
-                        window.open('http://bryntum.com/store/siesta');
-                    }
-                },
-                {
-                    text    : Siesta.Resource('Siesta.Harness.Browser.UI.AboutWindow', 'closeText'),
-                    handler : function () {
-                        this.up('window').close();
-                    }
-                }
-            ]
-        };
-
-        this.callParent(arguments);
-    }
-});
-
-;
-Ext.define('Siesta.Harness.Browser.UI.VersionUpdateButton', {
-    extend        : 'Ext.Button',
-    xtype         : 'versionupdatebutton',
-
-    text          : Siesta.Resource('Siesta.Harness.Browser.UI.VersionUpdateButton', 'newUpdateText'),
-    action        : 'upgrade-siesta',
-    hidden        : true,
-    latestVersion : null,
-    scale         : 'medium',
-
-    constructor : function () {
-        this.callParent(arguments);
-        this.scope = this;
-
-        if (Siesta.meta.VERSION && !window.location.href.match('^https')) {
-            this.fetchVersionInfo();
-        }
-    },
-
-    fetchVersionInfo : function () {
-
-        Ext.data.JsonP.request({
-            url      : '//bryntum.com/siesta_version',
-            params   : { v : Siesta.meta.VERSION },
-            scope    : this,
-            callback : this.onRequestCompleted
-        });
-    },
-
-    onRequestCompleted : function (success, data) {
-        if (success &&
-            data &&
-            data.name &&
-            new Ext.Version(data.name).isGreaterThan(Siesta.meta.VERSION || '1.0.0')) {
-
-            this.latestVersion = data.name;
-
-            this.show();
-        }
-    },
-
-    handler : function () {
-        var me = this;
-        var R = Siesta.Resource('Siesta.Harness.Browser.UI.VersionUpdateButton');
-
-        var win = new Ext.Window({
-            cls         : 'changelog-window',
-            title       : R.get('updateWindowTitleText') + (Siesta.meta.VERSION || '1.0.0'),
-            bodyPadding : 5,
-            modal       : true,
-            width       : 500,
-            height      : 380,
-            closeAction : 'destroy',
-            plain       : true,
-            autoScroll  : true,
-            buttons     : {
-                padding : '10 13',
-                style   : 'background: transparent',
-
-                items : [
-                    {
-                        cls        : 'light-button',
-                        href       : 'http://www.bryntum.com/products/siesta/download-lite',
-                        hrefTarget : '_blank',
-                        scale      : 'medium',
-                        text       : R.get('downloadText') + this.latestVersion + R.get('liteText')
-                    },
-                    {
-                        cls        : 'light-button',
-                        href       : 'http://bryntum.com/customerzone',
-                        hrefTarget : '_blank',
-                        scale      : 'medium',
-                        text       : R.get('downloadText') + this.latestVersion + R.get('standardText')
-                    },
-                    {
-                        text    : R.get('cancelText'),
-                        scale   : 'medium',
-                        handler : function () {
-                            win.close();
-                        }
-                    }
-                ]
-            }
-        })
-
-        win.show();
-        win.body.mask(R.get('loadingChangelogText'));
-
-        Ext.Ajax.request({
-            useDefaultXhrHeader : false,
-            url                 : 'http://bryntum.com/changelogs/_siesta.php',
-            callback            : function (o, success, response) {
-                win.body.unmask();
-
-                if (success && response && response.responseText) {
-                    win.body.update(response.responseText);
-                } else {
-                    win.body.update(Siesta.Resource('Siesta.Harness.Browser.UI.VersionUpdateButton', 'changelogLoadFailedText'));
-                }
-            }
-        })
-    }
-});;
-Ext.define('Siesta.Harness.Browser.UI.Header', {
-
-    extend : 'Ext.Component',
-
-    xtype : 'siesta-header',
-    cls   : 'siesta-header',
-
-    afterRender : function () {
-        var R = Siesta.Resource('Siesta.Harness.Browser.UI.Viewport');
-
-        this.callParent(arguments);
-
-        this.getEl().createChild([
-            {
-                tag  : 'a',
-                cls  : "logo-link",
-                href : "#",
-                cn   : [
-                    {
-                        tag  : 'span',
-                        html : (Siesta.meta.VERSION || "1.0.0"),
-                        cls  : 'tr-version-indicator'
-                    }
-                ]
-            },
-            {
-                tag : 'div',
-                cls : "right-top-area",
-                cn  : [
-                    {
-                        tag    : 'a',
-                        id     : "bryntum-logo",
-                        href   : "http://bryntum.com/",
-                        target : "_blank",
-                        cls  : "bryntum-logo"
-                    },
-                    {
-                        tag    : 'a',
-                        cls    : 'apidocs-link',
-                        href   : R.get('apiLinkUrl'),
-                        target : '_blank',
-                        html   : R.get('apiLinkText')
-                    }
-                ]
-            },
-
-            {
-                tag : 'div',
-                id  : 'update-ct'
-            }
-        ]);
-    }
-})
-;
-Ext.define('Siesta.Harness.Browser.UI.ViewportController', {
-
-    extend                    : 'Ext.app.ViewController',
-    alias                     : 'controller.viewport',
-    control                   : {
-        testgrid : {
-            selectionchange        : 'onTestGridSelectionChange',
-            checkchange            : 'onTestGridCheckChange',
-            itemcontextmenu        : 'onTestFileContextMenu',
-            itemdblclick           : 'onTestFileDoubleClick',
-            showcoverageinfo       : 'showCoverageReport',
-            resize                 : 'onTestGridResize',
-            optionchange           : 'onTestGridOptionChange',
-            buttonclick            : 'onTestGridToolbarClick',
-            framesizechange        : 'onFrameSizeChange'
-        },
-        
-        'testnamecolumn treefilter' : { change : { fn : 'onFilterChange', buffer : 300 } },
-
-        'testgridcontextmenu #uncheckOthers' : { click : 'uncheckOthers' },
-        'testgridcontextmenu #runThis'       : { click : 'runThisFile' },
-        'testgridcontextmenu #uncheckAll'    : { click : 'uncheckAll' },
-        'testgridcontextmenu #checkAll'      : { click : 'checkAll' },
-        'testgridcontextmenu #expandAll'     : { click : 'expandAll' },
-        'testgridcontextmenu #collapseAll'   : { click : 'collapseAll' },
-        'testgridcontextmenu #filterToCurrentGroup'   : { click : 'filterToCurrentGroup' },
-        'testgridcontextmenu #filterToFailed'   : { click : 'filterToFailed' },
-        'testgridcontextmenu #viewSource'   : { click : 'viewSource' },
-
-        resultpanel : {
-            viewdomchange  : 'onDomPanelVisibilityChange',
-            runbuttonclick : 'runTest'
-        },
-
-        coveragereport : {
-            backtomainui : 'onCoverageReportBackToMainUI'
-        }
-    },
-    
-    disableRunButtonTimeout             : null,
-    disableRunButtonInterval            : 150,
-    
-    
-    onFilterChange : function () {
-        var viewport    = this.getView();
-        
-        viewport.saveState()
-    },
-    
-    
-    filterToFailed : function () {
-        var viewport    = this.getView();
-        
-        var filter      = []
-
-        viewport.forEachTestFile(function (testFileRecord) {
-            var test = testFileRecord.get('test')
-
-            if (test && test.isFailed()) filter.push(testFileRecord.get('title'))
-        })
-        
-        if (filter.length) viewport.slots.filesTree.setFilterValue(filter.join(' | '))
-    },
-    
-    
-    filterToCurrentGroup : function () {
-        var viewport    = this.getView();
-        var desc        = viewport.currentFile.get('descriptor')
-        
-        if (desc.parent) viewport.slots.filesTree.setFilterValue(desc.parent.group + '>')
-    },
-    
-
-    // Test Grid events
-    onTestGridSelectionChange : function (selModel, selectedRecords) {
-
-        if (selectedRecords.length) {
-            var viewport    = this.getView();
-            var testFile    = selectedRecords[0]
-            var test        = testFile.get('test')
-
-            if (test) {
-                viewport.slots.resultPanel.showTest(test, testFile.get('assertionsStore'))
-            }
-
-            if (testFile.isLeaf()) {
-                Ext.History.add(testFile.data.url);
-            }
-        }
-    },
-
-    onTestGridCheckChange : function (testFile, checked) {
-        var viewport = this.getView();
-
-        viewport.setNodeChecked(testFile, checked)
-    },
-
-    onTestFileContextMenu : function (view, testFile, el, index, event) {
-        var viewport = this.getView();
-
-        viewport.currentFile = testFile
-
-        if (!viewport.contextMenu) {
-            viewport.contextMenu = new Siesta.Harness.Browser.UI.TestGridContextMenu();
-        }
-
-        viewport.contextMenu.showAt(event.getXY());
-
-        event.preventDefault();
-    },
-
-
-    onTestFileDoubleClick : function (view, testFile) {
-        var viewport    = this.getView();
-        var testsStore  = viewport.testsStore
-
-        if (testsStore.isTreeFiltered() && !testFile.isLeaf()) {
-            var childDesc = []
-            
-            testFile.cascadeBy(function (node) {
-                if (node != testFile && node.isLeaf() && testsStore.isNodeFilteredIn(node)) 
-                    childDesc.push(node.get('descriptor'))
-            })
-
-            viewport.harness.launch(childDesc);
-        } else
-            viewport.launchTest(testFile);
-    },
-
-    showCoverageReport : function () {
-        var viewport = this.getView();
-        var resultPanel = viewport.slots.resultPanel;
-        var cardCt = resultPanel.slots.cardContainer;
-        var coverageReport = resultPanel.slots.coverageReport;
-
-        coverageReport.loadHtmlReport(viewport.harness.generateCoverageHtmlReport(false));
-
-        if (cardCt.getLayout().getActiveItem() !== coverageReport) {
-            resultPanel.hideIFrame()
-            resultPanel.slots.domContainer.collapse();
-
-            cardCt.getLayout().setActiveItem(coverageReport)
-        } else {
-            this.onCoverageReportBackToMainUI();
-        }
-    },
-
-    onTestGridResize : function () {
-        // preserve min width of the assertion grid
-        this.getView().slots.resultPanel.ensureLayout();
-    },
-
-    onTestGridOptionChange : function (component, optionName, optionValue) {
-        var viewport = this.getView();
-
-        viewport.setOption(optionName, optionValue)
-
-        viewport.saveState()
-    },
-
-
-    onTestGridToolbarClick : function (hdr, button, action) {
-        var viewport = this.getView();
-
-        switch (action) {
-            case 'run-checked':
-                viewport.runChecked();
-                break;
-            case 'run-failed':
-                viewport.runFailed();
-                break;
-            case 'run-all':
-                viewport.runAll();
-                break;
-            case 'stop':
-                viewport.stopSuite(button);
-                break;
-        }
-    },
-
-    onFrameSizeChange : function(slider, width, height, landscape) {
-        var viewport = this.getView();
-
-        if (!landscape) {
-            var w = width;
-            width = height;
-            height = w;
-        }
-
-        $('.tr-iframe').width(width);
-        $('.tr-iframe').height(height);
-
-        viewport.harness.viewportHeight = height;
-        viewport.harness.viewportWidth = width;
-    },
-    // EOF Test Grid events
-
-
-    // Test Grid Context Menu events
-    uncheckOthers    : function () {
-        var viewport = this.getView();
-        var currentFile = viewport.currentFile
-
-        viewport.uncheckAllExcept(currentFile)
-
-        viewport.setNodeChecked(currentFile, true)
-    },
-
-    runThisFile : function () {
-        var viewport = this.getView();
-
-        viewport.harness.launch([viewport.currentFile.get('descriptor')])
-    },
-
-    uncheckAll : function () {
-        var viewport = this.getView();
-
-        viewport.uncheckAllExcept()
-    },
-
-    checkAll : function () {
-        var viewport = this.getView();
-
-        viewport.testsStore.forEach(function (node) {
-            viewport.setNodeChecked(node, true, true)
-        })
-    },
-    
-    expandAll : function () {
-        var viewport = this.getView();
-
-        viewport.slots.filesTree.expandAll()
-    },
-    
-    collapseAll : function () {
-        var viewport = this.getView();
-
-        viewport.slots.filesTree.collapseAll()
-    },
-
-    viewSource : function() {
-        var testRecord      = this.getView().currentFile;
-        var test            = testRecord.get('test');
-        var win             = window.open(null, 'siesta-source');
-        var head            = win.document.documentElement.getElementsByTagName('head')[0];
-        var body            = win.document.body;
-
-        head.innerHTML = '<title>' + testRecord.get('title') + '</title>'
-
-        if (test) {
-            body.innerHTML      = '<pre>' + test.getSource() + '</pre>';
-        } else {
-            $.ajax(testRecord.get('url'), {
-                success: function(text) {
-                    body.innerHTML  = '<pre>' + text + '</pre>';
-                }
-            });
-        }
-    },
-    // EOF Test Grid Context Menu events
-
-    // Result Panel events
-    onDomPanelVisibilityChange : function (g, value) {
-        var viewport = this.getView();
-
-        viewport.setOption('viewDOM', value);
-        viewport.saveState();
-    },
-
-    
-    runTest : function () {
-        // launch the "viewport.runTest();" immediately, but ignore any further calls to this method
-        // during the following 100ms
-        var me          = this
-        
-        if (me.disableRunButtonTimeout != null) return
-        
-        me.disableRunButtonTimeout  = setTimeout(function () {
-            me.disableRunButtonTimeout    = null
-        }, me.disableRunButtonInterval)
-        
-        var viewport    = me.getView();
-        
-        viewport.runTest();
-    },
-    // EOF Result Panel events
-
-
-    // Coverage Panel events
-    onCoverageReportBackToMainUI : function () {
-        var viewport = this.getView();
-        var resultPanel = viewport.slots.resultPanel;
-        var cardCt = resultPanel.slots.cardContainer;
-
-        cardCt.getLayout().setActiveItem(0)
-        resultPanel.alignIFrame()
-    }
-    // EOF Coverage Panel events
-})
-;
-// workaround for: http://www.sencha.com/forum/showthread.php?299660-5.1.0.107-Exception-thrown-when-opening-any-example-in-Chrome-touch-simulation-mode&p=1094459#post1094459
-
-// this condition seems to point that Chrome is opened in device simulation mode, w/o touch events enabled from command line
-// seems "TouchEvents" + "!Touch" confuses Ext and exception is thrown
-if (Ext.supports && Ext.supports.TouchEvents && !Ext.supports.Touch) {
-    // w/o these, UI throws exceptions
-    Ext.supports.Touch          = false
-    Ext.supports.touchScroll    = false
-}
-// eof workaround
-
-
-Ext.define('Siesta.Harness.Browser.UI.Viewport', {
-
-    extend : 'Ext.container.Viewport',
-
-    mixins     : [
-        'Siesta.Harness.Browser.UI.CanFillAssertionsStore'
-    ],
-    controller : 'viewport',
-
-    requires        : [
-        'Ext.state.LocalStorageProvider',
-        'Ext.state.CookieProvider',
-
-        'ExtX.Reference.Slot',
-
-        'Siesta.Harness.Browser.UI.TestGrid',
-        'Siesta.Harness.Browser.UI.ResultPanel'
-    ],
-
-    title : null,
-
-    harness      : null,
-
-    // need to set stateful properties before `initComponent`
-    stateful     : false,
-    layout       : 'border',
-
-    // stateful
-    selection    : null,
-    filter       : null,
-    filterGroups : false,
-    // eof stateful
-
-    testsStore : null,
-
-    contextMenu        : null,
-    mouseVisualizer    : null,
-    enableVersionCheck : true,
-
-    collapsedNodes : null,
-
-    showSizeControls : false,
-
-    expectedExtJSVersion : '6.0.1.250',
-
-    viewportSizes : [
-        [640, 480],
-        [800, 600],
-        [1024, 768],
-        [1920, 1080],
-        [2048, 1536]
-    ],
-
-    initComponent : function () {
-        var harness = this.harness;
-
-        Ext.getBody().addCls('siesta')
-
-        Ext.getBody().on('keydown', this.onBodyKeyDown, this)
-        Ext.setGlyphFontFamily('FontAwesome');
-
-        Ext.state.Manager.setProvider(Ext.supports.LocalStorage ? new Ext.state.LocalStorageProvider() : new Ext.state.CookieProvider())
-
-        this.selection = {}
-
-        if (harness.stateful) this.applyState(this.loadState())
-
-        var data = this.buildTreeData({
-            id    : 'root',
-            group : 'test suite' + this.title,
-            items : harness.descriptors
-        }).children;
-
-        var testsStore = this.testsStore = new Siesta.Harness.Browser.Model.FilterableTreeStore({
-            model : 'Siesta.Harness.Browser.Model.TestFile',
-
-            sortOnLoad : false,
-
-            root : {
-                expanded : true,
-
-                children : data
-            },
-
-            proxy : 'memory',
-
-            listeners : {
-                nodecollapse : this.saveState,
-                nodeexpand   : this.saveState,
-
-                scope : this
-            }
-        })
-
-        Ext.apply(this, {
-            mouseVisualizer : Ext.isIE ? undefined : new Siesta.Harness.Browser.UI.MouseVisualizer({ harness : harness }),
-            slots           : true,
-
-            items : [
-                {
-                    region           : 'west',
-                    xtype            : 'testgrid',
-                    store            : testsStore,
-                    slot             : 'filesTree',
-                    id               : harness.id.replace(/\W/g, '_') + '-testTree',
-                    showSizeControls : this.showSizeControls,
-                    viewportSizes    : this.viewportSizes,
-                    stateConfig      : this.getState(),
-
-                    animate : !Ext.isIE,
-                    split   : {
-                        size : 7
-                    },
-
-                    filter       : this.filter,
-                    filterGroups : this.filterGroups
-                },
-                {
-                    xtype          : 'resultpanel',
-                    region         : 'center',
-                    slot           : 'resultPanel',
-                    cls            : 'resultPanel-panel',
-                    viewDOM        : this.getOption('viewDOM'),
-                    id             : harness.id.replace(/\W/g, '_') + '-resultpanel',
-                    harness        : harness,
-                    recorderConfig : harness.recorderConfig,
-
-                    maintainViewportSize    : harness.maintainViewportSize,
-                    domContainerRegion      : harness.domContainerRegion
-                }
-            ]
-            // eof main content area
-        })
-
-        this.callParent()
-
-        // delay is required to avoid recursive loop
-        this.on('afterlayout', this.onAfterLayout, this, { single : true, delay : 1 })
-
-        this.slots.filesTree.store.on({
-            'filter-set'   : this.saveState,
-            'filter-clear' : this.saveState,
-
-            scope : this
-        })
-
-        harness.on('testendbubbling', this.onEveryTestEnd, this)
-        harness.on('hassomecoverageinfo', this.onHasSomeCoverageInfo, this)
-        harness.on('nocoverageinfo', this.onNoCoverageInfo, this)
-        harness.on('testsuitelaunch', this.onTestSuiteLaunch, this)
-        harness.on('assertiondiscard', this.onAssertionDiscarded, this)
-
-        if (this.mouseVisualizer) {
-            this.slots.resultPanel.on('recorderplay', function(pnl, test) {
-                this.mouseVisualizer.beginCursorVisualization(test);
-            }, this);
-        }
-
-        if (window.location.href.match('^file:///')) {
-            var R = Siesta.Resource('Siesta.Harness.Browser.UI.Viewport');
-
-            Ext.Msg.alert(R.get('httpWarningTitle'), R.get('httpWarningDesc'))
-        }
-    },
-
-
-    buildTreeData : function (descriptor) {
-        var data = {
-            id         : descriptor.id,
-            title      : descriptor.group || descriptor.title || descriptor.name || descriptor.url.replace(/(?:.*\/)?([^/]+)$/, '$1'),
-            descriptor : descriptor,
-
-            // HACK, bypass Ext JS cloning
-            nodeType   : 1,
-            cloneNode  : function () {
-                return this;
-            }
-        }
-
-
-        var me              = this
-        var prevId          = data.id
-        var collapsedNodes  = this.collapsedNodes || {}
-
-        if (descriptor.group) {
-
-            var children = []
-
-            Ext.each(descriptor.items, function (desc) {
-                children.push(me.buildTreeData(desc))
-            })
-
-            Ext.apply(data, {
-                expanded : (collapsedNodes[prevId] != null || descriptor.expanded === false) ? false : true,
-                // || false is required for TreeView - it checks that "checked" field contains Boolean
-                checked  : me.selection.hasOwnProperty(prevId) || false,
-
-                folderStatus : 'yellow',
-
-                children : children,
-                leaf     : false
-            })
-
-        } else {
-            Ext.apply(data, {
-                url : descriptor.url,
-
-                leaf    : true,
-                // || false is required for TreeView - it checks that "checked" field contains Boolean
-                checked : me.selection.hasOwnProperty(prevId) || false,
-
-                passCount : 0,
-                failCount : 0,
-
-                time : 0,
-
-                assertionsStore : new Siesta.Harness.Browser.Model.AssertionTreeStore({
-                    //autoDestroy : true,
-                    model : 'Siesta.Harness.Browser.Model.Assertion',
-
-                    proxy : 'memory',
-
-                    root : {
-                        id       : '__ROOT__',
-                        expanded : true
-                    }
-                })
-            })
-        }
-
-        return data
-    },
-
-
-    onBodyKeyDown : function (e) {
-        if (e.getKey() == Ext.EventObject[this.harness.rerunHotKey] && e.ctrlKey) {
-            this.runTest();
-
-            e.preventDefault();
-        }
-    },
-
-
-    onAfterLayout : function () {
-        if (this.getOption('autoRun')) {
-            var checked = this.getChecked()
-
-            // either launch the suite for checked tests or for all
-            this.harness.launch(checked.length && checked || this.harness.descriptors)
-        }
-    },
-
-
-    setNodeChecked : function (testFile, checked, doNotCascade, skipSave) {
-        var me = this
-        var id = testFile.getId()
-
-        if (checked)
-            this.selection[id] = 1
-        else
-            delete this.selection[id]
-
-
-        testFile.set('checked', checked)
-
-        // when unchecking the node - uncheck the parent node (folder) as well
-        if (!checked && testFile.parentNode) me.setNodeChecked(testFile.parentNode, false, true, true)
-
-        // only cascade for folders and when `doNotCascade` is false
-        if (!testFile.isLeaf() && !doNotCascade) Ext.each(testFile.childNodes, function (childNode) {
-            me.setNodeChecked(childNode, checked, false, true)
-        })
-
-        if (!skipSave) this.saveState()
-    },
-
-
-    forEachTestFile : function (func, scope) {
-        this.testsStore.each(func, scope)
-    },
-
-
-    getChecked : function () {
-        var descriptors = []
-
-        this.forEachTestFile(function (testFileRecord) {
-            if (testFileRecord.get('checked') && testFileRecord.isLeaf()) descriptors.push(testFileRecord.get('descriptor'))
-        })
-
-        return descriptors
-    },
-
-    runChecked : function () {
-        var checked = this.getChecked();
-
-        if (checked.length > 0) {
-            this.harness.launch(this.getChecked())
-        }
-    },
-
-
-    runFailed : function () {
-        var descriptors = []
-
-        this.forEachTestFile(function (testFileRecord) {
-            var test = testFileRecord.get('test')
-
-            if (test && test.isFailed()) descriptors.push(testFileRecord.get('descriptor'))
-        })
-
-        if (descriptors.length > 0) {
-            this.harness.launch(descriptors)
-        }
-    },
-
-
-    runAll : function () {
-        var allDesc = []
-
-        this.forEachTestFile(function (testFile) {
-            if (testFile.isLeaf()) allDesc.push(testFile.get('descriptor'))
-        })
-
-        if (allDesc.length > 0) {
-            this.harness.launch(allDesc)
-        }
-    },
-
-
-    stopSuite : function (button) {
-        this.performStop();
-        button.disable()
-
-        setTimeout(function () {
-
-            button.enable()
-
-        }, 1000)
-    },
-
-    performStop          : function () {
-        this.harness.needToStop = true;
-
-        this.testsStore.forEach(function (testFileRecord) {
-            if (testFileRecord.get('isStarting') && !testFileRecord.get('isStarted')) {
-                testFileRecord.set('isStarting', false);
-            }
-        });
-    },
-
-
-    // looks less nice than setting it only after preload for some reason
-    onBeforeScopePreload : function (scopeProvider, url) {
-        var testRecord = this.testsStore.getNodeById(url)
-
-        // to avoid disturbing grid
-        testRecord.data.isStarted = true
-    },
-
-
-    isTestRunningVisible : function (test) {
-        // return false for test's running in popups (not iframes), since we can't show any visual accompaniment for them
-        if (!(test.scopeProvider instanceof Scope.Provider.IFrame)) return false;
-
-        // if there is a "forced to be on top" test then we only need to compare the tests instances
-        if (this.harness.testOfForcedIFrame) {
-            return this.harness.testOfForcedIFrame.isFromTheSameGeneration(test)
-        }
-
-        // otherwise the only possibly visible test is the one of the current assertion grid
-        var resultPanel = this.slots.resultPanel;
-
-        // if resultPanel has no testRecord it hasn't yet been assigned a test record
-        if (!resultPanel.test || !resultPanel.test.isFromTheSameGeneration(test)) {
-            return false;
-        }
-
-        // now we know that visible assertion grid is from our test and there is no "forced on top" test
-        // we only need to check visibility (collapsed / expanded of the right panel
-        return resultPanel.isFrameVisible()
-    },
-
-
-    resetDescriptors  : function (descriptors) {
-        var testsStore = this.testsStore;
-
-        Joose.A.each(this.harness.flattenDescriptors(descriptors), function (descriptor) {
-            var testRecord = testsStore.getNodeById(descriptor.id);
-
-            testRecord.get('assertionsStore').removeAll(true)
-            testRecord.reject();
-            // || false is required for TreeView - it checks that "checked" field contains Boolean
-            testRecord.set('checked', this.selection.hasOwnProperty(descriptor.id) || false)
-        }, this);
-    },
-
-
-    // method is called when test suite (any several tests) starts - before caching the script contents
-    // at this point we don't know yet about missing test files
-    onTestSuiteStart  : function (descriptors) {
-        Ext.getBody().addCls('testsuite-running');
-
-        var harness = this.harness
-        var filesTree = this.slots.filesTree
-        var selModel = filesTree.getSelectionModel()
-        var prevSelection = selModel.getLastSelected()
-        var testsStore = this.testsStore
-
-        this.resetDescriptors(descriptors);
-
-        // restore the selection after data reload
-        if (prevSelection) selModel.select(testsStore.getNodeById(prevSelection.getId()))
-    },
-
-
-    // method is called when test suite (any several tests) launches - after the caching the script contents
-    // has completed and 1st test is about to start
-    // at this point we know about missing files and `desc.isMissing` property is set
-    onTestSuiteLaunch : function (event, descriptors) {
-        var testsStore = this.testsStore
-
-        var updated = {}
-
-        Joose.A.each(this.harness.flattenDescriptors(descriptors), function (descriptor) {
-            var testRecord = testsStore.getNodeById(descriptor.id)
-
-            testRecord.set({
-                isMissing  : descriptor.isMissing,
-                isStarting : true
-            })
-
-            var groupNode = testRecord.parentNode
-
-            if (groupNode && !updated[groupNode.getId()]) {
-                // trying hard to prevent extra updates
-                for (var node = groupNode; node; node = node.parentNode) updated[node.getId()] = true
-
-                groupNode.updateFolderStatus()
-            }
-        })
-    },
-
-
-    onTestSuiteEnd : function (descriptors) {
-        Ext.getBody().removeCls('testsuite-running');
-
-        this.updateStatusIndicator();
-
-        // Without this the keyboard hotkey won't work (since one of the frames will steal focus likely)
-        if (Ext.isChrome) {
-            window.focus();
-        } else {
-            document.body.tabIndex = -1;
-            document.body.focus();
-        }
-    },
-
-
-    onTestStart        : function (test) {
-        var testRecord = this.testsStore.getNodeById(test.url)
-
-        testRecord.beginEdit()
-
-        // will trigger an update in grid
-        testRecord.set({
-            test      : test,
-            isRunning : true
-        })
-
-        testRecord.endEdit()
-
-        var currentSelection = this.slots.filesTree.getSelectionModel().getLastSelected()
-
-        // activate the assertions grid for currently selected row, or, if the main area is empty
-        if (currentSelection && currentSelection.getId() == test.url) {
-            var resultPanel = this.slots.resultPanel
-
-            resultPanel.showTest(test, testRecord.get('assertionsStore'))
-            resultPanel.setInitializing(false);
-        }
-    },
-
-
-    // this method checks that test update, coming from given `test` is actual
-    // update may be not actual, if user has re-launched the test, so new test already presents
-    isTestUpdateActual : function (test, testRecord) {
-        testRecord = testRecord || this.testsStore.getNodeById(test.url)
-
-        var currentTest = testRecord.get('test')
-        
-        if (!currentTest) return true
-
-        return currentTest && currentTest.isFromTheSameGeneration(test) && currentTest.launchId == test.launchId
-    },
-
-
-    onTestUpdate   : function (test, result, parentResult) {
-        var testRecord = this.testsStore.getNodeById(test.url)
-
-        // need to check that test record contains the same test instance as the test in arguments (or its sub-test)
-        // test instance may change if user has restarted a test for example
-        if (this.isTestUpdateActual(test, testRecord)) {
-            this.processNewResult(testRecord.get('assertionsStore'), test, result, parentResult)
-
-            if (this.getOption('breakOnFail') && test.getFailCount() > 0) {
-                this.performStop();
-                this.slots.filesTree.getSelectionModel().select(testRecord);
-            }
-        }
-    },
-
-    onAssertionDiscarded: function (event, test, result) {
-        var testRecord = this.testsStore.getNodeById(test.url)
-
-        // need to check that test record contains the same test instance as the test in arguments (or its sub-test)
-        // test instance may change if user has restarted a test for example
-        if (this.isTestUpdateActual(test, testRecord)) {
-            var assertionStore = testRecord.get('assertionsStore')
-
-            assertionStore.getNodeById(result.id).remove()
-        }
-    },
-
-
-    // only triggered for "root" tests
-    onTestEnd      : function (test) {
-        var testRecord = this.testsStore.getNodeById(test.url)
-
-        // need to check that test record contains the same test instance as the test in arguments (or its sub-test)
-        // test instance may change if user has restarted a test for example
-        if (this.isTestUpdateActual(test, testRecord)) {
-            testRecord.beginEdit()
-
-            testRecord.set({
-                'passCount'     : test.getPassCount(),
-                'failCount'     : test.getFailCount(),
-                'todoPassCount' : test.getTodoPassCount(),
-                'todoFailCount' : test.getTodoFailCount()
-                // Not relevant for
-                //,
-                //'time'          : test.getDuration() + 'ms'
-            });
-
-            testRecord.endEdit()
-
-            testRecord.parentNode && testRecord.parentNode.updateFolderStatus()
-        }
-
-        this.updateStatusIndicator()
-    },
-
-
-    // is bubbling and thus triggered for all tests (including sub-tests)
-    onEveryTestEnd : function (event, test) {
-        var testRecord = this.testsStore.getNodeById(test.url)
-
-        // need to check that test record contains the same test instance as the test in arguments (or its sub-test)
-        // test instance may change if user has restarted a test for example
-        if (this.isTestUpdateActual(test, testRecord)) {
-            this.processEveryTestEnd(testRecord.get('assertionsStore'), test)
-        }
-    },
-
-
-    onTestFail : function (test, exception, stack) {
-        var testRecord = this.testsStore.getNodeById(test.url)
-
-        // need to check that test record contains the same test instance as the test in arguments
-        // test instance may change if user has restarted a test for example
-        if (this.isTestUpdateActual(test, testRecord) && !test.isTodo) {
-            testRecord.set('isFailed', true)
-
-            testRecord.parentNode && testRecord.parentNode.updateFolderStatus()
-        }
-    },
-
-
-    getOption : function (name) {
-        switch (name) {
-            case 'selection'    :
-                return this.selection
-
-            default             :
-                return this.harness[name]
-        }
-    },
-
-
-    setOption : function (name, value) {
-        switch (name) {
-            case 'selection'    :
-                return this.selection = value || {}
-
-            case 'collapsedNodes':
-                return this.collapsedNodes = value
-
-            case 'filter'       :
-                return this.filter = value
-            case 'filterGroups' :
-                return this.filterGroups = value
-
-            default             :
-                return this.harness[name] = value
-        }
-    },
-
-
-    getState : function () {
-        return {
-            // harness configs
-            autoRun        : this.getOption('autoRun'),
-            speedRun       : this.getOption('speedRun'),
-            viewDOM        : this.getOption('viewDOM'),
-            cachePreload   : this.getOption('cachePreload'),
-            transparentEx  : this.getOption('transparentEx'),
-            breakOnFail    : this.getOption('breakOnFail'),
-            debuggerOnFail : this.getOption('debuggerOnFail'),
-
-            // UI configs
-            selection      : this.getCheckedNodes(),
-            collapsedNodes : this.getCollapsedFolders(),
-
-            filter       : this.slots ? this.slots.filesTree.getFilterValue() : this.filter,
-            filterGroups : this.slots ? this.slots.filesTree.getFilterGroups() : this.filterGroups
-        }
-    },
-
-
-    getCheckedNodes : function () {
-        var checked = {}
-
-        this.testsStore.forEach(function (treeNode) {
-            if (treeNode.get('checked')) checked[treeNode.getId()] = 1
-        })
-
-        return checked
-    },
-
-
-    getCollapsedFolders : function () {
-        var collapsed = {}
-
-        this.testsStore.forEach(function (treeNode) {
-            if (!treeNode.isLeaf() && !treeNode.isExpanded()) collapsed[treeNode.getId()] = 1
-        })
-
-        return collapsed
-    },
-
-
-    applyState : function (state) {
-        var me = this
-
-        if (state) Joose.O.each(state, function (value, name) {
-            me.setOption(name, value)
-        })
-    },
-
-
-    getStateId : function () {
-        return 'test-run-' + this.title
-    },
-
-    loadState : function () {
-        var stateId = this.getStateId()
-        var state = Ext.state.Manager.get(stateId)
-
-        if (!state) return
-
-        if (!state.collapsedNodes)  state.collapsedNodes = Ext.state.Manager.get(stateId + '-collapsed')
-        if (!state.selection)       state.selection = Ext.state.Manager.get(stateId + '-selection')
-
-        return state
-    },
-
-    saveState : function () {
-        var stateId = this.getStateId()
-        var state = this.getState()
-
-        Ext.state.Manager.set(stateId + '-collapsed', state.collapsedNodes)
-        Ext.state.Manager.set(stateId + '-selection', state.selection)
-
-        delete state.collapsedNodes
-        delete state.selection
-
-        Ext.state.Manager.set(stateId, state)
-    },
-
-
-    uncheckAllExcept : function (testFile) {
-        var me = this
-
-        this.testsStore.forEach(function (node) {
-
-            if (node != testFile) me.setNodeChecked(node, false, true)
-        })
-    },
-
-    launchTest : function (testFile) {
-        var resultPanel = this.slots.resultPanel
-        var isLeaf = (testFile instanceof Ext.data.Model && testFile.data.leaf) || true;
-        var descriptor = testFile instanceof Siesta.Test ? this.harness.getScriptDescriptor(testFile) : testFile.get('descriptor');
-
-        // clear the content of the result panel when launching a single test
-        if (isLeaf) {
-            Ext.History.add(descriptor.url);
-            // assertions of the tests being launched will be cleared in the `onTestSuiteStart` method
-            resultPanel.setInitializing(true);
-        }
-
-        this.harness.launch([descriptor])
-    },
-
-
-    updateStatusIndicator : function () {
-        // can remain neutral if all files are missing for example
-//        var isNeutral       = true
-//        var allGreen        = true
-//        var hasFailures     = false
-
-        var totalPassed = 0
-        var totalFailed = 0
-
-        this.testsStore.forEach(function (testFileRecord) {
-            var test = testFileRecord.get('test')
-
-            // if there's at least one test - state is not neutral
-            if (test && test.isFinished()) {
-//                isNeutral       = false
-
-//                allGreen        = allGreen      && test.isPassed()
-//                hasFailures     = hasFailures   || test.isFailed()
-
-                totalPassed += test.getPassCount()
-                totalFailed += test.getFailCount()
-            }
-        })
-
-        this.slots.filesTree.updateStatus(totalPassed, totalFailed);
-    },
-
-    /**
-     * Re-runs the latest executed test
-     */
-    runTest : function () {
-        var toRun = this.slots.filesTree.getSelectionModel().getSelection()[0] ||
-                    this.slots.resultPanel.test;
-
-        if (toRun) {
-            this.launchTest(toRun);
-        }
-    },
-
-    
-    afterRender : function () {
-        this.callParent(arguments);
-
-        if (!Ext.versions.extjs.equals(this.expectedExtJSVersion)) {
-            Ext.Msg.alert('Wrong Ext JS version detected', 'The Siesta UI expects that you use Ext JS version: ' + this.expectedExtJSVersion + '. You may experience errors when using another version');
-        }
-        
-        if (!this.harness.isAutomated) setTimeout(Ext.Function.bind(this.deferredSetup, this), 1000);
-    },
-
-    
-    deferredSetup : function() {
-        Ext.QuickTips && Ext.QuickTips.init();
-
-        if (this.enableVersionCheck && Siesta.Harness.Browser.UI.VersionUpdateButton) {
-            new Siesta.Harness.Browser.UI.VersionUpdateButton();
-        }
-    },
-
-    
-    onHasSomeCoverageInfo : function () {
-        this.slots.filesTree.enableCoverageButton();
-    },
-
-    
-    onNoCoverageInfo : function () {
-        this.slots.filesTree.disableCoverageButton()
-    },
-    
-    
-    onManualCloseOfForcedIframe : function (test) {
-        var domContainer        = this.down('domcontainer')
-        
-        if (domContainer && domContainer.test == test) domContainer.alignIFrame(true)
-    }
-})
-//eof Siesta.Harness.Browser.UI.Viewport
-;
-// Exceptions happening in grid cell rendering should not be silenced
-Ext.XTemplate.override({
-    strict   : true
-});
-
-
-// Override to allow report to fetch the data from file system
-// http://www.sencha.com/forum/showthread.php?10621-Why-Ajax-can-not-get-local-file-while-prototypejs-can&s=3ce6b6ad58be217b173c3b31b8f0ad5d
-Ext.data.Connection.override({
-
-    parseStatus : function (status) {
-        var result = this.callOverridden(arguments);
-        if (status === 0) {
-            result.success = true;
-        }
-        return result;
-    }
-});;
-};
 // Internal class visualizing the cursor position, only used in good browsers (!== IE)
 Class('Siesta.Harness.Browser.UI.MouseVisualizer', {
 
@@ -44778,5 +43317,4 @@ Class('Siesta.Harness.Browser.UI.MouseVisualizer', {
         }
     }
 });
-;
 ;
