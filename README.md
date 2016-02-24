@@ -1,11 +1,14 @@
+[travis]: https://travis-ci.org/shmeltex/siesta
+[gemnasium]: https://gemnasium.com/shmeltex/siesta
+[codeclimate]: https://codeclimate.com/github/shmeltex/siesta
+[coveralls]: https://coveralls.io/r/shmeltex/siesta
+
 ## Siesta
 
-[![Build
-Status](https://secure.travis-ci.org/towerhe/siesta.png)](http://travis-ci.org/towerhe/siesta)
-[![Dependency
-Status](https://gemnasium.com/towerhe/siesta.png)](https://gemnasium.com/towerhe/siesta)
-[![Code
-Climate](https://codeclimate.com/badge.png)](https://codeclimate.com/github/towerhe/siesta)
+[![Build Status](https://travis-ci.org/shmeltex/siesta.svg?branch=master)][travis]
+[![Dependency Status](https://gemnasium.com/shmeltex/siesta.png)][gemnasium]
+[![Code Climate](https://codeclimate.com/github/shmeltex/siesta/badges/gpa.svg)][codeclimate]
+[![Test Coverage](https://codeclimate.com/github/shmeltex/siesta/badges/coverage.svg)][codeclimate]
 
 A rails mountable engine setting up
 [siesta](http://www.bryntum.com/products/siesta/) for testing ExtJS.

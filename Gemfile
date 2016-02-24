@@ -23,3 +23,4 @@ group :development, :test do
   gem "quiet_assets"
   gem 'test-unit', '~> 3.0'
 end
+gem "codeclimate-test-reporter", group: :test, require: nil
