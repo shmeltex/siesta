@@ -1,6 +1,6 @@
 /*
 
-Siesta 4.0.5
+Siesta 4.0.6
 Copyright(c) 2009-2016 Bryntum AB
 http://bryntum.com/contact
 http://bryntum.com/products/siesta/license
@@ -177,14 +177,7 @@ http://bryntum.com/products/siesta/license
 .tr-iframe-forced-screenshot .ghost-cursor,
 .tr-iframe-forced-screenshot .ghost-cursor-click-indicator {
     display : none;
-}/*.target-inspector-box {*/
-    /*position       : absolute;*/
-    /*pointer-events : none;*/
-    /*z-index        : 100001;*/
-    /*border         : 2px solid;*/
-/*}*/
-
-.target-inspector-label {
+}.target-inspector-label {
     display         : inline-block;
     margin-top      : -10px;
     font-size       : 10px;
@@ -197,21 +190,6 @@ http://bryntum.com/products/siesta/license
 .target-inspector-label:hover {
     text-decoration : underline;
 }
-
-/*.target-inspector-coordinate {*/
-    /*width       : 10px;*/
-    /*height      : 10px;*/
-    /*position    : absolute;*/
-    /*margin-top  : -5px;*/
-    /*margin-left : -5px;*/
-/*}*/
-
-/*.target-inspector-box,*/
-/*.target-inspector-coordinate {*/
-
-    /*transition-property : left, top, width, height;*/
-    /*transition-duration : 0.3s;*/
-/*}*/
 .siesta-domcontainer {
 }
 

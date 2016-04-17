@@ -1,6 +1,6 @@
 /*
 
-Siesta 4.0.5
+Siesta 4.0.6
 Copyright(c) 2009-2016 Bryntum AB
 http://bryntum.com/contact
 http://bryntum.com/products/siesta/license
@@ -8558,7 +8558,7 @@ Class('Siesta.Content.Manager', {
 ;
 ;
 Class('Siesta', {
-    /*PKGVERSION*/VERSION : '4.0.5',
+    /*PKGVERSION*/VERSION : '4.0.6',
 
     // "my" should been named "static"
     my : {
@@ -9033,7 +9033,8 @@ Siesta.CurrentLocale = Siesta.CurrentLocale || {
         CompositeQuery               : 'CompositeQuery',
         matchedNoCmp                 : 'matched no Ext.Component',
         messageBoxVisible            : 'Message box is visible',
-        messageBoxHidden             : 'Message box is hidden'
+        messageBoxHidden             : 'Message box is hidden',
+        waitedForComponentQuery      : 'Waiting too long for Ext.ComponentQuery'
     },
 
     "Siesta.Test.Function"           : {
@@ -10507,7 +10508,9 @@ Role('Siesta.Test.More', {
                     obj2                : obj2
                 })
             }
-            else {
+            // Not supported in IE8
+            else if (window.DeepDiff) {
+
                 var diff = DeepDiff(obj1, obj2);
 
                 if (diff.length > 5) {
@@ -10530,6 +10533,12 @@ Role('Siesta.Test.More', {
                     window.console && console.log('DIFF RESULT:', diffItem);
                 }
 
+            } else {
+                this.fail(desc, {
+                    assertionName       : 'isDeeply',
+                    got                 : obj1,
+                    need                : obj2
+                })
             }
         },
         
@@ -13016,6 +13025,7 @@ Class('Siesta.Test', {
 
         reusingSandbox      : false,
         sandboxCleanup      : true,
+        sharedSandboxState  : null,
 
         // the scope provider for the context of the test script
         // usually the same as the `scopeProvider`, but may be different in case of using `separateContext` option
@@ -14244,6 +14254,8 @@ Class('Siesta.Test', {
             if (this.startDate) throw R.get('testAlreadyStarted');
 
             this.startDate  = new Date() - 0
+            
+            me.onTestStart()
 
             /**
              * This event is fired when an individual test case starts. When *started*, the test will be waiting for 
@@ -14769,6 +14781,10 @@ Class('Siesta.Test', {
         },
 
 
+        onTestStart : function () {
+        },
+        
+        
         getSummaryMessage : function (lineBreaks) {
             var res             = []
 
@@ -16151,7 +16167,7 @@ Class('Siesta.Harness', {
             this.startDate  = new Date()
             
             /**
-             * This event is fired when the test suite starts. Note, that when running the test suite in the browsers, this event can be fired several times
+             * This event is fired when the test suite starts. Note, that when running the test suite in the browser, this event can be fired several times
              * (for each group of tests you've launched).  
              * 
              * You can subscribe to it, using regular ExtJS syntax:
@@ -16173,7 +16189,7 @@ Class('Siesta.Harness', {
             this.endDate    = new Date()
             
             /**
-             * This event is fired when the test suite ends. Note, that when running the test suite in the browsers, this event can be fired several times
+             * This event is fired when the test suite ends. Note, that when running the test suite in the browser, this event can be fired several times
              * (for each group of tests you've launched).  
              * 
              * @event testsuiteend
@@ -16944,7 +16960,7 @@ Class('Siesta.Harness', {
         },
         
         
-        processURL : function (desc, index, contentManager, launchState, callback, noCleanup) {
+        processURL : function (desc, index, contentManager, launchState, callback, noCleanup, sharedSandboxState) {
             var me      = this
             var url     = desc.url
             
@@ -16991,7 +17007,7 @@ Class('Siesta.Harness', {
             var testClass       = me.getDescriptorConfig(desc, 'testClass')
             if (me.typeOf(testClass) == 'String') testClass = Joose.S.strToClass(testClass)
             
-            var testConfig      = me.getNewTestConfiguration(desc, scopeProvider, contentManager, launchState)
+            var testConfig      = me.getNewTestConfiguration(desc, scopeProvider, contentManager, launchState, sharedSandboxState)
             
             // create the test instance early, so that one can perform some setup (as the test class method call)
             // even before the "pageUrl" starts loading
@@ -17021,7 +17037,7 @@ Class('Siesta.Harness', {
                     me.onAfterScopePreload(scopeProvider, url, test, failedPreloads)
                     
                     failedPreloads && Joose.O.each(failedPreloads, function (value, url) {
-                        preloadErrors.push({ 
+                        preloadErrors.unshift({ 
                             isException : false, 
                             message     : Siesta.Resource('Siesta.Harness', 'preloadHasFailed', { url : url })
                         })
@@ -17139,7 +17155,7 @@ Class('Siesta.Harness', {
         },
         
         
-        getNewTestConfiguration : function (desc, scopeProvider, contentManager, launchState) {
+        getNewTestConfiguration : function (desc, scopeProvider, contentManager, launchState, sharedSandboxState) {
             var groups          = []
             var currentDesc     = desc.parent
             
@@ -17183,6 +17199,7 @@ Class('Siesta.Harness', {
                 sourceLineForAllAssertions  : this.sourceLineForAllAssertions,
                 
                 sandboxCleanup              : this.getDescriptorConfig(desc, 'sandboxCleanup'),
+                sharedSandboxState          : sharedSandboxState,
                 
                 config                      : this.getDescriptorConfig(desc, 'config'),
                 
@@ -26497,412 +26514,418 @@ jQuery.fn.center = function () {
  * NOTE: Patched to handle Date objects from different frames (replaced all instanceof checks)
  */
 // jshint ignore: start
-;(function(root, factory) {
-    'use strict';
-    if (typeof define === 'function' && define.amd) {
-        // AMD. Register as an anonymous module.
-        define([], factory);
-    } else if (typeof exports === 'object') {
-        // Node. Does not work with strict CommonJS, but
-        // only CommonJS-like environments that support module.exports,
-        // like Node.
-        module.exports = factory();
-    } else {
-        // Browser globals (root is window)
-        root.DeepDiff = factory();
-    }
-}(this, function(undefined) {
-    'use strict';
+if (Object.create) {
+    ;(function (root, factory) {
+        'use strict';
+        if (typeof define === 'function' && define.amd) {
+            // AMD. Register as an anonymous module.
+            define([], factory);
+        } else if (typeof exports === 'object') {
+            // Node. Does not work with strict CommonJS, but
+            // only CommonJS-like environments that support module.exports,
+            // like Node.
+            module.exports = factory();
+        } else {
+            // Browser globals (root is window)
+            root.DeepDiff = factory();
+        }
+    }(this, function (undefined) {
+        'use strict';
 
-    var $scope, conflict, conflictResolution = [];
-    if (typeof global === 'object' && global) {
-        $scope = global;
-    } else if (typeof window !== 'undefined') {
-        $scope = window;
-    } else {
-        $scope = {};
-    }
-    conflict = $scope.DeepDiff;
-    if (conflict) {
-        conflictResolution.push(
-            function() {
-                if ('undefined' !== typeof conflict && $scope.DeepDiff === accumulateDiff) {
-                    $scope.DeepDiff = conflict;
-                    conflict = undefined;
+        var $scope, conflict, conflictResolution = [];
+        if (typeof global === 'object' && global) {
+            $scope = global;
+        } else if (typeof window !== 'undefined') {
+            $scope = window;
+        } else {
+            $scope = {};
+        }
+        conflict = $scope.DeepDiff;
+        if (conflict) {
+            conflictResolution.push(
+                function () {
+                    if ('undefined' !== typeof conflict && $scope.DeepDiff === accumulateDiff) {
+                        $scope.DeepDiff = conflict;
+                        conflict        = undefined;
+                    }
+                });
+        }
+
+        // nodejs compatible on server side and in the browser.
+        function inherits(ctor, superCtor) {
+            ctor.super_    = superCtor;
+            ctor.prototype = Object.create(superCtor.prototype, {
+                constructor : {
+                    value        : ctor,
+                    enumerable   : false,
+                    writable     : true,
+                    configurable : true
                 }
             });
-    }
+        }
 
-    // nodejs compatible on server side and in the browser.
-    function inherits(ctor, superCtor) {
-        ctor.super_ = superCtor;
-        ctor.prototype = Object.create(superCtor.prototype, {
-            constructor: {
-                value: ctor,
-                enumerable: false,
-                writable: true,
-                configurable: true
+        function Diff(kind, path) {
+            Object.defineProperty(this, 'kind', {
+                value      : kind,
+                enumerable : true
+            });
+            if (path && path.length) {
+                Object.defineProperty(this, 'path', {
+                    value      : path,
+                    enumerable : true
+                });
             }
-        });
-    }
+        }
 
-    function Diff(kind, path) {
-        Object.defineProperty(this, 'kind', {
-            value: kind,
-            enumerable: true
-        });
-        if (path && path.length) {
-            Object.defineProperty(this, 'path', {
-                value: path,
-                enumerable: true
+        function DiffEdit(path, origin, value) {
+            DiffEdit.super_.call(this, 'E', path);
+            Object.defineProperty(this, 'lhs', {
+                value      : origin,
+                enumerable : true
+            });
+            Object.defineProperty(this, 'rhs', {
+                value      : value,
+                enumerable : true
             });
         }
-    }
 
-    function DiffEdit(path, origin, value) {
-        DiffEdit.super_.call(this, 'E', path);
-        Object.defineProperty(this, 'lhs', {
-            value: origin,
-            enumerable: true
-        });
-        Object.defineProperty(this, 'rhs', {
-            value: value,
-            enumerable: true
-        });
-    }
-    inherits(DiffEdit, Diff);
+        inherits(DiffEdit, Diff);
 
-    function DiffNew(path, value) {
-        DiffNew.super_.call(this, 'N', path);
-        Object.defineProperty(this, 'rhs', {
-            value: value,
-            enumerable: true
-        });
-    }
-    inherits(DiffNew, Diff);
-
-    function DiffDeleted(path, value) {
-        DiffDeleted.super_.call(this, 'D', path);
-        Object.defineProperty(this, 'lhs', {
-            value: value,
-            enumerable: true
-        });
-    }
-    inherits(DiffDeleted, Diff);
-
-    function DiffArray(path, index, item) {
-        DiffArray.super_.call(this, 'A', path);
-        Object.defineProperty(this, 'index', {
-            value: index,
-            enumerable: true
-        });
-        Object.defineProperty(this, 'item', {
-            value: item,
-            enumerable: true
-        });
-    }
-    inherits(DiffArray, Diff);
-
-    function arrayRemove(arr, from, to) {
-        var rest = arr.slice((to || from) + 1 || arr.length);
-        arr.length = from < 0 ? arr.length + from : from;
-        arr.push.apply(arr, rest);
-        return arr;
-    }
-
-    function realTypeOf(subject) {
-        var type = typeof subject;
-        if (type !== 'object') {
-            return type;
+        function DiffNew(path, value) {
+            DiffNew.super_.call(this, 'N', path);
+            Object.defineProperty(this, 'rhs', {
+                value      : value,
+                enumerable : true
+            });
         }
 
-        if (subject === Math) {
-            return 'math';
-        } else if (subject === null) {
-            return 'null';
-        } else if (Array.isArray(subject)) {
-            return 'array';
-        } else if (Object.prototype.toString.call(subject) === '[object Date]') {
-            return 'date';
-        } else if (/^\/.*\//.test(subject.toString())) {
-            return 'regexp';
-        }
-        return 'object';
-    }
+        inherits(DiffNew, Diff);
 
-    function deepDiff(lhs, rhs, changes, prefilter, path, key, stack) {
-        path = path || [];
-        var currentPath = path.slice(0);
-        if (typeof key !== 'undefined') {
-            if (prefilter && prefilter(currentPath, key, { lhs: lhs, rhs: rhs })) {
-                return;
+        function DiffDeleted(path, value) {
+            DiffDeleted.super_.call(this, 'D', path);
+            Object.defineProperty(this, 'lhs', {
+                value      : value,
+                enumerable : true
+            });
+        }
+
+        inherits(DiffDeleted, Diff);
+
+        function DiffArray(path, index, item) {
+            DiffArray.super_.call(this, 'A', path);
+            Object.defineProperty(this, 'index', {
+                value      : index,
+                enumerable : true
+            });
+            Object.defineProperty(this, 'item', {
+                value      : item,
+                enumerable : true
+            });
+        }
+
+        inherits(DiffArray, Diff);
+
+        function arrayRemove(arr, from, to) {
+            var rest   = arr.slice((to || from) + 1 || arr.length);
+            arr.length = from < 0 ? arr.length + from : from;
+            arr.push.apply(arr, rest);
+            return arr;
+        }
+
+        function realTypeOf(subject) {
+            var type = typeof subject;
+            if (type !== 'object') {
+                return type;
             }
-            currentPath.push(key);
-        }
 
-        // Use string comparison for regexes
-        if (realTypeOf(lhs) === 'regexp' && realTypeOf(rhs) === 'regexp') {
-            lhs = lhs.toString();
-            rhs = rhs.toString();
-        }
-
-        var ltype = typeof lhs;
-        var rtype = typeof rhs;
-        if (ltype === 'undefined') {
-            if (rtype !== 'undefined') {
-                changes(new DiffNew(currentPath, rhs));
+            if (subject === Math) {
+                return 'math';
+            } else if (subject === null) {
+                return 'null';
+            } else if (Array.isArray(subject)) {
+                return 'array';
+            } else if (Object.prototype.toString.call(subject) === '[object Date]') {
+                return 'date';
+            } else if (/^\/.*\//.test(subject.toString())) {
+                return 'regexp';
             }
-        } else if (rtype === 'undefined') {
-            changes(new DiffDeleted(currentPath, lhs));
-        } else if (realTypeOf(lhs) !== realTypeOf(rhs)) {
-            changes(new DiffEdit(currentPath, lhs, rhs));
-        } else if (Object.prototype.toString.call(lhs) === '[object Date]' && Object.prototype.toString.call(rhs) === '[object Date]' && ((lhs - rhs) !== 0)) {
-            changes(new DiffEdit(currentPath, lhs, rhs));
-        } else if (ltype === 'object' && lhs !== null && rhs !== null) {
-            stack = stack || [];
-            if (stack.indexOf(lhs) < 0) {
-                stack.push(lhs);
-                if (Array.isArray(lhs)) {
-                    var i, len = lhs.length;
-                    for (i = 0; i < lhs.length; i++) {
-                        if (i >= rhs.length) {
-                            changes(new DiffArray(currentPath, i, new DiffDeleted(undefined, lhs[i])));
-                        } else {
-                            deepDiff(lhs[i], rhs[i], changes, prefilter, currentPath, i, stack);
-                        }
-                    }
-                    while (i < rhs.length) {
-                        changes(new DiffArray(currentPath, i, new DiffNew(undefined, rhs[i++])));
-                    }
-                } else {
-                    var akeys = Object.keys(lhs);
-                    var pkeys = Object.keys(rhs);
-                    akeys.forEach(function(k, i) {
-                        var other = pkeys.indexOf(k);
-                        if (other >= 0) {
-                            deepDiff(lhs[k], rhs[k], changes, prefilter, currentPath, k, stack);
-                            pkeys = arrayRemove(pkeys, other);
-                        } else {
-                            deepDiff(lhs[k], undefined, changes, prefilter, currentPath, k, stack);
-                        }
-                    });
-                    pkeys.forEach(function(k) {
-                        deepDiff(undefined, rhs[k], changes, prefilter, currentPath, k, stack);
-                    });
+            return 'object';
+        }
+
+        function deepDiff(lhs, rhs, changes, prefilter, path, key, stack) {
+            path            = path || [];
+            var currentPath = path.slice(0);
+            if (typeof key !== 'undefined') {
+                if (prefilter && prefilter(currentPath, key, { lhs : lhs, rhs : rhs })) {
+                    return;
                 }
-                stack.length = stack.length - 1;
+                currentPath.push(key);
             }
-        } else if (lhs !== rhs) {
-            if (!(ltype === 'number' && isNaN(lhs) && isNaN(rhs))) {
+
+            // Use string comparison for regexes
+            if (realTypeOf(lhs) === 'regexp' && realTypeOf(rhs) === 'regexp') {
+                lhs = lhs.toString();
+                rhs = rhs.toString();
+            }
+
+            var ltype = typeof lhs;
+            var rtype = typeof rhs;
+            if (ltype === 'undefined') {
+                if (rtype !== 'undefined') {
+                    changes(new DiffNew(currentPath, rhs));
+                }
+            } else if (rtype === 'undefined') {
+                changes(new DiffDeleted(currentPath, lhs));
+            } else if (realTypeOf(lhs) !== realTypeOf(rhs)) {
                 changes(new DiffEdit(currentPath, lhs, rhs));
+            } else if (Object.prototype.toString.call(lhs) === '[object Date]' && Object.prototype.toString.call(rhs) === '[object Date]' && ((lhs - rhs) !== 0)) {
+                changes(new DiffEdit(currentPath, lhs, rhs));
+            } else if (ltype === 'object' && lhs !== null && rhs !== null) {
+                stack = stack || [];
+                if (stack.indexOf(lhs) < 0) {
+                    stack.push(lhs);
+                    if (Array.isArray(lhs)) {
+                        var i, len = lhs.length;
+                        for (i = 0; i < lhs.length; i++) {
+                            if (i >= rhs.length) {
+                                changes(new DiffArray(currentPath, i, new DiffDeleted(undefined, lhs[i])));
+                            } else {
+                                deepDiff(lhs[i], rhs[i], changes, prefilter, currentPath, i, stack);
+                            }
+                        }
+                        while (i < rhs.length) {
+                            changes(new DiffArray(currentPath, i, new DiffNew(undefined, rhs[i++])));
+                        }
+                    } else {
+                        var akeys = Object.keys(lhs);
+                        var pkeys = Object.keys(rhs);
+                        akeys.forEach(function (k, i) {
+                            var other = pkeys.indexOf(k);
+                            if (other >= 0) {
+                                deepDiff(lhs[k], rhs[k], changes, prefilter, currentPath, k, stack);
+                                pkeys = arrayRemove(pkeys, other);
+                            } else {
+                                deepDiff(lhs[k], undefined, changes, prefilter, currentPath, k, stack);
+                            }
+                        });
+                        pkeys.forEach(function (k) {
+                            deepDiff(undefined, rhs[k], changes, prefilter, currentPath, k, stack);
+                        });
+                    }
+                    stack.length = stack.length - 1;
+                }
+            } else if (lhs !== rhs) {
+                if (!(ltype === 'number' && isNaN(lhs) && isNaN(rhs))) {
+                    changes(new DiffEdit(currentPath, lhs, rhs));
+                }
             }
         }
-    }
 
-    function accumulateDiff(lhs, rhs, prefilter, accum) {
-        accum = accum || [];
-        deepDiff(lhs, rhs,
-            function(diff) {
-                if (diff) {
-                    accum.push(diff);
+        function accumulateDiff(lhs, rhs, prefilter, accum) {
+            accum = accum || [];
+            deepDiff(lhs, rhs,
+                function (diff) {
+                    if (diff) {
+                        accum.push(diff);
+                    }
+                },
+                prefilter);
+            return (accum.length) ? accum : undefined;
+        }
+
+        function applyArrayChange(arr, index, change) {
+            if (change.path && change.path.length) {
+                var it   = arr[index],
+                    i, u = change.path.length - 1;
+                for (i = 0; i < u; i++) {
+                    it = it[change.path[i]];
                 }
+                switch (change.kind) {
+                    case 'A':
+                        applyArrayChange(it[change.path[i]], change.index, change.item);
+                        break;
+                    case 'D':
+                        delete it[change.path[i]];
+                        break;
+                    case 'E':
+                    case 'N':
+                        it[change.path[i]] = change.rhs;
+                        break;
+                }
+            } else {
+                switch (change.kind) {
+                    case 'A':
+                        applyArrayChange(arr[index], change.index, change.item);
+                        break;
+                    case 'D':
+                        arr = arrayRemove(arr, index);
+                        break;
+                    case 'E':
+                    case 'N':
+                        arr[index] = change.rhs;
+                        break;
+                }
+            }
+            return arr;
+        }
+
+        function applyChange(target, source, change) {
+            if (target && source && change && change.kind) {
+                var it   = target,
+                    i    = -1,
+                    last = change.path ? change.path.length - 1 : 0;
+                while (++i < last) {
+                    if (typeof it[change.path[i]] === 'undefined') {
+                        it[change.path[i]] = (typeof change.path[i] === 'number') ? [] : {};
+                    }
+                    it = it[change.path[i]];
+                }
+                switch (change.kind) {
+                    case 'A':
+                        applyArrayChange(change.path ? it[change.path[i]] : it, change.index, change.item);
+                        break;
+                    case 'D':
+                        delete it[change.path[i]];
+                        break;
+                    case 'E':
+                    case 'N':
+                        it[change.path[i]] = change.rhs;
+                        break;
+                }
+            }
+        }
+
+        function revertArrayChange(arr, index, change) {
+            if (change.path && change.path.length) {
+                // the structure of the object at the index has changed...
+                var it   = arr[index],
+                    i, u = change.path.length - 1;
+                for (i = 0; i < u; i++) {
+                    it = it[change.path[i]];
+                }
+                switch (change.kind) {
+                    case 'A':
+                        revertArrayChange(it[change.path[i]], change.index, change.item);
+                        break;
+                    case 'D':
+                        it[change.path[i]] = change.lhs;
+                        break;
+                    case 'E':
+                        it[change.path[i]] = change.lhs;
+                        break;
+                    case 'N':
+                        delete it[change.path[i]];
+                        break;
+                }
+            } else {
+                // the array item is different...
+                switch (change.kind) {
+                    case 'A':
+                        revertArrayChange(arr[index], change.index, change.item);
+                        break;
+                    case 'D':
+                        arr[index] = change.lhs;
+                        break;
+                    case 'E':
+                        arr[index] = change.lhs;
+                        break;
+                    case 'N':
+                        arr = arrayRemove(arr, index);
+                        break;
+                }
+            }
+            return arr;
+        }
+
+        function revertChange(target, source, change) {
+            if (target && source && change && change.kind) {
+                var it = target,
+                    i, u;
+                u      = change.path.length - 1;
+                for (i = 0; i < u; i++) {
+                    if (typeof it[change.path[i]] === 'undefined') {
+                        it[change.path[i]] = {};
+                    }
+                    it = it[change.path[i]];
+                }
+                switch (change.kind) {
+                    case 'A':
+                        // Array was modified...
+                        // it will be an array...
+                        revertArrayChange(it[change.path[i]], change.index, change.item);
+                        break;
+                    case 'D':
+                        // Item was deleted...
+                        it[change.path[i]] = change.lhs;
+                        break;
+                    case 'E':
+                        // Item was edited...
+                        it[change.path[i]] = change.lhs;
+                        break;
+                    case 'N':
+                        // Item is new...
+                        delete it[change.path[i]];
+                        break;
+                }
+            }
+        }
+
+        function applyDiff(target, source, filter) {
+            if (target && source) {
+                var onChange = function (change) {
+                    if (!filter || filter(target, source, change)) {
+                        applyChange(target, source, change);
+                    }
+                };
+                deepDiff(target, source, onChange);
+            }
+        }
+
+        Object.defineProperties(accumulateDiff, {
+
+            diff           : {
+                value      : accumulateDiff,
+                enumerable : true
             },
-            prefilter);
-        return (accum.length) ? accum : undefined;
-    }
-
-    function applyArrayChange(arr, index, change) {
-        if (change.path && change.path.length) {
-            var it = arr[index],
-                i, u = change.path.length - 1;
-            for (i = 0; i < u; i++) {
-                it = it[change.path[i]];
-            }
-            switch (change.kind) {
-                case 'A':
-                    applyArrayChange(it[change.path[i]], change.index, change.item);
-                    break;
-                case 'D':
-                    delete it[change.path[i]];
-                    break;
-                case 'E':
-                case 'N':
-                    it[change.path[i]] = change.rhs;
-                    break;
-            }
-        } else {
-            switch (change.kind) {
-                case 'A':
-                    applyArrayChange(arr[index], change.index, change.item);
-                    break;
-                case 'D':
-                    arr = arrayRemove(arr, index);
-                    break;
-                case 'E':
-                case 'N':
-                    arr[index] = change.rhs;
-                    break;
-            }
-        }
-        return arr;
-    }
-
-    function applyChange(target, source, change) {
-        if (target && source && change && change.kind) {
-            var it = target,
-                i = -1,
-                last = change.path ? change.path.length - 1 : 0;
-            while (++i < last) {
-                if (typeof it[change.path[i]] === 'undefined') {
-                    it[change.path[i]] = (typeof change.path[i] === 'number') ? [] : {};
-                }
-                it = it[change.path[i]];
-            }
-            switch (change.kind) {
-                case 'A':
-                    applyArrayChange(change.path ? it[change.path[i]] : it, change.index, change.item);
-                    break;
-                case 'D':
-                    delete it[change.path[i]];
-                    break;
-                case 'E':
-                case 'N':
-                    it[change.path[i]] = change.rhs;
-                    break;
-            }
-        }
-    }
-
-    function revertArrayChange(arr, index, change) {
-        if (change.path && change.path.length) {
-            // the structure of the object at the index has changed...
-            var it = arr[index],
-                i, u = change.path.length - 1;
-            for (i = 0; i < u; i++) {
-                it = it[change.path[i]];
-            }
-            switch (change.kind) {
-                case 'A':
-                    revertArrayChange(it[change.path[i]], change.index, change.item);
-                    break;
-                case 'D':
-                    it[change.path[i]] = change.lhs;
-                    break;
-                case 'E':
-                    it[change.path[i]] = change.lhs;
-                    break;
-                case 'N':
-                    delete it[change.path[i]];
-                    break;
-            }
-        } else {
-            // the array item is different...
-            switch (change.kind) {
-                case 'A':
-                    revertArrayChange(arr[index], change.index, change.item);
-                    break;
-                case 'D':
-                    arr[index] = change.lhs;
-                    break;
-                case 'E':
-                    arr[index] = change.lhs;
-                    break;
-                case 'N':
-                    arr = arrayRemove(arr, index);
-                    break;
-            }
-        }
-        return arr;
-    }
-
-    function revertChange(target, source, change) {
-        if (target && source && change && change.kind) {
-            var it = target,
-                i, u;
-            u = change.path.length - 1;
-            for (i = 0; i < u; i++) {
-                if (typeof it[change.path[i]] === 'undefined') {
-                    it[change.path[i]] = {};
-                }
-                it = it[change.path[i]];
-            }
-            switch (change.kind) {
-                case 'A':
-                    // Array was modified...
-                    // it will be an array...
-                    revertArrayChange(it[change.path[i]], change.index, change.item);
-                    break;
-                case 'D':
-                    // Item was deleted...
-                    it[change.path[i]] = change.lhs;
-                    break;
-                case 'E':
-                    // Item was edited...
-                    it[change.path[i]] = change.lhs;
-                    break;
-                case 'N':
-                    // Item is new...
-                    delete it[change.path[i]];
-                    break;
-            }
-        }
-    }
-
-    function applyDiff(target, source, filter) {
-        if (target && source) {
-            var onChange = function(change) {
-                if (!filter || filter(target, source, change)) {
-                    applyChange(target, source, change);
-                }
-            };
-            deepDiff(target, source, onChange);
-        }
-    }
-
-    Object.defineProperties(accumulateDiff, {
-
-        diff: {
-            value: accumulateDiff,
-            enumerable: true
-        },
-        observableDiff: {
-            value: deepDiff,
-            enumerable: true
-        },
-        applyDiff: {
-            value: applyDiff,
-            enumerable: true
-        },
-        applyChange: {
-            value: applyChange,
-            enumerable: true
-        },
-        revertChange: {
-            value: revertChange,
-            enumerable: true
-        },
-        isConflict: {
-            value: function() {
-                return 'undefined' !== typeof conflict;
+            observableDiff : {
+                value      : deepDiff,
+                enumerable : true
             },
-            enumerable: true
-        },
-        noConflict: {
-            value: function() {
-                if (conflictResolution) {
-                    conflictResolution.forEach(function(it) {
-                        it();
-                    });
-                    conflictResolution = null;
-                }
-                return accumulateDiff;
+            applyDiff      : {
+                value      : applyDiff,
+                enumerable : true
             },
-            enumerable: true
-        }
-    });
+            applyChange    : {
+                value      : applyChange,
+                enumerable : true
+            },
+            revertChange   : {
+                value      : revertChange,
+                enumerable : true
+            },
+            isConflict     : {
+                value      : function () {
+                    return 'undefined' !== typeof conflict;
+                },
+                enumerable : true
+            },
+            noConflict     : {
+                value      : function () {
+                    if (conflictResolution) {
+                        conflictResolution.forEach(function (it) {
+                            it();
+                        });
+                        conflictResolution = null;
+                    }
+                    return accumulateDiff;
+                },
+                enumerable : true
+            }
+        });
 
-    return accumulateDiff;
-}));
+        return accumulateDiff;
+    }));
+}
 ;
 /*
  * jQuery scrollintoview() plugin and :scrollable selector filter
@@ -28337,20 +28360,19 @@ Role('Siesta.Test.Simulate.Mouse', {
          */
         moveCursorBetweenPoints         : true,
 
-        /**
-         * @cfg {Int} mouseMovePrecision Defines how precisely to follow the path between two points when simulating a drag or mouse move. 
-         * Value 1 indicates that "mouseover/mouseout" events are simulated for every point along the path.
-         * Value 2 indicates every other point will be used. (low value = slow dragging, high value = fast dragging)
-         */
-        mouseMovePrecision              : $.browser.msie ? 10 : 5,
-
+        pathBatchSize                   : $.browser.msie ? 10 : 5,
+        
+        mouseMovePrecision              : 1,
+        
         enableUnreachableClickWarning   : true,
 
         autoScrollElementsIntoView      : true,
 
         overEls                         : Joose.I.Array,
         
-        delayAfterScrollIntoView        : 200
+        delayAfterScrollIntoView        : 200,
+        
+        mouseState                      : 'up'
     },
 
 
@@ -28546,7 +28568,7 @@ Role('Siesta.Test.Simulate.Mouse', {
         },
 
         // private
-        moveMouse : function (xy, xy2, callback, scope, precision, async, options) {
+        moveMouse : function (xy, xy2, callback, scope, pathBatchSize, async, options, mouseMovePrecision) {
             var me          = this
 
             this.movePointerTemplate({
@@ -28559,7 +28581,8 @@ Role('Siesta.Test.Simulate.Mouse', {
                 overEls         : this.overEls,
                 interval        : async !== false ? this.dragDelay : 0,
                 callbackDelay   : async !== false ? 50 : 0,
-                precision       : precision || me.mouseMovePrecision,
+                pathBatchSize   : pathBatchSize || me.pathBatchSize,
+                mouseMovePrecision : mouseMovePrecision || me.mouseMovePrecision,
 
                 onVoidOverEls   : function () {
                     return me.overEls  = []
@@ -28606,7 +28629,7 @@ Role('Siesta.Test.Simulate.Mouse', {
         },
 
 
-        // xy, xy2, overEls, callback, scope, precision, interval, callbackDelay, options,
+        // xy, xy2, overEls, callback, scope, pathBatchSize, interval, callbackDelay, options,
         // onPointerEnter, onPointerLeave, onPointerOver, onPointerOut, onPointerMove
         movePointerTemplate: function (args) {
             var document    = this.global.document,
@@ -28617,12 +28640,14 @@ Role('Siesta.Test.Simulate.Mouse', {
                 lastOverEl  = overEls[ overEls.length - 1 ];
                 
             if (lastOverEl && this.nodeIsUnloaded(lastOverEl)) {
-                lastOverEl      = null
-                overEls         = args.onVoidOverEls()
+                lastOverEl  = null
+                overEls     = args.onVoidOverEls()
             }
-
-            var precision   = args.precision
-            var options     = args.options || {}
+            
+            // always simulate drag with 1px precision
+            var mouseMovePrecision  = me.mouseState == 'down' ? 1 : args.mouseMovePrecision || me.mouseMovePrecision
+            var pathBatchSize       = Math.max(args.pathBatchSize, mouseMovePrecision)
+            var options             = args.options || {}
 
             var path        = this.getPathBetweenPoints(args.xy, args.xy2);
 
@@ -28640,21 +28665,31 @@ Role('Siesta.Test.Simulate.Mouse', {
                 processor       : function (data, index) {
                     var fromIndex   = data.sourceIndex,
                         toIndex     = data.targetIndex;
+                        
+//                    console.log("from index: %s, to index: %s", fromIndex, toIndex)
+                        
+                    // replace 0 with 1 to avoid infinite loop
+                    var delta       = Math.min(toIndex - fromIndex, mouseMovePrecision) || 1
 
-                    for (var j = fromIndex; j <= toIndex; j++) {
+                    for (var j = fromIndex; j <= toIndex; j += delta) {
                         var point       = path[ j ];
-                        var targetEl    = me.elementFromPoint(point[ 0 ], point[ 1 ]);
+                        
+//                        console.log("point : " + point)
+                        
+                        var x           = point[ 0 ]
+                        var y           = point[ 1 ]
+                        var targetEl    = me.elementFromPoint(x, y);
 
                         // Might get null here if moving over a non-initialized frame (seen in Chrome)
                         if (targetEl) {
 
                             if (targetEl.ownerDocument !== document) {
-                                var win     = targetEl.ownerDocument.defaultView || targetEl.ownerDocument.parentWindow;
+                                var win = targetEl.ownerDocument.defaultView || targetEl.ownerDocument.parentWindow;
 
                                 var offsetsToTopWindow = me.$(win.frameElement).offset();
 
-                                point[ 0 ]  -= offsetsToTopWindow.left;
-                                point[ 1 ]  -= offsetsToTopWindow.top;
+                                x       -= offsetsToTopWindow.left;
+                                y       -= offsetsToTopWindow.top;
                             }
 
                             if (targetEl !== lastOverEl) {
@@ -28666,14 +28701,14 @@ Role('Siesta.Test.Simulate.Mouse', {
                                     else
                                         if (el !== targetEl && me.$(el).has(targetEl).length === 0) {
                                             if (supports.mouseEnterLeave) {
-                                                args.onPointerLeave(el, $.extend({ clientX: point[ 0 ], clientY: point[ 1 ], relatedTarget : targetEl}, options))
+                                                args.onPointerLeave(el, $.extend({ clientX: x, clientY: y, relatedTarget : targetEl}, options))
                                             }
                                             overEls.splice(i, 1);
                                         }
                                 }
 
                                 if (lastOverEl) {
-                                    args.onPointerOut(lastOverEl, $.extend({ clientX: point[ 0 ], clientY: point[ 1 ], relatedTarget : targetEl}, options))
+                                    args.onPointerOut(lastOverEl, $.extend({ clientX: x, clientY: y, relatedTarget : targetEl}, options))
                                 }
 
                                 if (supports.mouseEnterLeave && jQuery.inArray(targetEl, overEls) == -1) {
@@ -28691,19 +28726,19 @@ Role('Siesta.Test.Simulate.Mouse', {
 
                                     for (var i = 0; i < els.length; i++) {
                                         if (jQuery.inArray(els[ i ], overEls) == -1) {
-                                            args.onPointerEnter(els[ i ], $.extend({ clientX: point[ 0 ], clientY: point[ 1 ], relatedTarget : lastOverEl}, options))
+                                            args.onPointerEnter(els[ i ], $.extend({ clientX: x, clientY: y, relatedTarget : lastOverEl}, options))
 
                                             overEls.push(els[ i ]);
                                         }
                                     }
                                 }
 
-                                args.onPointerOver(targetEl, $.extend({ clientX: point[ 0 ], clientY: point[ 1 ], relatedTarget : lastOverEl}, options))
+                                args.onPointerOver(targetEl, $.extend({ clientX: x, clientY: y, relatedTarget : lastOverEl}, options))
 
                                 lastOverEl = targetEl;
                             }
 
-                            args.onPointerMove(targetEl, $.extend({ clientX: point[ 0 ], clientY: point[ 1 ] }, options), j < toIndex)
+                            args.onPointerMove(targetEl, $.extend({ clientX: x, clientY: y }, options), j < toIndex)
                         }
                         // eof (targetEl)
                     }
@@ -28711,10 +28746,10 @@ Role('Siesta.Test.Simulate.Mouse', {
                 }
             });
 
-            for (var i = 0, l = path.length; i < l; i += precision) {
+            for (var i = 0, l = path.length; i < l; i += pathBatchSize) {
                 queue.addStep({
                     sourceIndex       : i,
-                    targetIndex       : Math.min(i + precision - 1, path.length - 1)
+                    targetIndex       : Math.min(i + pathBatchSize - 1, path.length - 1)
                 });
             }
 
@@ -29108,6 +29143,12 @@ Role('Siesta.Test.Simulate.Mouse', {
                     if (targetHasChanged && data.cancelIfTargetChanged) return
 
                     var event = me.simulateEvent(el, data.event, options, data.suppressLog);
+                    
+                    if (event.type == 'mousedown') 
+                        me.mouseState    = 'down'
+                    else
+                        if (event.type == 'mouseup')
+                            me.mouseState    = 'up'
 
                     if (data.focus) me.mimicFocusOnMouseDown(el, event)
                 }
@@ -29311,8 +29352,8 @@ Role('Siesta.Test.Simulate.Mouse', {
             options         = options || {};
 
             // For drag operations we should always use the top level document.elementFromPoint
-            var source      = me.elementFromPoint(sourceXY[0], sourceXY[1], true);
-            var target      = me.elementFromPoint(targetXY[0], targetXY[1], true);
+            var source      = me.elementFromPoint(sourceXY[0], sourceXY[1], false);
+            var target      = me.elementFromPoint(targetXY[0], targetXY[1], false);
 
             var queue       = new Siesta.Util.Queue({
                 deferer         : this.originalSetTimeout,
@@ -29333,7 +29374,7 @@ Role('Siesta.Test.Simulate.Mouse', {
             queue.addStep({
                 processor : function () {
                     // Fetch source el again since the mouseover might trigger another element to go visible.
-                    source  = me.elementFromPoint(sourceXY[0], sourceXY[1], true, source);
+                    source  = me.elementFromPoint(sourceXY[0], sourceXY[1], false, source);
                     me.simulateEvent(source, "mouseover", $.extend({ clientX: sourceXY[0], clientY: sourceXY[1]}, options));
                 }
             });
@@ -29350,7 +29391,7 @@ Role('Siesta.Test.Simulate.Mouse', {
                 isAsync     : true,
 
                 processor   : function (data) {
-                    me.moveMouse(sourceXY, targetXY, data.next, this, null, true, options);
+                    me.moveMouse(sourceXY, targetXY, data.next, this, null, true, options, 1);
                 }
             });
 
@@ -29358,7 +29399,7 @@ Role('Siesta.Test.Simulate.Mouse', {
 
             queue.addStep({
                 processor : function () {
-                    el      = me.elementFromPoint(targetXY[0], targetXY[1], true);
+                    el      = me.elementFromPoint(targetXY[0], targetXY[1], false);
                     me.simulateEvent(el, 'mouseover', $.extend({ clientX: targetXY[0], clientY: targetXY[1] }, options));
                 }
             });
@@ -31103,7 +31144,7 @@ Role('Siesta.Test.Simulate.Touch', {
                 overEls         : overEls,
                 interval        : this.dragDelay,
                 callbackDelay   : me.afterActionDelay,
-                precision       : me.mouseMovePrecision,
+                pathBatchSize   : me.pathBatchSize,
                 
                 onVoidOverEls   : function () {
                     return overEls = []
@@ -31426,6 +31467,8 @@ Role('Siesta.Test.ExtJSCore', {
         waitForExtReady         : true,
         waitForAppReady         : false,
         
+        waitForExtComponentQueryReady   : true,
+        
         loaderPath              : null,
         requires                : null,
         
@@ -31466,10 +31509,26 @@ Role('Siesta.Test.ExtJSCore', {
         isAppReadyDone          : false,
         
         requiringWaitingStarted : false,
-        isRequiringDone         : false
+        isRequiringDone         : false,
+        
+        modelsDefinedInPreload  : Joose.I.Object
     },
 
     override : {
+        
+        onTestStart : function () {
+            var me                  = this
+            var sharedSandboxState  = this.sharedSandboxState
+            
+            if (!this.reusingSandbox && sharedSandboxState) {
+                if (!sharedSandboxState.modelsDefinedInPreload) sharedSandboxState.modelsDefinedInPreload = {}
+                
+                this.forEachModelInAllSchemas(function (entity, entityName, className, schema) {
+                    sharedSandboxState.modelsDefinedInPreload[ className ] = true
+                })
+            }
+        },
+        
         
         // only called for the re-used contexts
         cleanupContextBeforeStartDom : function () {
@@ -31529,6 +31588,19 @@ Role('Siesta.Test.ExtJSCore', {
 
                 Ext.data.StoreManager.unregister.apply(Ext.data.StoreManager, toRemove);
             }
+            
+            var sharedSandboxState          = this.sharedSandboxState
+            var modelsDefinedInPreload      = sharedSandboxState && sharedSandboxState.modelsDefinedInPreload
+            
+            me.forEachModelInAllSchemas(function (entity, entityName, className, schema) {
+                if (!modelsDefinedInPreload[ className ]) {
+                    Ext.undefine(className)
+                    
+                    // TODO also need to remove the associations
+                    delete schema.entityClasses[ className ]
+                    delete schema.entities[ entityName ]
+                }
+            })
         },
         
         
@@ -31574,37 +31646,12 @@ Role('Siesta.Test.ExtJSCore', {
                 
                 Ext.onReady(function () {
                     me.isExtOnReadyDone     = true
-
-                    if (Ext.ComponentQuery) {
-
-                        // add :root pseudo CQ selector to be able to identify 'root' level components that don't have
-                        // parent containers. value is 1-based
-                        Ext.ComponentQuery.pseudos.root = function(items, value) {
-                            var i = 0, l = items.length, c, result = [];
-                            var findAllRoots = value === undefined
-
-                            if (!findAllRoots) {
-                                value = Number(value) - 1;
-                            }
-
-                            // Gather root level components
-                            for (; i < l; i++) {
-                                c = items[i].up();
-                                var hasParentContainer = c && c.contains && c.contains(items[i]);
-
-                                if (!hasParentContainer) {
-                                    result.push(items[i]);
-                                }
-                            }
-
-                            if (!findAllRoots) {
-                                result = result[value] ? [result[value]] : [];
-                            }
-
-                            return result;
-                        };
-                    }
                 })
+            }
+            
+            if (this.waitForExtComponentQueryReady && Ext && Ext.getVersion && !Ext.ComponentQuery) return {
+                ready       : false,
+                reason      : R.get('waitedForComponentQuery')
             }
             
             if (requires && !this.isRequiringDone) return {
@@ -31620,6 +31667,35 @@ Role('Siesta.Test.ExtJSCore', {
             if (this.waitForAppReady && !this.isAppReadyDone) return {
                 ready       : false,
                 reason      : R.get('waitedForApp')
+            }
+            
+            if (Ext && Ext.ComponentQuery) {
+                // add :root pseudo CQ selector to be able to identify 'root' level components that don't have
+                // parent containers. value is 1-based
+                Ext.ComponentQuery.pseudos.root = function(items, value) {
+                    var i = 0, l = items.length, c, result = [];
+                    var findAllRoots = value === undefined
+
+                    if (!findAllRoots) {
+                        value = Number(value) - 1;
+                    }
+
+                    // Gather root level components
+                    for (; i < l; i++) {
+                        c = items[i].up();
+                        var hasParentContainer = c && c.contains && c.contains(items[i]);
+
+                        if (!hasParentContainer) {
+                            result.push(items[i]);
+                        }
+                    }
+
+                    if (!findAllRoots) {
+                        result = result[value] ? [result[value]] : [];
+                    }
+
+                    return result;
+                };
             }
             
             return {
@@ -31673,6 +31749,22 @@ Role('Siesta.Test.ExtJSCore', {
             // Since this test is preloading Ext JS, we should let Siesta know what to 'expect'
             this.expectGlobals('Ext', 'id');
             this.SUPER();
+        },
+        
+        
+        forEachModelInAllSchemas : function (func) {
+            var Ext     = this.getExt()
+            
+            if (Ext && Ext.data && Ext.data.schema && Ext.data.schema.Schema && Ext.undefine) {
+                Joose.O.each(Ext.data.schema.Schema.instances, function (schema, name) {
+                    
+                    schema.eachEntity(function (entityName) {
+                        var entity  = schema.getEntity(entityName)
+                        
+                        func(entity, entityName, entity.$className, schema)
+                    })
+                })
+            }
         },
 
         
@@ -32180,8 +32272,8 @@ Role('Siesta.Test.ExtJSCore', {
                 var cmp             = components[i];
 
                 if (
-                    cmp.rendered && (
-                        !onlyVisibleComponents || (cmp.isVisible ? cmp.isVisible() : !cmp.isHidden()) 
+                    cmp.rendered && (            // Widgets don't implement isVisible/isHidden
+                        !onlyVisibleComponents || cmp.isWidget || (cmp.isVisible ? cmp.isVisible() : !cmp.isHidden())
                     )
                 ) {
                     var result  = this.compToEl(cmp, false);
@@ -34258,7 +34350,7 @@ Role('Siesta.Test.Element', {
 
                 this.suppressPassedWaitForAssertion = false;
 
-                me.processCallbackFromTest(callback, null, scope || me)
+                me.processCallbackFromTest(callback, [actionLog], scope || me)
             });
         },
 
@@ -35501,6 +35593,7 @@ Role('Siesta.Test.Element', {
             return !disabled &&
                 (
                 this.isTextInput(el) ||
+                (el.nodeName.toLowerCase() === 'input' && el.type === 'file') ||
                 nodeName in focusable ||
                 (el.getAttribute('tabIndex') != null && (!$.browser.msie || String(el.getAttribute('unselectable')).toLowerCase() != 'on'))
                 );
@@ -35895,7 +35988,7 @@ Class('Siesta.Test.Browser', {
             Joose.A.each([ 
                 'currentPosition', 
                 'actionDelay', 'afterActionDelay', 
-                'dragDelay', 'moveCursorBetweenPoints', 'mouseMovePrecision', 'overEls',
+                'dragDelay', 'moveCursorBetweenPoints', 'mouseMovePrecision', 'pathBatchSize', 'overEls',
                 'realAlert', 'realConfirm', 'realPrompt', 'realPrint', 'realOpen', 'popups'
             ], function (name) {
                 res[ name ]     = me[ name ]
@@ -36919,8 +37012,10 @@ Class('Siesta.Test.Browser', {
             this.switchTo(this.scopeProvider.scope, callback)
         },
 
-        setCursorPosition : function(x, y) {
+        setCursorPosition : function(x, y, callback) {
             this.moveMouse(this.currentPosition, [x,y], null, null, 100000, false);
+
+            callback && callback.call(this);
         },
 
         /**
@@ -37890,7 +37985,7 @@ Class('Siesta.Harness.Browser', {
         
         
         /**
-         * @cfg {Integer/String} mouseMovePrecision 
+         * @cfg {Integer} mouseMovePrecision 
          * 
          * Defines how precisely to follow the path between two points when simulating a drag or mouse move. 
          * Value 1 indicates that "mouseover/mouseout" events are simulated for every point along the path (which is 
@@ -37904,7 +37999,7 @@ Class('Siesta.Harness.Browser', {
          * 
          * This option can be also specified in the test file descriptor.
          */
-        mouseMovePrecision      : null,
+        mouseMovePrecision      : 1,
 
         /**
          * @cfg {Boolean} breakOnFail When set to `true`, the harness will not start launching any further tests after detecting a failed assertion.
@@ -38640,16 +38735,12 @@ Class('Siesta.Harness.Browser', {
             })
             
             if (this.getDescriptorConfig(desc, 'speedRun')) {
-                if (config.mouseMovePrecision == null) config.mouseMovePrecision   = 20
-                
                 Joose.O.extend(config, {
                     actionDelay         : 1,
-                    dragDelay           : 10
+                    dragDelay           : 10,
+                    pathBatchSize       : 30
                 })
             }
-            
-            // use default drag precision
-            if (config.mouseMovePrecision == null) delete config.mouseMovePrecision
             
             return config
         },
@@ -38748,7 +38839,9 @@ Class('Siesta.Harness.Browser', {
         runCoreSharedContext : function (sharedContextGroups, contentManager, launchState, callback) {
             var me                  = this
             
-            var processDescriptor   = function (descriptors, isFirst, scopeProvider, firstDesc) {
+            var processDescriptor   = function (group, isFirst, scopeProvider, firstDesc) {
+                var descriptors     = group.items
+                
                 if (!descriptors.length) { processGroup(sharedContextGroups); return }
                 
                 var desc            = descriptors.shift()
@@ -38760,13 +38853,13 @@ Class('Siesta.Harness.Browser', {
                 if (isFirst) {
                     // new context should be created for the 1st item in the group
                     me.processURL(desc, desc.index, contentManager, launchState, function () {
-                        processDescriptor(descriptors, false, me.scopesByURL[ desc.url ], desc)
-                    }, noCleanup)
+                        processDescriptor(group, false, me.scopesByURL[ desc.url ], desc)
+                    }, noCleanup, group)
                 } else {
                     // same context should be re-used
                     me.processUrlShared(desc, desc.index, contentManager, launchState, function () {
-                        processDescriptor(descriptors, false, scopeProvider, firstDesc)
-                    }, noCleanup, scopeProvider, firstDesc)
+                        processDescriptor(group, false, scopeProvider, firstDesc)
+                    }, noCleanup, group, scopeProvider, firstDesc)
                 }
             }
                 
@@ -38775,17 +38868,18 @@ Class('Siesta.Harness.Browser', {
                 
                 var group           = sharedContextGroups.shift()
                 
-                processDescriptor(group.items, true)
+                processDescriptor(group, true)
             }
             
             processGroup(sharedContextGroups)
         },
         
         
-        processUrlShared : function (desc, index, contentManager, launchState, callback, noCleanup, scopeProvider, firstDesc) {
+        processUrlShared : function (desc, index, contentManager, launchState, callback, noCleanup, sharedSandboxState, scopeProvider, firstDesc) {
             var me      = this
             var url     = desc.url
             
+            // If first test in group is missing - behavior is undefined
             if (desc.isMissing) {
                 callback()
                 
@@ -38816,7 +38910,7 @@ Class('Siesta.Harness.Browser', {
                 var testClass       = me.getDescriptorConfig(desc, 'testClass')
                 if (me.typeOf(testClass) == 'String') testClass = Joose.S.strToClass(testClass)
                 
-                var testConfig      = me.getNewTestConfiguration(desc, scopeProvider, contentManager, launchState)
+                var testConfig      = me.getNewTestConfiguration(desc, scopeProvider, contentManager, launchState, sharedSandboxState)
                 
                 // create the test instance early, so that one can perform some setup (as the test class method call)
                 // even before the "pageUrl" starts loading
@@ -39352,6 +39446,16 @@ Role('Siesta.Harness.Browser.ExtJSCore', {
          */
         requires                : null,
         
+        /**
+         * @cfg {Boolean} waitForExtComponentQueryReady
+         * 
+         * Setting this configuration option to "true" will cause Siesta to wait until the `Ext.ComponentQuery` class is loaded on the page,
+         * before starting the test. 
+         *   
+         * This option can (and probably should) be also specified in the test file descriptor. 
+         */
+        waitForExtComponentQueryReady       : true,
+        
         
         // Set to true to fail t.knownBugInStatements, useful when running against Ext JS nightly builds
         failKnownBugIn          : false
@@ -39365,6 +39469,8 @@ Role('Siesta.Harness.Browser.ExtJSCore', {
             
             config.loaderPath       = this.getDescriptorConfig(desc, 'loaderPath')
             config.requires         = this.getDescriptorConfig(desc, 'requires')
+            
+            config.waitForExtComponentQueryReady = this.getDescriptorConfig(desc, 'waitForExtComponentQueryReady')
             
             return config
         },
@@ -39910,272 +40016,236 @@ Ext.define('ExtX.Reference.Slot2', {
     }
 })
 ;
-(function () {
-    var config = {
-        idProperty : 'id',
-
-        fields : [
-            'id',
-            'url',
-
-            'title',
-
-            { name : 'passCount', type : 'int', defaultValue : 0 },
-            { name : 'failCount', type : 'int', defaultValue : 0 },
-            { name : 'todoPassCount', type : 'int', defaultValue : 0 },
-            { name : 'todoFailCount', type : 'int', defaultValue : 0 },
-
-            { name : 'time', type : 'int', defaultValue : 0 },
-
-            { name : 'checked', defaultValue : false },
-
-            { name : 'folderStatus', defaultValue : 'yellow' },
-
-            // will be set to true for all tests, once the users clicks "run"
-            'isStarting',
-            // will be set to true, right before the scope preload begin
-            'isStarted',
-            // will be set to true, after preload ends and tests launch
-            { name : 'isRunning', type : 'boolean', defaultValue : false },
-            { name : 'isMissing', type : 'boolean', defaultValue : false },
-            { name : 'isFailed', type : 'boolean', defaultValue : false },
-
-            // composite objects
-            'assertionsStore',
-            'test',
-            'descriptor'
-        ]
-    };
-    
-    var isSenchaTouch = Ext.getVersion && Ext.getVersion('touch')
-
-    Ext.define(
-        'Siesta.Harness.Browser.Model.TestFile',
+Ext.define('Siesta.Harness.Browser.Model.TestFile', {
+    extend      : 'Ext.data.Model',
         
-        Ext.apply({
-            extend      : 'Ext.data.Model',
-            
-            //init        : function () {
-                //this.internalId = this.getId() || this.internalId
-                //debugger;
-            //},
+    idProperty : 'id',
 
-            computeFolderStatus : function () {
-                if (!this.childNodes.length) return 'yellow'
-    
-                var isWorking = false
-                var hasFailed = false
-                var allGreen = true
-    
-                Joose.A.each(this.childNodes, function (childNode) {
-    
-                    if (childNode.isLeaf()) {
-                        var test = childNode.get('test')
-    
-                        if (test && test.isFailed()) {
-                            allGreen = false
-                            hasFailed = true
-    
-                            // stop iteration
-                            return false
-                        }
-    
-                        if (!test && childNode.get('isStarting'))    isWorking = true
-                        if (test && !test.isFinished())     isWorking = true
-                        if (test && !test.isPassed())       allGreen = false
-                        if (!test)                          allGreen = false
-    
-                    } else {
-                        var status = childNode.computeFolderStatus()
-    
-                        if (status == 'red') {
-                            allGreen = false
-                            hasFailed = true
-    
-                            // stop iteration
-                            return false
-                        }
-    
-                        if (status == 'working') {
-                            isWorking = true
-    
-                            // stop iteration
-                            return false
-                        }
-    
-                        if (status == 'yellow')         allGreen = false
-                    }
-                })
-    
-                if (isWorking)  return 'working'
-                if (hasFailed)  return 'red'
-                if (allGreen)   return 'green'
-    
-                return 'yellow'
-            },
-    
-    
-            updateFolderStatus : function () {
-                this.set('folderStatus', this.computeFolderStatus())
-    
-                var parentNode = this.parentNode
-    
-                if (parentNode && !parentNode.isRoot()) parentNode.updateFolderStatus()
-            }
-        }, isSenchaTouch ? { config : config } : config)//,
-        // eof Ext.apply
-        
-        //function () {
-        //    if (!isSenchaTouch) {
-        //        Ext.data.NodeInterface.decorate(this);
-        //
-        //        this.override({
-        //            expand : function () {
-        //                Ext.suspendLayouts();
-        //                this.callParent(arguments);
-        //                Ext.resumeLayouts();
-        //            }
-        //        });
-        //    }
-        //}
-    )
-})();
-;
-(function () {
-    var config = {
-        idProperty  : 'id',
-        
-        proxy       : { type : 'memory' },
+    fields : [
+        'id',
+        'url',
 
-        fields      : [
-            'id',
-            { name : 'folderStatus', defaultValue : 'yellow' },
-            // the Siesta.Result instance itself
-            { name : 'result' }
-        ]
-    };
-    
-    var isSenchaTouch = Ext.getVersion && Ext.getVersion('touch')
+        'title',
 
-    Ext.define(
-        'Siesta.Harness.Browser.Model.Assertion', 
-        
-        Ext.apply({
-            extend : 'Ext.data.Model',
-            
-            getResult : function () {
-                return this.data.result
-            },
-            
-            
-            isAssertion : function () {
-                return this.data.result instanceof Siesta.Result.Assertion
-            },
-            
-            
-            isDiagnostic : function () {
-                return this.data.result instanceof Siesta.Result.Diagnostic
-            },
-            
-            
-            isSummary : function () {
-                return this.data.result instanceof Siesta.Result.Summary
-            },
-            
-            
-            ensureVisible : function () {
-                var parent      = this.parentNode
-                
-                while (parent && !parent.isRoot()) {
-                    parent.expand()
-                    
-                    parent      = parent.parentNode
+        { name : 'passCount', type : 'int', defaultValue : 0 },
+        { name : 'failCount', type : 'int', defaultValue : 0 },
+        { name : 'todoPassCount', type : 'int', defaultValue : 0 },
+        { name : 'todoFailCount', type : 'int', defaultValue : 0 },
+
+        { name : 'time', type : 'int', defaultValue : 0 },
+
+        { name : 'checked', defaultValue : false },
+
+        { name : 'folderStatus', defaultValue : 'yellow' },
+
+        // will be set to true for all tests, once the users clicks "run"
+        'isStarting',
+        // will be set to true, right before the scope preload begin
+        'isStarted',
+        // will be set to true, after preload ends and tests launch
+        { name : 'isRunning', type : 'boolean', defaultValue : false },
+        { name : 'isMissing', type : 'boolean', defaultValue : false },
+        { name : 'isFailed', type : 'boolean', defaultValue : false },
+
+        // composite objects
+        'assertionsStore',
+        'test',
+        'descriptor'
+    ],
+    
+        //init        : function () {
+            //this.internalId = this.getId() || this.internalId
+            //debugger;
+        //},
+
+    computeFolderStatus : function () {
+        if (!this.childNodes.length) return 'yellow'
+
+        var isWorking = false
+        var hasFailed = false
+        var allGreen = true
+
+        Joose.A.each(this.childNodes, function (childNode) {
+
+            if (childNode.isLeaf()) {
+                var test = childNode.get('test')
+
+                if (test && test.isFailed()) {
+                    allGreen = false
+                    hasFailed = true
+
+                    // stop iteration
+                    return false
                 }
-            },
-            
-            
-            isWaitingAssertion : function () {
-                var result      = this.data.result
-                
-                return this.isAssertion() && result.isWaiting && !result.completed
-            },
-            
-            
-            updateFolderStatus : function () {
-                if (!this.isLeaf()) this.set('folderStatus', this.computeFolderStatus())
-    
-                var parentNode = this.parentNode
-    
-                if (parentNode && !parentNode.isRoot()) parentNode.updateFolderStatus()
-            },
-            
-            
-            triggerUIUpdate: function(){
-                // This isn't ideal, however none of the underlying fields have changed
-                // but we still need to update the UI
-                this.callJoined('afterEdit', []);
-            },
 
-            
-            computeFolderStatus : function () {
-                if (!this.isLeaf() && this.getResult().isWorking()) return 'working'
-                
-                if (!this.childNodes.length) return 'yellow'
-                
-                var isWorking   = false
-                var hasFailed   = false
-                var allGreen    = true
-    
-                Joose.A.each(this.childNodes, function (childNode) {
-                    var result  = childNode.getResult()
-    
-                    if (childNode.isLeaf()) {
-                        if (childNode.isWaitingAssertion()) 
-                            isWorking           = true
-                        
-                        if (childNode.isAssertion()) {
-                            if (!result.isPassed()) {
-                                allGreen        = false
-                                hasFailed       = true
-                                
-                                // stop iteration
-                                return false
-                            }
-                        }
-    
-                    } else {
-                        var status = childNode.computeFolderStatus()
-    
-                        if (status == 'red') {
-                            allGreen            = false
-                            hasFailed           = true
-    
-                            // stop iteration
-                            return false
-                        }
-                        
-                        if (result.isWorking() || status == 'working') {
-                            isWorking           = true
-    
-                            // stop iteration
-                            return false
-                        }
-    
-                        if (status == 'yellow')
-                            allGreen            = false
-                    }
-                })
-    
-                if (isWorking)  return 'working'
-                if (hasFailed)  return 'red'
-                if (allGreen)   return 'green'
-    
-                return 'yellow'
+                if (!test && childNode.get('isStarting'))    isWorking = true
+                if (test && !test.isFinished())     isWorking = true
+                if (test && !test.isPassed())       allGreen = false
+                if (!test)                          allGreen = false
+
+            } else {
+                var status = childNode.computeFolderStatus()
+
+                if (status == 'red') {
+                    allGreen = false
+                    hasFailed = true
+
+                    // stop iteration
+                    return false
+                }
+
+                if (status == 'working') {
+                    isWorking = true
+
+                    // stop iteration
+                    return false
+                }
+
+                if (status == 'yellow')         allGreen = false
             }
+        })
+
+        if (isWorking)  return 'working'
+        if (hasFailed)  return 'red'
+        if (allGreen)   return 'green'
+
+        return 'yellow'
+    },
+
+
+    updateFolderStatus : function () {
+        this.set('folderStatus', this.computeFolderStatus())
+
+        var parentNode = this.parentNode
+
+        if (parentNode && !parentNode.isRoot()) parentNode.updateFolderStatus()
+    }
+});
+Ext.define('Siesta.Harness.Browser.Model.Assertion', { 
+    
+    extend : 'Ext.data.Model',
+    
+    idProperty  : 'id',
+    
+    proxy       : { type : 'memory' },
+
+    fields      : [
+        'id',
+        { name : 'folderStatus', defaultValue : 'yellow' },
+        // the Siesta.Result instance itself
+        { name : 'result' }
+    ],
+    
+    getResult : function () {
+        return this.data.result
+    },
+    
+    
+    isAssertion : function () {
+        return this.data.result instanceof Siesta.Result.Assertion
+    },
+    
+    
+    isDiagnostic : function () {
+        return this.data.result instanceof Siesta.Result.Diagnostic
+    },
+    
+    
+    isSummary : function () {
+        return this.data.result instanceof Siesta.Result.Summary
+    },
+    
+    
+    ensureVisible : function () {
+        var parent      = this.parentNode
+        
+        while (parent && !parent.isRoot()) {
+            parent.expand()
             
-        }, isSenchaTouch ? { config : config } : config)
-    );
-})();
+            parent      = parent.parentNode
+        }
+    },
+    
+    
+    isWaitingAssertion : function () {
+        var result      = this.data.result
+        
+        return this.isAssertion() && result.isWaiting && !result.completed
+    },
+    
+    
+    updateFolderStatus : function () {
+        if (!this.isLeaf()) this.set('folderStatus', this.computeFolderStatus())
+
+        var parentNode = this.parentNode
+
+        if (parentNode && !parentNode.isRoot()) parentNode.updateFolderStatus()
+    },
+    
+    
+    triggerUIUpdate: function(){
+        // This isn't ideal, however none of the underlying fields have changed
+        // but we still need to update the UI
+        this.callJoined('afterEdit', []);
+    },
+
+    
+    computeFolderStatus : function () {
+        if (!this.isLeaf() && this.getResult().isWorking()) return 'working'
+        
+        if (!this.childNodes.length) return 'yellow'
+        
+        var isWorking   = false
+        var hasFailed   = false
+        var allGreen    = true
+
+        Joose.A.each(this.childNodes, function (childNode) {
+            var result  = childNode.getResult()
+
+            if (childNode.isLeaf()) {
+                if (childNode.isWaitingAssertion()) 
+                    isWorking           = true
+                
+                if (childNode.isAssertion()) {
+                    if (!result.isPassed()) {
+                        allGreen        = false
+                        hasFailed       = true
+                        
+                        // stop iteration
+                        return false
+                    }
+                }
+
+            } else {
+                var status = childNode.computeFolderStatus()
+
+                if (status == 'red') {
+                    allGreen            = false
+                    hasFailed           = true
+
+                    // stop iteration
+                    return false
+                }
+                
+                if (result.isWorking() || status == 'working') {
+                    isWorking           = true
+
+                    // stop iteration
+                    return false
+                }
+
+                if (status == 'yellow')
+                    allGreen            = false
+            }
+        })
+
+        if (isWorking)  return 'working'
+        if (hasFailed)  return 'red'
+        if (allGreen)   return 'green'
+
+        return 'yellow'
+    }
+});
 ;
 Ext.define("Sch.data.mixin.FilterableTreeStore", {
 
@@ -41442,16 +41512,24 @@ Ext.define('Siesta.Harness.Browser.UI.ComponentInspector', {
         }
 
         if (node) {
-            var offsets        = this.getOffsets(node);
-            var left           = (Ext.fly(node).getX() - 1 + offsets[0]) + 'px';
-            var top            = (Ext.fly(node).getY() - 1 + offsets[1]) + 'px';
-            var translateStyle = $.browser.opera ? ('translate(' + left + ',' + top + ')') :
-                ('translate3d(' + left + ',' + top + ', 0)');
+            var offsets = this.getOffsets(node);
+            var left    = (Ext.fly(node).getX() - 1 + offsets[0]);
+            var top     = (Ext.fly(node).getY() - 1 + offsets[1]);
+            var width   = ((Ext.fly(node).getWidth() || (parseInt(node.style.width.substring(0, node.style.width.length - 2), 10))) + 2);
+            var height  = ((Ext.fly(node).getHeight() || (parseInt(node.style.height.substring(0, node.style.height.length - 2), 10))) + 2);
+
+            if (this.injectIntoTestFrame) {
+                left += this.window.document.body.scrollLeft;
+                top  += this.window.document.body.scrollTop;
+            }
+
+            var translateStyle = $.browser.opera ? ('translate(' + left + 'px,' + top + 'px)') :
+                ('translate3d(' + left + 'px,' + top + 'px, 0)');
 
             // Regular getWidth/getHeight doesn't work if another iframe is on the page
             boxStyle.setProperty('transform', translateStyle)
-            boxStyle.width     = ((Ext.fly(node).getWidth() || (parseInt(node.style.width.substring(0, node.style.width.length - 2), 10))) + 2) + 'px';
-            boxStyle.height    = ((Ext.fly(node).getHeight() || (parseInt(node.style.height.substring(0, node.style.height.length - 2), 10))) + 2) + 'px';
+            boxStyle.width     = width + 'px';
+            boxStyle.height    = height + 'px';
             boxStyle['border-color']   = 'red';
 
             if (this.showSelectorText && content) {
@@ -41922,9 +42000,7 @@ Ext.define('Siesta.Harness.Browser.UI.AssertionGrid', {
         Ext.apply(this, {
 
             columns : [
-                {
-                    xtype : 'assertiontreecolumn'
-                }
+                this.assertionColumn = new Siesta.Harness.Browser.UI.AssertionTreeColumn()
             ],
 
             viewConfig : {
@@ -42015,7 +42091,9 @@ Ext.define('Siesta.Harness.Browser.UI.AssertionGrid', {
                 test.on('testupdate', this.onTestUpdate, this),
                 test.on('testendbubbling', this.onEveryTestEnd, this),
                 test.on('assertiondiscard', this.onAssertionDiscarded, this)
-            ] : []
+            ] : [
+                test.on('testfinalize', this.adaptColumnSize, this)
+            ]
         )
 
         Ext.suspendLayouts()
@@ -42033,6 +42111,17 @@ Ext.define('Siesta.Harness.Browser.UI.AssertionGrid', {
         this.processNewResult(this.store, test, result, parentResult)
     },
 
+    adaptColumnSize : function(event, test) {
+        var headerCt = this.getHeaderContainer();
+        var maxWidth = this.getView().getMaxContentWidth(this.assertionColumn); // HACK private method
+
+        this.assertionColumn.setWidth(Math.max(maxWidth, this.getWidth()));
+    },
+
+    onResize : function() {
+        this.callParent(arguments);
+        this.adaptColumnSize();
+    },
 
     // is bubbling and thus triggered for all tests (including sub-tests)
     onEveryTestEnd : function (event, test) {
@@ -42089,10 +42178,9 @@ Ext.define('Siesta.Harness.Browser.UI.AssertionTreeColumn', {
     tdCls             : 'tr-tree-column',
     resultTpl         : null,
     dataIndex         : 'folderStatus',
-    flex              : 1,
     menuDisabled      : true,
     sortable          : false,
-
+    width             : 500,
     descriptionTpl : '<span class="assertion-text">{text}</span>',
 
     initComponent : function () {

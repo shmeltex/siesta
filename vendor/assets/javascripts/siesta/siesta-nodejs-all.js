@@ -1,6 +1,6 @@
 /*
 
-Siesta 4.0.5
+Siesta 4.0.6
 Copyright(c) 2009-2016 Bryntum AB
 http://bryntum.com/contact
 http://bryntum.com/products/siesta/license
@@ -8558,7 +8558,7 @@ Class('Siesta.Content.Manager', {
 ;
 ;
 Class('Siesta', {
-    /*PKGVERSION*/VERSION : '4.0.5',
+    /*PKGVERSION*/VERSION : '4.0.6',
 
     // "my" should been named "static"
     my : {
@@ -9033,7 +9033,8 @@ Siesta.CurrentLocale = Siesta.CurrentLocale || {
         CompositeQuery               : 'CompositeQuery',
         matchedNoCmp                 : 'matched no Ext.Component',
         messageBoxVisible            : 'Message box is visible',
-        messageBoxHidden             : 'Message box is hidden'
+        messageBoxHidden             : 'Message box is hidden',
+        waitedForComponentQuery      : 'Waiting too long for Ext.ComponentQuery'
     },
 
     "Siesta.Test.Function"           : {
@@ -10507,7 +10508,9 @@ Role('Siesta.Test.More', {
                     obj2                : obj2
                 })
             }
-            else {
+            // Not supported in IE8
+            else if (window.DeepDiff) {
+
                 var diff = DeepDiff(obj1, obj2);
 
                 if (diff.length > 5) {
@@ -10530,6 +10533,12 @@ Role('Siesta.Test.More', {
                     window.console && console.log('DIFF RESULT:', diffItem);
                 }
 
+            } else {
+                this.fail(desc, {
+                    assertionName       : 'isDeeply',
+                    got                 : obj1,
+                    need                : obj2
+                })
             }
         },
         
@@ -13016,6 +13025,7 @@ Class('Siesta.Test', {
 
         reusingSandbox      : false,
         sandboxCleanup      : true,
+        sharedSandboxState  : null,
 
         // the scope provider for the context of the test script
         // usually the same as the `scopeProvider`, but may be different in case of using `separateContext` option
@@ -14244,6 +14254,8 @@ Class('Siesta.Test', {
             if (this.startDate) throw R.get('testAlreadyStarted');
 
             this.startDate  = new Date() - 0
+            
+            me.onTestStart()
 
             /**
              * This event is fired when an individual test case starts. When *started*, the test will be waiting for 
@@ -14769,6 +14781,10 @@ Class('Siesta.Test', {
         },
 
 
+        onTestStart : function () {
+        },
+        
+        
         getSummaryMessage : function (lineBreaks) {
             var res             = []
 
@@ -16151,7 +16167,7 @@ Class('Siesta.Harness', {
             this.startDate  = new Date()
             
             /**
-             * This event is fired when the test suite starts. Note, that when running the test suite in the browsers, this event can be fired several times
+             * This event is fired when the test suite starts. Note, that when running the test suite in the browser, this event can be fired several times
              * (for each group of tests you've launched).  
              * 
              * You can subscribe to it, using regular ExtJS syntax:
@@ -16173,7 +16189,7 @@ Class('Siesta.Harness', {
             this.endDate    = new Date()
             
             /**
-             * This event is fired when the test suite ends. Note, that when running the test suite in the browsers, this event can be fired several times
+             * This event is fired when the test suite ends. Note, that when running the test suite in the browser, this event can be fired several times
              * (for each group of tests you've launched).  
              * 
              * @event testsuiteend
@@ -16944,7 +16960,7 @@ Class('Siesta.Harness', {
         },
         
         
-        processURL : function (desc, index, contentManager, launchState, callback, noCleanup) {
+        processURL : function (desc, index, contentManager, launchState, callback, noCleanup, sharedSandboxState) {
             var me      = this
             var url     = desc.url
             
@@ -16991,7 +17007,7 @@ Class('Siesta.Harness', {
             var testClass       = me.getDescriptorConfig(desc, 'testClass')
             if (me.typeOf(testClass) == 'String') testClass = Joose.S.strToClass(testClass)
             
-            var testConfig      = me.getNewTestConfiguration(desc, scopeProvider, contentManager, launchState)
+            var testConfig      = me.getNewTestConfiguration(desc, scopeProvider, contentManager, launchState, sharedSandboxState)
             
             // create the test instance early, so that one can perform some setup (as the test class method call)
             // even before the "pageUrl" starts loading
@@ -17021,7 +17037,7 @@ Class('Siesta.Harness', {
                     me.onAfterScopePreload(scopeProvider, url, test, failedPreloads)
                     
                     failedPreloads && Joose.O.each(failedPreloads, function (value, url) {
-                        preloadErrors.push({ 
+                        preloadErrors.unshift({ 
                             isException : false, 
                             message     : Siesta.Resource('Siesta.Harness', 'preloadHasFailed', { url : url })
                         })
@@ -17139,7 +17155,7 @@ Class('Siesta.Harness', {
         },
         
         
-        getNewTestConfiguration : function (desc, scopeProvider, contentManager, launchState) {
+        getNewTestConfiguration : function (desc, scopeProvider, contentManager, launchState, sharedSandboxState) {
             var groups          = []
             var currentDesc     = desc.parent
             
@@ -17183,6 +17199,7 @@ Class('Siesta.Harness', {
                 sourceLineForAllAssertions  : this.sourceLineForAllAssertions,
                 
                 sandboxCleanup              : this.getDescriptorConfig(desc, 'sandboxCleanup'),
+                sharedSandboxState          : sharedSandboxState,
                 
                 config                      : this.getDescriptorConfig(desc, 'config'),
                 

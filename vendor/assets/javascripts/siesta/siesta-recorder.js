@@ -3971,8 +3971,10 @@ Role('Siesta.Util.Role.Dom', {
         closest : function (elem, selector, maxLevels) {
             maxLevels = maxLevels || 100;
 
+            var docEl = elem.ownerDocument.documentElement;
+
             // Get closest match
-            for (var i = 0; i < maxLevels && elem && "classList" in elem; elem = elem.parentNode ){
+            for (var i = 0; i < maxLevels && elem && elem !== docEl; elem = elem.parentNode ){
                 if (Sizzle.matchesSelector(elem, selector)) {
                     return elem;
                 }
@@ -4262,7 +4264,8 @@ Class('Siesta.Recorder.Event', {
     my : {
         has : {
             ID              : 1,
-            HOST            : null
+            HOST            : null,
+            isFirefox       : /firefox/i.test(navigator.userAgent)
         },
         
         methods : {
@@ -4277,8 +4280,8 @@ Class('Siesta.Recorder.Event', {
                 var config          = {
                     type            : e.type,
                     target          : e.target,
-                    timestamp       : e.timeStamp,
-                    
+                    timestamp       : Date.now && Date.now() || e.timeStamp, // Firefox / Chrome doesn't have stable timeStamp implementation https://bugzilla.mozilla.org/show_bug.cgi?id=1186218
+                                                  // https://googlechrome.github.io/samples/event-timestamp/index.html
                     options         : options
                 }
                 
@@ -4286,8 +4289,15 @@ Class('Siesta.Recorder.Event', {
                     config.charCode = e.charCode || e.keyCode;
                     config.keyCode  = e.keyCode;
                 } else {
-                    config.x        = e.pageX;
-                    config.y        = e.pageY;
+                    // Overcomplicated due to IE9
+                    var bodyEl      = e.target && e.target.ownerDocument && e.target.ownerDocument.body;
+                    var docEl       = e.target && e.target.ownerDocument.documentElement;
+                                                            //Chrome              Firefox
+                    var pageX       = bodyEl ? e.clientX + (bodyEl.scrollLeft || docEl.scrollLeft): e.pageX;
+                    var pageY       = bodyEl ? e.clientY + (bodyEl.scrollTop || docEl.scrollTop): e.pageY;
+
+                    config.x        = pageX;
+                    config.y        = pageY;
     
                     config.button   = e.button;
                 }
@@ -4647,7 +4657,11 @@ Class('Siesta.Recorder.TargetExtractor', {
     methods : {
 
         initialize : function () {
-            this.ignoreCssClassesRegExp = this.ignoreClasses.length ? new RegExp(this.ignoreClasses.join('|')) : /\0/
+            var ignoreClasses = this.constructor.prototype.meta.getAttribute('ignoreClasses').init()
+
+            ignoreClasses = ignoreClasses.concat(this.ignoreClasses)
+
+            this.ignoreCssClassesRegExp = ignoreClasses.length ? new RegExp(ignoreClasses.join('|')) : /\0/
         },
         
         // return `true` to keep the id, `false` - to ignore it
@@ -4692,10 +4706,12 @@ Class('Siesta.Recorder.TargetExtractor', {
         
         
         getCssClasses : function (dom) {
-            var classes             = dom.classList
+            var classes             = dom.className.trim().replace(/  +/g, ' ');
             var significantClasses  = []
             var index               = {}
-            
+
+            classes = classes && classes.split(' ') || [];
+
             for (var i = 0; i < classes.length; i++) {
                 var cssClass            = classes[ i ]
                 
@@ -5090,6 +5106,7 @@ Class('Siesta.Recorder.Recorder', {
         _moveCursorToSelectors          : Joose.I.Array,
         moveCursorToSelectorsMatcher    : null,
         lastMoveCursorToEl              : null,
+        lastMoveTimestamp               : null,
         actionClass                     : Siesta.Recorder.Action
     },
 
@@ -5677,17 +5694,21 @@ Class('Siesta.Recorder.Recorder', {
         onBodyMouseOver : function(e) {
             var target = e.target;
 
-            if (target.matches(this.moveCursorToSelectorsMatcher) ||
+            if (this.is(target, this.moveCursorToSelectorsMatcher) ||
                 (target = this.closest(e.target, this.moveCursorToSelectorsMatcher, 3))) {
 
                 if (target !== this.lastMoveCursorToEl) {
+                    var docEl       = this.window.document.documentElement;
+
                     var evtData = {
                         type      : e.type,
                         target    : target,
-                        timeStamp : e.timeStamp,
+                        timeStamp : Date.now(),
                         options   : e.options,
-                        pageX     : e.pageX,
-                        pageY     : e.pageY
+                        clientX   : e.clientX,
+                        clientY   : e.clientY,
+                        pageX     : e.clientX + docEl.scrollLeft,
+                        pageY     : e.clientY + docEl.scrollTop
                     };
 
                     this.onBodyMouseMove(evtData, false);
@@ -5717,14 +5738,13 @@ Class('Siesta.Recorder.Recorder', {
 
             return function (event) {
                 var now         = Date.now();
+                var docEl       = me.window.document.documentElement;
 
-                if ('pageX' in event) {
-                    me.cursorPosition[0] = event.pageX;
-                    me.cursorPosition[1] = event.pageY;
-                } else {
-                    me.cursorPosition[0] = event.clientX;
-                    me.cursorPosition[1] = event.clientY;
-                }
+                me.lastMoveTimestamp = now;
+
+                // No access to pageX/pageY in IE9
+                me.cursorPosition[0] = event.clientX + docEl.scrollLeft;
+                me.cursorPosition[1] = event.clientY + docEl.scrollTop;
 
                 if (last && now < last + threshhold) {
                     var args = arguments;
@@ -5755,6 +5775,7 @@ Class('Siesta.Recorder.Recorder', {
             var win = this.window;
 
             if (win) {
+                var d            = win.document;
                 var windowWidth  = win.innerWidth || d.documentElement.clientWidth || d.body.clientWidth,
                     windowHeight = win.innerHeight || d.documentElement.clientHeight || d.body.clientHeight;
 
