@@ -1,15 +1,17 @@
 language: ruby
 script: "bundle exec rspec spec"
 rvm:
-  - "1.9.3"
   - "2.2.4"
   - "2.3.0"
-  - "jruby"
+  - "jruby-9000"
+  - "jruby-head"
   - "rbx"
   - "ruby-head"
 matrix:
   allow_failures:
     - rvm: ruby-head
     - rvm: rbx
+    - rvm: jruby-9000
+    - rvm: jruby-head
 env:
   - CODECLIMATE_REPO_TOKEN=cdae638d374998cf1a2e011f6b93eef5693815d816c9d830932f94f6a1593457
