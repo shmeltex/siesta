@@ -2,7 +2,7 @@ language: ruby
 script: "bundle exec rspec spec"
 rvm:
   - "2.2.4"
-  - "2.3.0"
+  - "2.3.1"
   - "jruby-9000"
   - "jruby-head"
   - "rbx"
