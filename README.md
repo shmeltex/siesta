@@ -94,7 +94,7 @@ Harness.start({
 rails s
 ```
 
-* (OPTIONAL) Customize the behavior of siesta. See the [Siesta.Harness.Browser.ExtJS](http://www.bryntum.com/products/siesta/docs/#!/api/Siesta.Harness.Browser.ExtJS) for a detailed description of all available options.
+* (OPTIONAL) Customize the behavior of siesta. See the [Siesta.Harness.Browser.ExtJS](http://www.bryntum.com/docs/siesta/#!/api/Siesta.Harness.Browser.ExtJS) for a detailed description of all available options.
 
 ```javascript
 // spec/javascripts/siesta_config.js
@@ -110,7 +110,7 @@ Siesta.Harness.Browser.ExtJS.configure({
 ```
 
 For more detail about how to test your ExtJS, please visit:
-[http://www.bryntum.com/products/siesta/docs/](http://www.bryntum.com/products/siesta/docs/)
+[http://www.bryntum.com/docs/siesta/](http://www.bryntum.com/docs/siesta/)
 
 ### License
 
