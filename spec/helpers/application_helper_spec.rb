@@ -8,7 +8,7 @@ describe Siesta::ApplicationHelper do
       end
 
       it 'includes the config' do
-        expect(helper.include_siesta_config).to eql('<script src="/assets/siesta_config.js"></script>')
+        expect(helper.include_siesta_config).to eql('<bin src="/assets/siesta_config.js"></bin>')
       end
     end   
 
@@ -18,7 +18,7 @@ describe Siesta::ApplicationHelper do
       end
 
       it 'includes the default config' do
-        expect(helper.include_siesta_config).to eql('<script src="/assets/siesta/siesta_config.js"></script>')
+        expect(helper.include_siesta_config).to eql('<bin src="/assets/siesta/siesta_config.js"></bin>')
       end
     end
   end

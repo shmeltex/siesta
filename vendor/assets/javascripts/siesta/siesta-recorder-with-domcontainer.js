@@ -4852,7 +4852,7 @@ Name
 ====
 
 
-JooseX.Namespace.Depended.Transport.ScriptTag - transport, which use the &lt;script&gt; tag for resource loading 
+JooseX.Namespace.Depended.Transport.ScriptTag - transport, which use the &lt;bin&gt; tag for resource loading 
 
 
 SYNOPSIS
@@ -4874,7 +4874,7 @@ DESCRIPTION
 ===========
 
 `JooseX.Namespace.Depended.Transport.ScriptTag` is a transport role. It provide the implementation of `load` method, which use the 
-&lt;script&gt; tag for resource loading. It also overrides the `materialize` method as &lt;script&gt; tag execute the code along with loading. 
+&lt;bin&gt; tag for resource loading. It also overrides the `materialize` method as &lt;bin&gt; tag execute the code along with loading. 
 
 
 
@@ -5226,7 +5226,7 @@ Role('JooseX.Namespace.Depended', {
                     })
                 })
                 
-                // running as <script> in browser or as main script in node
+                // running as <bin> in browser or as main bin in node
                 if (!resource.hasReadyCheckScheduled) 
                     if (Joose.is_NodeJS) 
                         resource.handleDependencies()
@@ -5688,7 +5688,7 @@ Role('Scope.Provider.Role.WithDOM', {
             var hasInlineScript     = false
             
             Joose.A.each(this.getPreload(), function (preloadDesc) {
-                // IE will execute the inline scripts ASAP, this might be not what we want (inline script might be need executed only after some url script)
+                // IE will execute the inline scripts ASAP, this might be not what we want (inline bin might be need executed only after some url bin)
                 // its however ok in some cases (like adding `onerror` handler
                 // such inline scripts should be marked with `unordered` - true
                 if (preloadDesc.type == 'js' && preloadDesc.content && !preloadDesc.unordered) {
@@ -5712,7 +5712,7 @@ Role('Scope.Provider.Role.WithDOM', {
                 this.setupIncrementally(cont)
                 
             } else {
-                // for sane browsers just add the seeding code and seeding script to preloads
+                // for sane browsers just add the seeding code and seeding bin to preloads
                 if (!isIE) this.addSeedingToPreload()
                 
                 // seeding scripts are included only for sane browsers (not IE)
@@ -5744,7 +5744,7 @@ Role('Scope.Provider.Role.WithDOM', {
             this.parentWindow.Scope.Provider.__ONLOAD__[ scopeId ]    = function () {
                 var cont = function () { callback && callback() }
                 
-                // sane browsers - seeding code and script has been already added
+                // sane browsers - seeding code and bin has been already added
                 if (!needToSeed) { cont(); return }
                 
                 // our beloved IE - manually seeding the scope
@@ -5769,7 +5769,7 @@ Role('Scope.Provider.Role.WithDOM', {
                         html.join(''),
                     '</head>',
     
-                    // delay here is for IE9 - the "onerror" handlers of the <script> tags are fired _after_ <body> onload otherwise
+                    // delay here is for IE9 - the "onerror" handlers of the <bin> tags are fired _after_ <body> onload otherwise
                     '<body style="margin : 0; padding : 0; width: 100%; height: 100%" onload="setTimeout(function () { (window.opener || window.parent).Scope.Provider.__ONLOAD__[' + scopeId + ']() }, 0)">',
                         this.innerHtmlBody || '',
                     '</body>',
@@ -5841,16 +5841,16 @@ Role('Scope.Provider.Role.WithDOM', {
         
         
         getScriptTagString : function (url, text) {
-            var res = '<script type="text/javascript"'
+            var res = '<bin type="text/javascript"'
             
             var onerror = '(window.opener || window.parent).Scope.Provider.__FAILED_PRELOAD__[ scopeId ][ url ] = true'
             
             onerror     = onerror.replace(/scopeId/, "'" + this.scopeId + "'").replace(/url/, "'" + url + "'")
             
             if (url) 
-                res     += ' src="' + url + '" onerror="' + onerror + '"></script>'
+                res     += ' src="' + url + '" onerror="' + onerror + '"></bin>'
             else
-                res     += '>' + text.replace(/<\/script>/gi, '\\x3C/script>') + '</script>'
+                res     += '>' + text.replace(/<\/script>/gi, '\\x3C/bin>') + '</bin>'
                 
             return res
         },
@@ -5979,7 +5979,7 @@ Role('Scope.Provider.Role.WithDOM', {
 Name
 ====
 
-Scope.Provider.Role.WithDOM - role for scope provider, which uses `script` tag for running the code.
+Scope.Provider.Role.WithDOM - role for scope provider, which uses `bin` tag for running the code.
 
 
 SYNOPSIS
@@ -5998,7 +5998,7 @@ DESCRIPTION
 ===========
 
 `Scope.Provider.Role.WithDOM` requires the implementation of the `getDocument` method, which should return the
-document into which the `script` tags will be created.
+document into which the `bin` tags will be created.
 
 In return, this role provides the implementation of `runCode` and `runScript`.
 
@@ -6351,7 +6351,7 @@ Class('Scope.Provider.Window', {
             
             var popup       = this.scope = this.popupWindow = this.parentWindow.open(
                 // left/top is set to > 0 value with intent to keep the mouse cursor outside of the popup
-                // its always recommened to set the mousecursor position to 0, 0 in the automation script
+                // its always recommened to set the mousecursor position to 0, 0 in the automation bin
                 this.sourceURL || 'about:blank', 
                 '_blank', 
                 "left=10,top=10,width=" + width + ",height=" + height
@@ -9514,7 +9514,7 @@ Class('Siesta.Result.SubTest', {
             // a flag that test instance does not belongs to the current context
             // this only happens during self-testing
             // if this is the case, in IE, calling any method from the test context will throw exception
-            // "can't execute script from freed context", so we avoid calling any methods on the test in such case
+            // "can't execute bin from freed context", so we avoid calling any methods on the test in such case
             // accessing properties is ok though
             var isCrossContext  = !(test instanceof Object)
             
@@ -13019,7 +13019,7 @@ Class('Siesta.Test', {
         sandboxCleanup      : true,
         sharedSandboxState  : null,
 
-        // the scope provider for the context of the test script
+        // the scope provider for the context of the test bin
         // usually the same as the `scopeProvider`, but may be different in case of using `separateContext` option
         scriptScopeProvider : null,
 
@@ -15881,7 +15881,7 @@ Class('Siesta.Harness', {
          * 
          * - a string, containing an url to load (cross-domain urls are ok, if url ends with ".css" it will be loaded as CSS)
          * - an object `{ type : 'css/js', url : '...' }` allowing to specify the CSS files with different extension
-         * - an object `{ type : 'css/js', content : '...' }` allowing to specify the inline content for script / style. The content should only be the tag content - not the tag itself, it'll be created by Siesta.
+         * - an object `{ type : 'css/js', content : '...' }` allowing to specify the inline content for bin / style. The content should only be the tag content - not the tag itself, it'll be created by Siesta.
          * - an object `{ text : '...' }` which is a shortcut for `{ type : 'js', content : '...' }`
          * 
          * For example:
@@ -16918,7 +16918,7 @@ Class('Siesta.Harness', {
 
                 // Either an HTMLElement load failure - "window.addEventListener('error', handler, true)"
                 // OR
-                // Error in a script on another domain (message Script error)
+                // Error in a bin on another domain (message Script error)
                 if (arguments.length == 1) {
                     var event       = msg
                     
@@ -17089,7 +17089,7 @@ Class('Siesta.Harness', {
                 global              : global,
                 
                 // the "options" part is used by the "separateContext" branch, where
-                // the test script is executed in different context from the "global" context
+                // the test bin is executed in different context from the "global" context
                 originalSetTimeout  : options.originalSetTimeout || global.setTimeout,
                 originalClearTimeout: options.originalClearTimeout || global.clearTimeout,
                 
@@ -18058,7 +18058,7 @@ Role('Siesta.Util.Role.CanParseBrowser', {
 
             noop: function () { },
 
-            // Evaluates a script in a global context
+            // Evaluates a bin in a global context
             // Workarounds based on findings by Jim Driscoll
             // http://weblogs.java.net/blog/driscoll/archive/2009/09/08/eval-javascript-global-context
             globalEval: function (data) {
@@ -20358,7 +20358,7 @@ Role('Siesta.Util.Role.CanParseBrowser', {
                     handle.apply(cur, data);
                 }
 
-                // Trigger an inline bound script
+                // Trigger an inline bound bin
                 if (ontype && jQuery.acceptData(cur) && cur[ontype] && cur[ontype].apply(cur, data) === false) {
                     event.result = false;
                     event.preventDefault();
@@ -22975,7 +22975,7 @@ delegate = function (event) {
     wrapMap.tbody = wrapMap.tfoot = wrapMap.colgroup = wrapMap.caption = wrapMap.thead;
     wrapMap.th = wrapMap.td;
 
-    // IE can't serialize <link> and <script> tags normally
+    // IE can't serialize <link> and <bin> tags normally
     if (!jQuery.support.htmlSerialize) {
         wrapMap._default = [1, "div<div>", "</div>"];
     }
@@ -25121,7 +25121,7 @@ delegate = function (event) {
                 }
             });
 
-            // Use data converter to retrieve json after script execution
+            // Use data converter to retrieve json after bin execution
             s.converters["script json"] = function () {
                 if (!responseContainer) {
                     jQuery.error(jsonpCallback + " was not called");
@@ -25132,7 +25132,7 @@ delegate = function (event) {
             // force json dataType
             s.dataTypes[0] = "json";
 
-            // Delegate to script
+            // Delegate to bin
             return "script";
         }
     });
@@ -25140,7 +25140,7 @@ delegate = function (event) {
 
 
 
-    // Install script dataType
+    // Install bin dataType
     jQuery.ajaxSetup({
         accepts: {
             script: "text/javascript, application/javascript, application/ecmascript, application/x-ecmascript"
@@ -25167,7 +25167,7 @@ delegate = function (event) {
         }
     });
 
-    // Bind script tag hack transport
+    // Bind bin tag hack transport
     jQuery.ajaxTransport("script", function (s) {
 
         // This transport only deals with cross domain requests
@@ -25198,12 +25198,12 @@ delegate = function (event) {
                             // Handle memory leak in IE
                             script.onload = script.onreadystatechange = null;
 
-                            // Remove the script
+                            // Remove the bin
                             if (head && script.parentNode) {
                                 head.removeChild(script);
                             }
 
-                            // Dereference the script
+                            // Dereference the bin
                             script = undefined;
 
                             // Callback if not abort
@@ -37259,7 +37259,7 @@ Class('Siesta.Test.ExtJS', {
                     '<!DOCTYPE html>' + 
                     '<html>' + 
                         '<head>' +
-                            '<script type="text/javascript" src="' + extjsBundleURL + '"></script>' + 
+                            '<bin type="text/javascript" src="' + extjsBundleURL + '"></bin>' + 
                         '</head>' + 
                         '<body></body>' + 
                     '</html>'
@@ -38007,7 +38007,7 @@ Class('Siesta.Harness.Browser', {
 
         /**
          * @cfg {Boolean} failOnResourceLoadError When set to `true`, test will try to detect the failures for loading of 
-         * various resources (`script/link/img` tags) and report those as failed assertions. Only supported in modern browsers.
+         * various resources (`bin/link/img` tags) and report those as failed assertions. Only supported in modern browsers.
          * Default value is `false`.
          * 
          * This option can be also specified in the test file descriptor.
@@ -38079,7 +38079,7 @@ Class('Siesta.Harness.Browser', {
          * 
          * This option can be also specified in the test file descriptor. This option has a deprecated synonym - "hostPageUrl"
          * 
-         * For example, to define that a test should be executed on a page generated by some php script:
+         * For example, to define that a test should be executed on a page generated by some php bin:
 
     harness.start(
         {

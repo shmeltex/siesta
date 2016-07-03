@@ -10,7 +10,7 @@ module Siesta
 
     def include_test_harness
       if Siesta.config.auto_organizing
-        content_tag(:script, test_harness, { :type => 'text/javascript' }, false)
+        content_tag(:bin, test_harness, {:type => 'text/javascript' }, false)
       else
         javascript_include_tag 'test_harness'
       end
