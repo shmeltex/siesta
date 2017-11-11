@@ -14,4 +14,13 @@ matrix:
     - rvm: jruby-9000
     - rvm: jruby-head
 env:
-  - CODECLIMATE_REPO_TOKEN=cdae638d374998cf1a2e011f6b93eef5693815d816c9d830932f94f6a1593457
+  global:
+    - CC_TEST_REPORTER_ID=cdae638d374998cf1a2e011f6b93eef5693815d816c9d830932f94f6a1593457
+before_script:
+  - curl -L https://codeclimate.com/downloads/test-reporter/test-reporter-latest-linux-amd64 > ./cc-test-reporter
+  - chmod +x ./cc-test-reporter
+  - ./cc-test-reporter before-build
+script:
+  - bundle exec rspec
+after_script:
+  - ./cc-test-reporter after-build --exit-code $TRAVIS_TEST_RESULT
